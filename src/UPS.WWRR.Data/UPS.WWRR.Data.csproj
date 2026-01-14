@@ -1,0 +1,84 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Scripts\sp_AccessorialException_MergeProc.sql" />
+    <None Remove="Scripts\sp_AccessorialRatingRules_MergeProc.sql" />
+    <None Remove="Scripts\sp_BmaCapAmount_MergeProc.sql" />
+    <None Remove="Scripts\sp_CountryBillType_MergeProc.sql" />
+    <None Remove="Scripts\sp_CzmSystemRules_MergeProc.sql" />
+    <None Remove="Scripts\sp_DeficitWeightThreshold_MergeProc.sql" />
+    <None Remove="Scripts\sp_DestinationServiceFeatureType_MergeProc.sql" />
+    <None Remove="Scripts\sp_InternationalRatingCurrency_MergeProc.sql" />
+    <None Remove="Scripts\sp_InformationalAccessorialThreshold_MergeProc.sql" />
+    <None Remove="Scripts\sp_InsuranceCriteria_MergeProc.sql" />
+    <None Remove="Scripts\sp_LimitValuesBasedOnCriteria_MergeProc.sql" />
+    <None Remove="Scripts\sp_MinimumCriteria_MergeProc.sql" />
+    <None Remove="Scripts\sp_PostalException_MergeProc.sql" />
+    <None Remove="Scripts\sp_ServiceDefaultRules_MergeProc.sql" />
+    <None Remove="Scripts\sp_ServiceDowngradeRules_MergeProc.sql" />
+    <None Remove="Scripts\sp_SimpleRateVolumeRange_MergeProc.sql" />
+    <None Remove="Scripts\sp_ThresholdSimpleRates_MergeProc.sql" />
+    <None Remove="Scripts\sp_UpdateLoadRef_Proc.sql" />
+	<None Remove="Scripts\sp_AlternateCurrency_MergeProc.sql" />
+	<None Remove="Scripts\sp_DestinationZipSvcAsyValidation_Merge_Proc.sql" />
+    <None Remove="Scripts\sp_AccessorialThreshold_MergeProc.sql" />
+    <None Remove="Scripts\sp_ValidDestinationBillTerm_MergeProc.sql" />
+    <None Remove="Scripts\sp_ValidOriginBillTerm_MergeProc.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\sp_AccessorialException_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_AccessorialRatingRules_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_AuditHistory_Merge_Proc.sql" />
+    <EmbeddedResource Include="Scripts\sp_AccessorialMinMaxCriteria_Merge_Proc.sql" />
+    <EmbeddedResource Include="Scripts\sp_BmaCapAmount_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_CountryBillType_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_TemplateAccessorialRules_Merge_Proc.sql" />
+    <EmbeddedResource Include="Scripts\sp_SameDayRate_Merge_Proc.sql" />
+    <EmbeddedResource Include="Scripts\sp_InformationalAccessorialRate_Merge_Proc.sql" />
+    <EmbeddedResource Include="Scripts\sp_InformationalAccessorialCharge_Merge_Proc.sql" />
+    <EmbeddedResource Include="Scripts\sp_ImportServiceValidation_Merge_Proc.sql" />
+    <EmbeddedResource Include="Scripts\sp_InformationalAccessorialThreshold_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_InsuranceCriteria_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_InternationalRatingCurrency_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_LimitValuesBasedOnCriteria_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_MinimumCriteria_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_PostalException_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_ServiceDefaultRules_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_ServiceDowngradeRules_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_ServiceDowngradeValidAccessorialRules_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_SimpleRateVolumeRange_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_ThresholdSimpleRates_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_CzmSystemRules_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_UpdateLoadRef_Proc.sql" />
+    <EmbeddedResource Include="Scripts\sp_AccessorialThreshold_MergeProc.sql" />
+	<EmbeddedResource Include="Scripts\sp_DestinationZipSvcAsyValidation_Merge_Proc.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Ensure SQL scripts are not embedded or analyzed -->
+    <EmbeddedResource Include="Scripts\sp_AlternateCurrency_MergeProc.sql" />
+	  <EmbeddedResource Include="Scripts\sp_DeficitWeightThreshold_MergeProc.sql" />
+	  <EmbeddedResource Include="Scripts\sp_FreightRatingRules_Merge_Proc.sql" />
+	  <EmbeddedResource Include="Scripts\sp_ValidDestinationBillTerm_MergeProc.sql" />
+	  <EmbeddedResource Include="Scripts\sp_DestinationServiceFeatureType_MergeProc.sql" />
+	  <EmbeddedResource Include="Scripts\sp_ValidOriginBillTerm_MergeProc.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.20" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.20">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.10" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+  </ItemGroup>
+
+</Project>
