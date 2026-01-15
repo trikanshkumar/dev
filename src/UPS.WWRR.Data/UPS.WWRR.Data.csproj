@@ -29,6 +29,7 @@
 	<None Remove="Scripts\sp_DestinationZipSvcAsyValidation_Merge_Proc.sql" />
     <None Remove="Scripts\sp_AccessorialThreshold_MergeProc.sql" />
     <None Remove="Scripts\sp_ValidDestinationBillTerm_MergeProc.sql" />
+    <None Remove="Scripts\sp_ValidLaneService_MergeProc.sql" />
     <None Remove="Scripts\sp_ValidOriginBillTerm_MergeProc.sql" />
   </ItemGroup>
 
@@ -68,6 +69,7 @@
 	  <EmbeddedResource Include="Scripts\sp_FreightRatingRules_Merge_Proc.sql" />
 	  <EmbeddedResource Include="Scripts\sp_ValidDestinationBillTerm_MergeProc.sql" />
 	  <EmbeddedResource Include="Scripts\sp_DestinationServiceFeatureType_MergeProc.sql" />
+	  <EmbeddedResource Include="Scripts\sp_ValidLaneService_MergeProc.sql" />
 	  <EmbeddedResource Include="Scripts\sp_ValidOriginBillTerm_MergeProc.sql" />
   </ItemGroup>
 

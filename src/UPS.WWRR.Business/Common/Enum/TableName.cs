@@ -105,6 +105,9 @@ namespace UPS.WWRR.Business.Common.Constants
         TVORGBT,
 
         [Description("Template Accessorial Rules")]
-        TSPMYCD
+        TSPMYCD,
+
+        [Description("Valid Lane Service")]
+        TVLNSVC
     }
 }

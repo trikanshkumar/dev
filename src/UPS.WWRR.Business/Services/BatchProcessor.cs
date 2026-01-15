@@ -503,6 +503,12 @@ namespace UPS.WWRR.Business.Services
                 StoredProcConstant.TemplateAccessorialRulesMerge,
                 async path => await _csvValidator.ValidateCsvAsync<TemplateAccessorialRulesDto>(path)
             ),
+            nameof(TableEnum.TVLNSVC) => new LoadTableDescriptor(
+                nameof(TableEnum.TVLNSVC).ToLowerInvariant(),
+                (nameof(TableEnum.TVLNSVC) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.ValidLaneServiceMerge,
+                async path => await _csvValidator.ValidateCsvAsync<ValidLaneServiceDto>(path)
+            ),
             //Add other table descriptors here as needed
             _ => LoadTableDescriptor.Unsupported
         };

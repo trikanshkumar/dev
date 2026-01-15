@@ -79,6 +79,8 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<TemplateAccessorialRulesStaging> TemplateAccessorialRulesStaging { get; set; }
         public virtual DbSet<ValidOriginBillTerm> ValidOriginBillTerms { get; set; }
         public virtual DbSet<ValidOriginBillTermStaging> ValidOriginBillTermsStaging { get; set; }
+        public virtual DbSet<ValidLaneService> ValidLaneServices { get; set; }
+        public virtual DbSet<ValidLaneServiceStaging> ValidLaneServicesStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -322,6 +324,12 @@ namespace UPS.WWRR.Data.Models
             modelBuilder.Entity<DestinationServiceFeatureTypeStaging>(e =>
             {
                 e.ToTable("tvdsvcf_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ValidLaneServiceStaging>(e =>
+            {
+                e.ToTable("tvlnsvc_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 
