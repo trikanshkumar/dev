@@ -81,6 +81,8 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<ValidOriginBillTermStaging> ValidOriginBillTermsStaging { get; set; }
         public virtual DbSet<ValidLaneService> ValidLaneServices { get; set; }
         public virtual DbSet<ValidLaneServiceStaging> ValidLaneServicesStaging { get; set; }
+        public virtual DbSet<OriginServiceFeatureTypes> OriginServiceFeatureTypes { get; set; }
+        public virtual DbSet<OriginServiceFeatureTypesStaging> OriginServiceFeatureTypesStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

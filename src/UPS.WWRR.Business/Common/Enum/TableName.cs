@@ -108,6 +108,9 @@ namespace UPS.WWRR.Business.Common.Constants
         TSPMYCD,
 
         [Description("Valid Lane Service")]
-        TVLNSVC
+        TVLNSVC,
+
+        [Description("Origin Service Feature Type")]
+        TVOSVCF,
     }
 }

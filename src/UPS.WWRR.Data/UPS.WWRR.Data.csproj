@@ -40,6 +40,7 @@
     <EmbeddedResource Include="Scripts\sp_AccessorialMinMaxCriteria_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_BmaCapAmount_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_CountryBillType_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_OriginServiceFeatureTypes_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_TemplateAccessorialRules_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_SameDayRate_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_InformationalAccessorialRate_Merge_Proc.sql" />
