@@ -515,6 +515,12 @@ namespace UPS.WWRR.Business.Services
                 StoredProcConstant.OriginServiceFeatureTypeMerge,
                 async path => await _csvValidator.ValidateCsvAsync<OriginServiceFeatureTypesDto>(path)
             ),
+            nameof(TableEnum.TWGTTRH) => new LoadTableDescriptor(
+                nameof(TableEnum.TWGTTRH).ToLowerInvariant(),
+                (nameof(TableEnum.TWGTTRH) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.PublishedLetterThresholdMerge,
+                async path => await _csvValidator.ValidateCsvAsync<PublishedLetterThresholdDto>(path)
+            ),
             //Add other table descriptors here as needed
             _ => LoadTableDescriptor.Unsupported
         };

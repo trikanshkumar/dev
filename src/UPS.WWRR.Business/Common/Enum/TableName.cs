@@ -112,5 +112,8 @@ namespace UPS.WWRR.Business.Common.Constants
 
         [Description("Origin Service Feature Type")]
         TVOSVCF,
+
+        [Description("Published Letter Thresholds and Scan Tolerances")]
+        TWGTTRH
     }
 }

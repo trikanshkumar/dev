@@ -83,6 +83,8 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<ValidLaneServiceStaging> ValidLaneServicesStaging { get; set; }
         public virtual DbSet<OriginServiceFeatureTypes> OriginServiceFeatureTypes { get; set; }
         public virtual DbSet<OriginServiceFeatureTypesStaging> OriginServiceFeatureTypesStaging { get; set; }
+        public virtual DbSet<PublishedLetterThreshold> PublishedLetterThresholds { get; set; }
+        public virtual DbSet<PublishedLetterThresholdStaging> PublishedLetterThresholdsStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -332,6 +334,12 @@ namespace UPS.WWRR.Data.Models
             modelBuilder.Entity<ValidLaneServiceStaging>(e =>
             {
                 e.ToTable("tvlnsvc_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<PublishedLetterThresholdStaging>(e =>
+            {
+                e.ToTable("twgttrh_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 

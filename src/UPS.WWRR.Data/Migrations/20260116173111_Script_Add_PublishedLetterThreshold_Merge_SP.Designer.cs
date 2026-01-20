@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UPS.WWRR.Data.Models;
@@ -11,9 +12,11 @@ using UPS.WWRR.Data.Models;
 namespace UPS.WWRR.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260116173111_Script_Add_PublishedLetterThreshold_Merge_SP")]
+    partial class Script_Add_PublishedLetterThreshold_Merge_SP
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2860,90 +2863,6 @@ namespace UPS.WWRR.Data.Migrations
                     b.ToTable("tmincri_stg", (string)null);
                 });
 
-            modelBuilder.Entity("UPS.WWRR.Data.Models.OriginServiceFeatureTypes", b =>
-                {
-                    b.Property<string>("ExportCountryCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_xpt_cny_cd");
-
-                    b.Property<string>("ServiceType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("ServiceFeatureType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_fea_typ_cd");
-
-                    b.Property<DateTime>("EffectiveDate")
-                        .HasColumnType("date")
-                        .HasColumnName("tbl_row_eff_dt");
-
-                    b.Property<string>("Status")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("apv_sts_cd");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("tbl_row_exp_dt");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.HasKey("ExportCountryCode", "ServiceType", "ServiceFeatureType", "EffectiveDate", "Status");
-
-                    b.ToTable("tvosvcf");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.OriginServiceFeatureTypesStaging", b =>
-                {
-                    b.Property<string>("ExportCountryCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_xpt_cny_cd");
-
-                    b.Property<string>("ServiceType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("ServiceFeatureType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_fea_typ_cd");
-
-                    b.Property<DateTime>("EffectiveDate")
-                        .HasColumnType("date")
-                        .HasColumnName("tbl_row_eff_dt");
-
-                    b.Property<string>("Status")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("apv_sts_cd");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("tbl_row_exp_dt");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .HasColumnType("smallint")
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.HasKey("ExportCountryCode", "ServiceType", "ServiceFeatureType", "EffectiveDate", "Status");
-
-                    b.ToTable("tvosvcf_stg");
-                });
-
             modelBuilder.Entity("UPS.WWRR.Data.Models.PostalException", b =>
                 {
                     b.Property<string>("BusinessRuleCode")
@@ -4304,82 +4223,6 @@ namespace UPS.WWRR.Data.Migrations
                     b.HasKey("ImportCountryCode", "BillingTermTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
                     b.ToTable("tvdstbt_stg", (string)null);
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.ValidLaneService", b =>
-                {
-                    b.Property<string>("ExportCountryCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_xpt_cny_cd");
-
-                    b.Property<string>("ImportCountryCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_ipt_cny_cd");
-
-                    b.Property<string>("ServiceTypeCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<DateTime>("TableRowEffectiveDate")
-                        .HasColumnType("date")
-                        .HasColumnName("tbl_row_eff_dt");
-
-                    b.Property<DateTime>("TableRowEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("tbl_row_end_dt");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.HasKey("ExportCountryCode", "ImportCountryCode", "ServiceTypeCode", "TableRowEffectiveDate", "TableRowEndDate");
-
-                    b.ToTable("tvlnsvc");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.ValidLaneServiceStaging", b =>
-                {
-                    b.Property<string>("ExportCountryCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_xpt_cny_cd");
-
-                    b.Property<string>("ImportCountryCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_ipt_cny_cd");
-
-                    b.Property<string>("ServiceTypeCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<DateTime>("TableRowEffectiveDate")
-                        .HasColumnType("date")
-                        .HasColumnName("tbl_row_eff_dt");
-
-                    b.Property<DateTime>("TableRowEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("tbl_row_end_dt");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.HasKey("ExportCountryCode", "ImportCountryCode", "ServiceTypeCode", "TableRowEffectiveDate", "TableRowEndDate");
-
-                    b.ToTable("tvlnsvc_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ValidOriginBillTerm", b =>

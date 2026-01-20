@@ -35,5 +35,6 @@
         public const string ValidOriginBillTermMerge = "sp_validoriginbillterm_merge_proc";
         public const string ValidLaneServiceMerge = "sp_validlaneservice_merge_proc";
         public const string OriginServiceFeatureTypeMerge = "sp_originservicefeaturetypes_merge_proc";
+        public const string PublishedLetterThresholdMerge = "sp_publishedletterthreshold_merge_proc";
     }
 }
