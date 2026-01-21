@@ -530,6 +530,12 @@ namespace UPS.WWRR.Business.Services
                 StoredProcConstant.ValidAcquisitionMethodMerge,
                 async path => await _csvValidator.ValidateCsvAsync<ValidAcquisitionMethodDto>(path)
             ),
+            nameof(TableEnum.TCOLDEC) => new LoadTableDescriptor(
+                nameof(TableEnum.TCOLDEC).ToLowerInvariant(),
+                (nameof(TableEnum.TCOLDEC) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.ColumnDecodeMerge,
+                async path => await _csvValidator.ValidateCsvAsync<ColumnDecodeDto>(path)
+            ),
             //Add other table descriptors here as needed
             _ => LoadTableDescriptor.Unsupported
         };

@@ -37,5 +37,6 @@
         public const string OriginServiceFeatureTypeMerge = "sp_originservicefeaturetypes_merge_proc";
         public const string PublishedLetterThresholdMerge = "sp_publishedletterthreshold_merge_proc";
         public const string ValidAcquisitionMethodMerge = "sp_validacquisitionmethod_merge_proc";
+        public const string ColumnDecodeMerge = "sp_columndecode_merge_proc";
     }
 }

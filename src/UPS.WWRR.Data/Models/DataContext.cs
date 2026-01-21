@@ -87,6 +87,8 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<PublishedLetterThresholdStaging> PublishedLetterThresholdsStaging { get; set; }
         public virtual DbSet<ValidAcquisitionMethod> ValidAcquisitionMethods { get; set; }
         public virtual DbSet<ValidAcquisitionMethodStaging> ValidAcquisitionMethodsStaging { get; set; }
+        public virtual DbSet<ColumnDecode> ColumnDecodes { get; set; }
+        public virtual DbSet<ColumnDecodeStaging> ColumnDecodesStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -342,6 +344,12 @@ namespace UPS.WWRR.Data.Models
             modelBuilder.Entity<PublishedLetterThresholdStaging>(e =>
             {
                 e.ToTable("twgttrh_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ColumnDecodeStaging>(e =>
+            {
+                e.ToTable("tcoldec_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 

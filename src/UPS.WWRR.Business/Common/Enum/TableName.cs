@@ -118,5 +118,8 @@ namespace UPS.WWRR.Business.Common.Constants
 
         [Description("Valid Acquisition Method")]
         TVPAQMT,
+
+        [Description("Column Decodes")]
+        TCOLDEC,
     }
 }
