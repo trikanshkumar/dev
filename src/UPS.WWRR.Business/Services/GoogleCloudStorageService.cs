@@ -36,7 +36,7 @@ public class GoogleCloudStorageService : IStorageService
     public async Task<string?> DiscoverReceiptLogFileAsync(string bucketName, CancellationToken ct = default)
     {
         var receiptLogFilePattern = ServiceConstants.receiptLogFilePattern;
-        var matches = new List<string>();
+        var matches = new List<(string FileName, long LoadId, DateTimeOffset CreatedAt)>();
 
         await foreach (var obj in _storageClient.ListObjectsAsync(bucketName).WithCancellation(ct))
         {
@@ -50,11 +50,25 @@ public class GoogleCloudStorageService : IStorageService
             {
                 var loadIdPart = parts[8];
                 if (loadIdPart.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)) loadIdPart = loadIdPart[..^4];
-                if (!long.TryParse(loadIdPart, out _)) continue;
-                matches.Add(receiptFileName);
+                if (!long.TryParse(loadIdPart, out var loadId)) continue;
+
+                // Get object creation timestamp for secondary sorting when loadIds are the same
+                var createdAt = obj.TimeCreatedDateTimeOffset.HasValue
+                    ? obj.TimeCreatedDateTimeOffset.Value
+                    : DateTimeOffset.MaxValue;
+                matches.Add((receiptFileName, loadId, createdAt));
             }
         }
 
-        return matches.Count == 1 ? matches[0] : null;
+        if (matches.Count == 0)
+            return null;
+
+        // Return the receipt file ordered by loadId ascending, then by creation date ascending
+        var receiptByLoadIdAndDate = matches
+            .OrderBy(x => x.LoadId)
+            .ThenBy(x => x.CreatedAt)
+            .First();
+
+        return receiptByLoadIdAndDate.FileName;
     }
 }

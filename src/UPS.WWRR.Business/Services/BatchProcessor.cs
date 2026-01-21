@@ -40,7 +40,7 @@ namespace UPS.WWRR.Business.Services
             _csvValidator = csvValidator;
             _copyBatchService = copyBatchService;
             _loadRepository = loadRepository;
-            _intervalMinutes = int.TryParse(Environment.GetEnvironmentVariable("LOAD_INTERVAL_MINUTES"), out var m) ? m : 30;
+            _intervalMinutes = int.TryParse(Environment.GetEnvironmentVariable("LOAD_INTERVAL_MINUTES"), out var m) ? m : 5;
             _gcpBucketName = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_NAME")
                         ?? throw new InvalidOperationException("GOOGLE_CLOUD_STORAGE_BUCKET_NAME environment variable is not set.");
             _tableNameFilter = Environment.GetEnvironmentVariable("TABLE_NAME") ?? "ALL";
@@ -58,6 +58,9 @@ namespace UPS.WWRR.Business.Services
                 try
                 {
                     _logger.LogInformation("Starting processing cycle at {time}", DateTimeOffset.UtcNow);
+
+                    // Clear moved objects tracker at the start of each cycle to allow re-processing of files with same names
+                    _movedObjects.Clear();
 
                     // Discover and validate new loads (creates DataLoad entries)
                     var newLoads = await BuildLoadsAsync(stoppingToken);
