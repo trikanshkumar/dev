@@ -85,6 +85,8 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<OriginServiceFeatureTypesStaging> OriginServiceFeatureTypesStaging { get; set; }
         public virtual DbSet<PublishedLetterThreshold> PublishedLetterThresholds { get; set; }
         public virtual DbSet<PublishedLetterThresholdStaging> PublishedLetterThresholdsStaging { get; set; }
+        public virtual DbSet<ValidAcquisitionMethod> ValidAcquisitionMethods { get; set; }
+        public virtual DbSet<ValidAcquisitionMethodStaging> ValidAcquisitionMethodsStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

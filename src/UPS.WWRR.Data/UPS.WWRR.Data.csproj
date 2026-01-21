@@ -73,6 +73,7 @@
 	  <EmbeddedResource Include="Scripts\sp_ValidDestinationBillTerm_MergeProc.sql" />
 	  <EmbeddedResource Include="Scripts\sp_DestinationServiceFeatureType_MergeProc.sql" />
 	  <EmbeddedResource Include="Scripts\sp_ValidLaneService_MergeProc.sql" />
+	  <EmbeddedResource Include="Scripts\sp_ValidAcquisitionMethod_MergeProc.sql" />
 	  <EmbeddedResource Include="Scripts\sp_ValidOriginBillTerm_MergeProc.sql" />
   </ItemGroup>
 

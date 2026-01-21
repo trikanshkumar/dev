@@ -114,6 +114,9 @@ namespace UPS.WWRR.Business.Common.Constants
         TVOSVCF,
 
         [Description("Published Letter Thresholds and Scan Tolerances")]
-        TWGTTRH
+        TWGTTRH,
+
+        [Description("Valid Acquisition Method")]
+        TVPAQMT,
     }
 }
