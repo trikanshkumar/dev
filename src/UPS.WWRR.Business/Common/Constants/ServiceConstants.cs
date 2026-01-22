@@ -2,7 +2,7 @@
 {
     public static class ServiceConstants
     {
-        public const string receiptLogFilePattern = "WWRR_MOD_SENT_FILES_RECEIPT_";
+        public const string receiptLogFilePattern = "WWRR_MOD_RECEIPT_FILES_";
         public const string fileExtractName = "FileExtractName";
         public const string source = "Source";
         public const string processedDataFilesFolder = "ProcessedDataFiles";

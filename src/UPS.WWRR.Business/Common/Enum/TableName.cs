@@ -121,5 +121,8 @@ namespace UPS.WWRR.Business.Common.Constants
 
         [Description("Column Decodes")]
         TCOLDEC,
+
+        [Description("Valid Origin Service Package")]
+        TVSVCPK,
     }
 }

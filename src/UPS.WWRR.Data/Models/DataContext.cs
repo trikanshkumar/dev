@@ -89,6 +89,8 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<ValidAcquisitionMethodStaging> ValidAcquisitionMethodsStaging { get; set; }
         public virtual DbSet<ColumnDecode> ColumnDecodes { get; set; }
         public virtual DbSet<ColumnDecodeStaging> ColumnDecodesStaging { get; set; }
+        public virtual DbSet<ValidOriginServicePackage> ValidOriginServicePackages { get; set; }
+        public virtual DbSet<ValidOriginServicePackageStaging> ValidOriginServicePackagesStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -350,6 +352,12 @@ namespace UPS.WWRR.Data.Models
             modelBuilder.Entity<ColumnDecodeStaging>(e =>
             {
                 e.ToTable("tcoldec_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ValidOriginServicePackageStaging>(e =>
+            {
+                e.ToTable("tvsvcpk_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 

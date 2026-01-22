@@ -44,11 +44,12 @@ public class GoogleCloudStorageService : IStorageService
             var receiptFileName = obj.Name;
             if (!receiptFileName.StartsWith(receiptLogFilePattern, StringComparison.OrdinalIgnoreCase)) continue;
             if (!receiptFileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)) continue;
+            // New format: WWRR_MOD_RECEIPT_FILES_YYYY_MM_DD_LOADID.csv (8 parts)
             var parts = Path.GetFileName(receiptFileName).Split('_', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 9) continue;
-            if (int.TryParse(parts[5], out var y) && int.TryParse(parts[6], out var m) && int.TryParse(parts[7], out var d))
+            if (parts.Length < 8) continue;
+            if (int.TryParse(parts[4], out var y) && int.TryParse(parts[5], out var m) && int.TryParse(parts[6], out var d))
             {
-                var loadIdPart = parts[8];
+                var loadIdPart = parts[7];
                 if (loadIdPart.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)) loadIdPart = loadIdPart[..^4];
                 if (!long.TryParse(loadIdPart, out var loadId)) continue;
 
