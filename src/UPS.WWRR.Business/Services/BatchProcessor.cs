@@ -542,6 +542,12 @@ namespace UPS.WWRR.Business.Services
                 StoredProcConstant.ValidOriginServicePackageMerge,
                 async path => await _csvValidator.ValidateCsvAsync<ValidOriginServicePackageDto>(path)
             ),
+            nameof(TableEnum.TDECODE) => new LoadTableDescriptor(
+                nameof(TableEnum.TDECODE).ToLowerInvariant(),
+                (nameof(TableEnum.TDECODE) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.DecodeValuesMerge,
+                async path => await _csvValidator.ValidateCsvAsync<DecodeValuesDto>(path)
+            ),
             //Add other table descriptors here as needed
             _ => LoadTableDescriptor.Unsupported
         };

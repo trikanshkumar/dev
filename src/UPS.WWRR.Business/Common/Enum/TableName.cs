@@ -124,5 +124,8 @@ namespace UPS.WWRR.Business.Common.Constants
 
         [Description("Valid Origin Service Package")]
         TVSVCPK,
+
+        [Description("Decode Values")]
+        TDECODE,
     }
 }

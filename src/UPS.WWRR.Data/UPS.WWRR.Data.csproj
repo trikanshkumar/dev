@@ -13,6 +13,7 @@
     <None Remove="Scripts\sp_ColumnDecode_MergeProc.sql" />
     <None Remove="Scripts\sp_CountryBillType_MergeProc.sql" />
     <None Remove="Scripts\sp_CzmSystemRules_MergeProc.sql" />
+    <None Remove="Scripts\sp_DecodeValues_MergeProc.sql" />
     <None Remove="Scripts\sp_DeficitWeightThreshold_MergeProc.sql" />
     <None Remove="Scripts\sp_DestinationServiceFeatureType_MergeProc.sql" />
     <None Remove="Scripts\sp_InternationalRatingCurrency_MergeProc.sql" />
@@ -44,6 +45,7 @@
     <EmbeddedResource Include="Scripts\sp_BmaCapAmount_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_ColumnDecode_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_CountryBillType_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_DecodeValues_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_OriginServiceFeatureTypes_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_PublishedLetterThreshold_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_TemplateAccessorialRules_Merge_Proc.sql" />
