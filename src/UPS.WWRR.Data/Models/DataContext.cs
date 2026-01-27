@@ -93,6 +93,8 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<ValidOriginServicePackageStaging> ValidOriginServicePackagesStaging { get; set; }
         public virtual DbSet<DecodeValues> DecodeValues { get; set; }
         public virtual DbSet<DecodeValuesStaging> DecodeValuesStaging { get; set; }
+        public virtual DbSet<FuelSurcharge> FuelSurcharge { get; set; }
+        public virtual DbSet<FuelSurchargeStaging> FuelSurchargeStating { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -228,6 +230,7 @@ namespace UPS.WWRR.Data.Models
                     t.EffectiveDate
                 });
                 e.ToTable("tdstsvp_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 
             // Add default for DeficitWeightThresholdStaging.IsCompletedIndicator
@@ -366,6 +369,72 @@ namespace UPS.WWRR.Data.Models
             modelBuilder.Entity<DecodeValuesStaging>(e =>
             {
                 e.ToTable("tdecode_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<AuditHistoryStaging>(e =>
+            {
+                e.ToTable("tauhist_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<AccessorialMinMaxCriteriaStaging>(e =>
+            {
+                e.ToTable("tasytrh_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ImportServiceValidationStaging>(e =>
+            {
+                e.ToTable("timpsvc_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<InformationalAccessorialChargeStaging>(e =>
+            {
+                e.ToTable("tinfchg_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<InformationalAccessorialRateStaging>(e =>
+            {
+                e.ToTable("tinfrat_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<FreightRatingRulesStaging>(e =>
+            {
+                e.ToTable("tratrul_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<SameDayRateStaging>(e =>
+            {
+                e.ToTable("tsdrwsf_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<TemplateAccessorialRulesStaging>(e =>
+            {
+                e.ToTable("tspmycd_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<OriginServiceFeatureTypesStaging>(e =>
+            {
+                e.ToTable("tvosvcf_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ValidAcquisitionMethodStaging>(e =>
+            {
+                e.ToTable("tvpaqmt_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<FuelSurchargeStaging>(e =>
+            {
+                e.ToTable("tsubchg_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 

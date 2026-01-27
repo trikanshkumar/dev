@@ -127,5 +127,8 @@ namespace UPS.WWRR.Business.Common.Constants
 
         [Description("Decode Values")]
         TDECODE,
+
+        [Description("Fuel Surcharge")]
+        TSUBCHG,
     }
 }

@@ -48,6 +48,7 @@
     <EmbeddedResource Include="Scripts\sp_DecodeValues_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_OriginServiceFeatureTypes_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_PublishedLetterThreshold_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_FuelSurcharge_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_TemplateAccessorialRules_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_SameDayRate_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_InformationalAccessorialRate_Merge_Proc.sql" />

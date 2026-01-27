@@ -40,5 +40,6 @@
         public const string ColumnDecodeMerge = "sp_columndecode_merge_proc";
         public const string ValidOriginServicePackageMerge = "sp_validoriginservicepackage_merge_proc";
         public const string DecodeValuesMerge = "sp_decodevalues_merge_proc";
+        public const string FuelSurchargeMerge = "sp_fuelsurcharge_merge_proc";
     }
 }

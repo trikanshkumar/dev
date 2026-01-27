@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UPS.WWRR.Data.Models;
@@ -11,9 +12,11 @@ using UPS.WWRR.Data.Models;
 namespace UPS.WWRR.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260123204657_Add_tsubchg")]
+    partial class Add_tsubchg
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1572,84 +1575,6 @@ namespace UPS.WWRR.Data.Migrations
                     b.HasIndex("DataLoadDetailId");
 
                     b.ToTable("data_load_exceptions");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.DecodeValues", b =>
-                {
-                    b.Property<string>("FieldName")
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
-                        .HasColumnName("fld_na");
-
-                    b.Property<string>("TypeCodeFieldValueCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("char")
-                        .HasColumnName("typ_cd_fld_vlu_cd");
-
-                    b.Property<DateTime>("RecordEffectiveStartDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_stt_dt");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<DateTime>("RecordEffectiveEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_end_dt");
-
-                    b.Property<string>("TypeCodeFieldDescription")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("typ_cd_fld_dsc_te");
-
-                    b.HasKey("FieldName", "TypeCodeFieldValueCode", "RecordEffectiveStartDate");
-
-                    b.ToTable("tdecode");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.DecodeValuesStaging", b =>
-                {
-                    b.Property<string>("FieldName")
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
-                        .HasColumnName("fld_na");
-
-                    b.Property<string>("TypeCodeFieldValueCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("char")
-                        .HasColumnName("typ_cd_fld_vlu_cd");
-
-                    b.Property<DateTime>("RecordEffectiveStartDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_stt_dt");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<DateTime>("RecordEffectiveEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_end_dt");
-
-                    b.Property<string>("TypeCodeFieldDescription")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("typ_cd_fld_dsc_te");
-
-                    b.HasKey("FieldName", "TypeCodeFieldValueCode", "RecordEffectiveStartDate");
-
-                    b.ToTable("tdecode_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DeficitWeightThreshold", b =>

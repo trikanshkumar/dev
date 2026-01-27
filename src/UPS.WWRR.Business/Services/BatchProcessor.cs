@@ -548,6 +548,12 @@ namespace UPS.WWRR.Business.Services
                 StoredProcConstant.DecodeValuesMerge,
                 async path => await _csvValidator.ValidateCsvAsync<DecodeValuesDto>(path)
             ),
+            nameof(TableEnum.TSUBCHG) => new LoadTableDescriptor(
+                nameof(TableEnum.TSUBCHG).ToLowerInvariant(),
+                (nameof(TableEnum.TSUBCHG) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.FuelSurchargeMerge,
+                async path => await _csvValidator.ValidateCsvAsync<FuelSurchargeDto>(path)
+            ),
             //Add other table descriptors here as needed
             _ => LoadTableDescriptor.Unsupported
         };
