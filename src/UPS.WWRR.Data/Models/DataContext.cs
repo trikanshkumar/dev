@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using UPS.WWRR.Data.Common;
 
 namespace UPS.WWRR.Data.Models
 {
@@ -99,6 +100,8 @@ namespace UPS.WWRR.Data.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.HasDefaultSchema(DataConstants.defaultSchema);
+
             modelBuilder.Entity<AreaClassificationHeader>(e =>
                 e.HasKey(t => new
                 {

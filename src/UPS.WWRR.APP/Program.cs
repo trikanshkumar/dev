@@ -9,6 +9,7 @@ using UPS.WWRR.Business.Common.Helper;
 using UPS.WWRR.Business.Interfaces;
 using UPS.WWRR.Business.Repositories;
 using UPS.WWRR.Business.Services;
+using UPS.WWRR.Data.Common;
 using UPS.WWRR.Data.Models;
 
 [ExcludeFromCodeCoverage]
@@ -35,7 +36,8 @@ class Program
         var host = Host.CreateDefaultBuilder(args)
             .ConfigureServices(services =>
             {
-                services.AddDbContext<DataContext>(options => options.UseNpgsql(connectionString));
+                services.AddDbContext<DataContext>(options => options.UseNpgsql(connectionString, npgSqlOptions =>
+                    npgSqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", DataConstants.defaultSchema)));
                 services.AddScoped<INpgsqlConnectionHelper, NpgsqlConnectionHelper>();
                 services.AddScoped<ICsvSplitterService, CsvSplitterService>();
                 services.AddScoped<ICopyBatchDataService, CopyBatchDataService>();

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 using UPS.WWRR.Data.Models;
+using UPS.WWRR.Data.Common;
 
 namespace UPS.WWRR.API.DbContextFactory
 {
@@ -13,10 +14,11 @@ namespace UPS.WWRR.API.DbContextFactory
         {
             var connectionString = Environment.GetEnvironmentVariable("ALLOYDB_CONNECTION")
                         ?? throw new InvalidOperationException("ALLOYDB_CONNECTION environment variable is not set.");
-
+            
             var optionsBuilder = new DbContextOptionsBuilder<DataContext>();
             optionsBuilder
-                .UseNpgsql(connectionString)
+                .UseNpgsql(connectionString, npgSqlOptions =>
+                    npgSqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", DataConstants.defaultSchema))
                 .LogTo(Console.WriteLine, LogLevel.Information)
                 .EnableDetailedErrors();
 
