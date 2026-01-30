@@ -18,7 +18,7 @@ public class TSPMYCDTests : BatchProcessorTests
         var load = new DataLoad { Id = 9999, LoadTableName = "tspmycd", FileLocation = "gs://bucket/TSPMYCD_9999.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<TemplateAccessorialRulesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TSPMYCD_9999.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSPMYCD_9999.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -31,7 +31,7 @@ public class TSPMYCDTests : BatchProcessorTests
         var load = new DataLoad { Id = 9998, LoadTableName = "tspmycd", FileLocation = "gs://bucket/TSPMYCD_9998.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<TemplateAccessorialRulesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "invalid" }));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TSPMYCD_9998.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSPMYCD_9998.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -42,7 +42,7 @@ public class TSPMYCDTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TSPMYCD_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 9997, LoadTableName = "tspmycd", FileLocation = "gs://bucket/TSPMYCD_9997.csv" };
-        _storage.Setup(s => s.DownloadFile(Bucket, "TSPMYCD_9997.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSPMYCD_9997.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto
             {

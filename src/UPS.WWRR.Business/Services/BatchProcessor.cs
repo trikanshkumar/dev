@@ -116,7 +116,7 @@ namespace UPS.WWRR.Business.Services
 		{
 			var newLoads = new List<DataLoad>();
 			// Discover the new  receipt CSV directly from GCS bucket
-			string? dynamicReceiptName = await _storageService.DiscoverReceiptLogFileAsync(_gcpBucketName, ct);
+			string? dynamicReceiptName = await _storageService.DiscoverReceiptLogFileAsync(ct);
 			if (string.IsNullOrWhiteSpace(dynamicReceiptName))
 			{
 				_logger.LogInformation("No receipt log file found matching convention in bucket {bucket}.", _gcpBucketName);
@@ -125,7 +125,7 @@ namespace UPS.WWRR.Business.Services
 			string logContent;
 			try
 			{
-				logContent = await _storageService.GetFileAsString(_gcpBucketName, dynamicReceiptName);
+				logContent = await _storageService.GetFileAsString(dynamicReceiptName);
 				if (string.IsNullOrWhiteSpace(logContent))
 				{
 					_logger.LogWarning("Receipt file {file} empty or unreadable.", dynamicReceiptName);
@@ -221,7 +221,7 @@ namespace UPS.WWRR.Business.Services
 				{
 					tempFile = Path.GetTempFileName();
 					var gcsFileName = Path.GetFileName(load.FileLocation);
-					await _storageService.DownloadFile(_gcpBucketName, gcsFileName, tempFile);
+					await _storageService.DownloadFile(gcsFileName, tempFile);
 				}
 
 				try
@@ -580,7 +580,7 @@ namespace UPS.WWRR.Business.Services
 					// Download once and keep for copy
 					var tempFile = Path.GetTempFileName();
 					var gcsFileName = Path.GetFileName(load.FileLocation);
-					await _storageService.DownloadFile(_gcpBucketName, gcsFileName, tempFile);
+					await _storageService.DownloadFile(gcsFileName, tempFile);
 
 					var validation = await descriptor.ValidateAsync(tempFile);
 					bool valid = validation.Success;
@@ -742,7 +742,7 @@ namespace UPS.WWRR.Business.Services
 				if (string.IsNullOrWhiteSpace(objectName)) return;
 				if (_movedObjects.Contains(objectName)) return;
 				var destName = $"{ServiceConstants.processedDataFilesFolder}/{Path.GetFileName(objectName)}";
-				await _storageService.MoveFile(_gcpBucketName, objectName, destName);
+				await _storageService.MoveFile(objectName, destName);
 				_movedObjects.Add(objectName);
 			}
 			catch (Exception ex)

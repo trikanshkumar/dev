@@ -19,7 +19,7 @@ public class TLMTVLUTests : BatchProcessorTests
         var load = new DataLoad { Id = 4401, LoadTableName = "tlmtvlu", FileLocation = "gs://bucket/TLMTVLU_4401.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<LimitValuesBasedOnCriteriaDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TLMTVLU_4401.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TLMTVLU_4401.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -32,7 +32,7 @@ public class TLMTVLUTests : BatchProcessorTests
         var load = new DataLoad { Id = 4402, LoadTableName = "tlmtvlu", FileLocation = "gs://bucket/TLMTVLU_4402.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<LimitValuesBasedOnCriteriaDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "invalid" }));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TLMTVLU_4402.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TLMTVLU_4402.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -43,7 +43,7 @@ public class TLMTVLUTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TLMTVLU_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 4411, LoadTableName = "tlmtvlu", FileLocation = "gs://bucket/TLMTVLU_4411.csv" };
-        _storage.Setup(s => s.DownloadFile(Bucket, "TLMTVLU_4411.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TLMTVLU_4411.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto { TableName = "tlmtvlu_stg", SourceFile = "temp", RowsLoaded = 10, TotalRowsAttempted = 10, StartedAt = DateTimeOffset.UtcNow, CompletedAt = DateTimeOffset.UtcNow });
         var sut = CreateSut();

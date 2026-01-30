@@ -20,7 +20,7 @@ public class TDECODETests : BatchProcessorTests
     [Fact]
     public async Task BuildLoadsAsync_TDECODE_NoReceipt_ReturnsEmpty()
     {
-        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(Bucket, It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
         var sut = CreateSut();
         var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
         Assert.Empty(list);
@@ -30,8 +30,8 @@ public class TDECODETests : BatchProcessorTests
     [Fact]
     public async Task BuildLoadsAsync_TDECODE_EmptyReceipt_ReturnsEmpty()
     {
-        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(Bucket, It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        _storage.Setup(s => s.GetFileAsString(Bucket, "receipt.csv")).ReturnsAsync(string.Empty);
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(string.Empty);
         var sut = CreateSut();
         var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
         Assert.Empty(list);
@@ -40,8 +40,8 @@ public class TDECODETests : BatchProcessorTests
     [Fact]
     public async Task BuildLoadsAsync_TDECODE_InvalidColumns_ReturnsEmpty()
     {
-        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(Bucket, It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        _storage.Setup(s => s.GetFileAsString(Bucket, "receipt.csv")).ReturnsAsync("Wrong,Header\nval1,val2");
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync("Wrong,Header\nval1,val2");
         var sut = CreateSut();
         var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
         Assert.Empty(list);
@@ -50,9 +50,9 @@ public class TDECODETests : BatchProcessorTests
     [Fact]
     public async Task BuildLoadsAsync_TDECODE_ValidSingleLoad_Inserts()
     {
-        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(Bucket, It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
         var content = "FileExtractName,Source\nTDECODE_39001.csv,SRC";
-        _storage.Setup(s => s.GetFileAsString(Bucket, "receipt.csv")).ReturnsAsync(content);
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TDECODE", 39001, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
             .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
@@ -66,9 +66,9 @@ public class TDECODETests : BatchProcessorTests
     [Fact]
     public async Task BuildLoadsAsync_TDECODE_AlreadyExists_SkipsInsert()
     {
-        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(Bucket, It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
         var content = "FileExtractName,Source\nTDECODE_39002.csv,SRC";
-        _storage.Setup(s => s.GetFileAsString(Bucket, "receipt.csv")).ReturnsAsync(content);
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TDECODE", 39002, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         var sut = CreateSut();
         var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
@@ -79,9 +79,9 @@ public class TDECODETests : BatchProcessorTests
     [Fact]
     public async Task BuildLoadsAsync_TDECODE_MultipleLoads_InsertsAll()
     {
-        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(Bucket, It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
         var content = "FileExtractName,Source\nTDECODE_39003.csv,SRC\nTDECODE_39004.csv,SRC";
-        _storage.Setup(s => s.GetFileAsString(Bucket, "receipt.csv")).ReturnsAsync(content);
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TDECODE", It.IsAny<long>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
             .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
@@ -101,7 +101,7 @@ public class TDECODETests : BatchProcessorTests
         var load = new DataLoad { Id = 3901, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3901.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3901.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3901.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -114,7 +114,7 @@ public class TDECODETests : BatchProcessorTests
         var load = new DataLoad { Id = 3902, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3902.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Invalid field name" }));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3902.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3902.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -135,7 +135,7 @@ public class TDECODETests : BatchProcessorTests
         };
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, errors));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3903.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3903.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         _repo.Setup(r => r.AddExceptionsAsync(It.IsAny<IEnumerable<DataLoadException>>(), It.IsAny<CancellationToken>()))
@@ -153,7 +153,7 @@ public class TDECODETests : BatchProcessorTests
         var load = new DataLoad { Id = 3904, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3904.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: FLD_NA exceeds maximum length of 30" }));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3904.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3904.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -168,7 +168,7 @@ public class TDECODETests : BatchProcessorTests
         var load = new DataLoad { Id = 3905, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3905.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: TYP_CD_FLD_VLU_CD exceeds maximum length of 10" }));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3905.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3905.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -183,7 +183,7 @@ public class TDECODETests : BatchProcessorTests
         var load = new DataLoad { Id = 3906, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3906.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: TYP_CD_FLD_DSC_TE exceeds maximum length of 100" }));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3906.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3906.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -198,7 +198,7 @@ public class TDECODETests : BatchProcessorTests
         var load = new DataLoad { Id = 3907, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3907.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3907.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3907.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -211,7 +211,7 @@ public class TDECODETests : BatchProcessorTests
         var load = new DataLoad { Id = 3908, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3908.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3908.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3908.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -226,7 +226,7 @@ public class TDECODETests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TDECODE_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 3911, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3911.csv" };
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3911.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3911.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto
             {
@@ -247,7 +247,7 @@ public class TDECODETests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TDECODE_CopyFails_SetsFailedStatus()
     {
         var load = new DataLoad { Id = 3912, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3912.csv" };
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3912.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3912.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var failedResult = new CopyBatchResultDto
         {
             TableName = "tdecode_stg",
@@ -270,7 +270,7 @@ public class TDECODETests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TDECODE_UsesCorrectStagingTable()
     {
         var load = new DataLoad { Id = 3913, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3913.csv" };
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3913.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3913.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         TableConfigurationRequest? capturedConfig = null;
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .Callback<string, TableConfigurationRequest, CancellationToken>((_, cfg, _) => capturedConfig = cfg)
@@ -294,7 +294,7 @@ public class TDECODETests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TDECODE_LargeFile_ProcessesSuccessfully()
     {
         var load = new DataLoad { Id = 3914, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3914.csv" };
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3914.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3914.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto
             {
@@ -315,7 +315,7 @@ public class TDECODETests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TDECODE_PartialFailure_ReportsErrors()
     {
         var load = new DataLoad { Id = 3915, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3915.csv" };
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3915.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3915.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var partialResult = new CopyBatchResultDto
         {
             TableName = "tdecode_stg",
@@ -468,7 +468,7 @@ public class TDECODETests : BatchProcessorTests
         var load = new DataLoad { Id = 3950, LoadTableName = "TDECODE", FileLocation = "gs://bucket/TDECODE_3950.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3950.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3950.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -481,7 +481,7 @@ public class TDECODETests : BatchProcessorTests
         var load = new DataLoad { Id = 3951, LoadTableName = "tdecode", FileLocation = "gs://bucket/TDECODE_3951.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3951.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3951.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -496,9 +496,9 @@ public class TDECODETests : BatchProcessorTests
     public async Task EndToEnd_TDECODE_FullSuccessFlow()
     {
         // Build
-        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(Bucket, It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
         var content = "FileExtractName,Source\nTDECODE_3960.csv,SRC";
-        _storage.Setup(s => s.GetFileAsString(Bucket, "receipt.csv")).ReturnsAsync(content);
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TDECODE", 3960, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
             .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
@@ -519,7 +519,7 @@ public class TDECODETests : BatchProcessorTests
         // Validation
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3961.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3961.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
 
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
@@ -550,7 +550,7 @@ public class TDECODETests : BatchProcessorTests
         // Validation
         _validator.Setup(v => v.ValidateCsvAsync<DecodeValuesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TDECODE_3962.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TDECODE_3962.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
 
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();

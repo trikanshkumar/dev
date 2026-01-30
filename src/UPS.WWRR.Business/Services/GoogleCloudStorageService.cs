@@ -4,41 +4,36 @@ using UPS.WWRR.Business.Common.Constants;
 using UPS.WWRR.Business.Interfaces;
 
 namespace UPS.WWRR.API.Infrastructure;
-public class GoogleCloudStorageService : IStorageService
+public class GoogleCloudStorageService(StorageClient storageClient, string bucketName, string baseDirectory) : IStorageService
 {
-    private readonly StorageClient _storageClient;
-    public GoogleCloudStorageService(StorageClient storageClient)
-    {
-        _storageClient = storageClient;
-    }
 
-    public async Task<string> GetFileAsString(string bucketName, string fileName)
+    public async Task<string> GetFileAsString(string fileName)
     {
         using var stream = new MemoryStream();
-        await _storageClient.DownloadObjectAsync(bucketName, fileName, stream);
+        await storageClient.DownloadObjectAsync(bucketName, PrependBaseDirectory(fileName), stream);
         using var reader = new StreamReader(stream);
         stream.Seek(0, SeekOrigin.Begin);
         var content = await reader.ReadToEndAsync();
         return content;
     }
 
-    public async Task DownloadFile(string bucketName, string storageFileName, string localFileName)
+    public async Task DownloadFile(string storageFileName, string localFileName)
     {
         using var stream = File.OpenWrite(localFileName);
-        await _storageClient.DownloadObjectAsync(bucketName, storageFileName, stream);
+        await storageClient.DownloadObjectAsync(bucketName, PrependBaseDirectory(storageFileName), stream);
     }
 
-    public async Task MoveFile(string bucketName, string sourceFileName, string destFileName)
+    public async Task MoveFile(string sourceFileName, string destFileName)
     {
-        await _storageClient.MoveObjectAsync(bucketName, sourceFileName, destFileName);
+        await storageClient.MoveObjectAsync(bucketName, PrependBaseDirectory(sourceFileName), PrependBaseDirectory(destFileName));
     }
 
-    public async Task<string?> DiscoverReceiptLogFileAsync(string bucketName, CancellationToken ct = default)
+    public async Task<string?> DiscoverReceiptLogFileAsync(CancellationToken ct = default)
     {
-        var receiptLogFilePattern = ServiceConstants.receiptLogFilePattern;
+        var receiptLogFilePattern = PrependBaseDirectory(ServiceConstants.receiptLogFilePattern);
         var matches = new List<(string FileName, long LoadId, DateTimeOffset CreatedAt)>();
 
-        await foreach (var obj in _storageClient.ListObjectsAsync(bucketName).WithCancellation(ct))
+        await foreach (var obj in storageClient.ListObjectsAsync(bucketName).WithCancellation(ct))
         {
             ct.ThrowIfCancellationRequested();
             var receiptFileName = obj.Name;
@@ -57,7 +52,7 @@ public class GoogleCloudStorageService : IStorageService
                 var createdAt = obj.TimeCreatedDateTimeOffset.HasValue
                     ? obj.TimeCreatedDateTimeOffset.Value
                     : DateTimeOffset.MaxValue;
-                matches.Add((receiptFileName, loadId, createdAt));
+                matches.Add((Path.GetFileName(receiptFileName), loadId, createdAt));
             }
         }
 
@@ -72,4 +67,6 @@ public class GoogleCloudStorageService : IStorageService
 
         return receiptByLoadIdAndDate.FileName;
     }
+
+    private string PrependBaseDirectory(string objectName) => !string.IsNullOrWhiteSpace(baseDirectory) ? $"{baseDirectory}/{objectName}" : objectName;
 }

@@ -18,7 +18,7 @@ public class TBRCHACTests : BatchProcessorTests
         var load = new DataLoad { Id = 301, LoadTableName = "tbrchac", FileLocation = "gs://bucket/TBRCHAC_301.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<UPS.WWRR.Business.DTO.Models.LoadTableDto.ThresholdSimpleRatesDTO>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TBRCHAC_301.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TBRCHAC_301.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -31,7 +31,7 @@ public class TBRCHACTests : BatchProcessorTests
         var load = new DataLoad { Id = 302, LoadTableName = "tbrchac", FileLocation = "gs://bucket/TBRCHAC_302.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<UPS.WWRR.Business.DTO.Models.LoadTableDto.ThresholdSimpleRatesDTO>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "e" }));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TBRCHAC_302.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TBRCHAC_302.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -42,7 +42,7 @@ public class TBRCHACTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TBRCHAC_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 311, LoadTableName = "tbrchac", FileLocation = "gs://bucket/TBRCHAC_311.csv" };
-        _storage.Setup(s => s.DownloadFile(Bucket, "TBRCHAC_311.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TBRCHAC_311.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto { TableName = "tbrchac_stg", SourceFile = "temp", RowsLoaded = 5, TotalRowsAttempted = 5, StartedAt = DateTimeOffset.UtcNow, CompletedAt = DateTimeOffset.UtcNow });
         var sut = CreateSut();

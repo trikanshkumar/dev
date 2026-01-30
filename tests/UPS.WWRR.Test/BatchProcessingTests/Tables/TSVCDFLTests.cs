@@ -19,7 +19,7 @@ public class TSVCDFLTests : BatchProcessorTests
         var load = new DataLoad { Id = 6401, LoadTableName = "tsvcdfl", FileLocation = "gs://bucket/TSVCDFL_6401.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ServiceDefaultRulesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TSVCDFL_6401.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSVCDFL_6401.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -32,7 +32,7 @@ public class TSVCDFLTests : BatchProcessorTests
         var load = new DataLoad { Id = 6402, LoadTableName = "tsvcdfl", FileLocation = "gs://bucket/TSVCDFL_6402.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ServiceDefaultRulesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "invalid" }));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TSVCDFL_6402.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSVCDFL_6402.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -43,7 +43,7 @@ public class TSVCDFLTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TSVCDFL_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 6411, LoadTableName = "tsvcdfl", FileLocation = "gs://bucket/TSVCDFL_6411.csv" };
-        _storage.Setup(s => s.DownloadFile(Bucket, "TSVCDFL_6411.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSVCDFL_6411.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto { TableName = "tsvcdfl_stg", SourceFile = "temp", RowsLoaded = 9, TotalRowsAttempted = 9, StartedAt = DateTimeOffset.UtcNow, CompletedAt = DateTimeOffset.UtcNow });
         var sut = CreateSut();

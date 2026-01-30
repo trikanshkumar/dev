@@ -19,7 +19,7 @@ public class TIRACCYTests : BatchProcessorTests
         var load = new DataLoad { Id = 3401, LoadTableName = "tiraccy", FileLocation = "gs://bucket/TIRACCY_3401.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<InternationalRatingCurrencyDTO>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TIRACCY_3401.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TIRACCY_3401.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -32,7 +32,7 @@ public class TIRACCYTests : BatchProcessorTests
         var load = new DataLoad { Id = 3402, LoadTableName = "tiraccy", FileLocation = "gs://bucket/TIRACCY_3402.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<InternationalRatingCurrencyDTO>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "invalid" }));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TIRACCY_3402.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TIRACCY_3402.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -43,7 +43,7 @@ public class TIRACCYTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TIRACCY_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 3411, LoadTableName = "tiraccy", FileLocation = "gs://bucket/TIRACCY_3411.csv" };
-        _storage.Setup(s => s.DownloadFile(Bucket, "TIRACCY_3411.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TIRACCY_3411.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto { TableName = "tiraccy_stg", SourceFile = "temp", RowsLoaded = 10, TotalRowsAttempted = 10, StartedAt = DateTimeOffset.UtcNow, CompletedAt = DateTimeOffset.UtcNow });
         var sut = CreateSut();

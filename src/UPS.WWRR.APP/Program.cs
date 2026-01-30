@@ -32,6 +32,7 @@ class Program
         var delimiter = Environment.GetEnvironmentVariable("BatchLoad_Delimiter") ?? ",";
         var hasHeader = bool.TryParse(Environment.GetEnvironmentVariable("BatchLoad_HasHeader"), out var hh) ? hh : true;
         var bucket = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_NAME") ?? string.Empty;
+        var bucketSubName = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_SUB_NAME") ?? string.Empty;
 
         var host = Host.CreateDefaultBuilder(args)
             .ConfigureServices(services =>
@@ -46,7 +47,7 @@ class Program
                 services.AddHostedService<BatchProcessor>();
 
                 var storageClient = StorageClient.Create();
-                services.AddSingleton<IStorageService>(_ => new GoogleCloudStorageService(storageClient));
+                services.AddSingleton<IStorageService>(_ => new GoogleCloudStorageService(storageClient, bucket, bucketSubName));
                 services.AddSingleton(new LocalRuntimeSettings(connectionString, tableName, batchSize, chunkSize, delimiter, hasHeader, bucket));
             })
             .UseSerilog()

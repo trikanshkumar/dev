@@ -15,7 +15,7 @@ public class TWGTTRHTests : BatchProcessorTests
     [Fact]
     public async Task BuildLoadsAsync_NoReceipt_ReturnsEmpty()
     {
-        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(Bucket, It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
         var sut = CreateSut();
         var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
         Assert.Empty(list);
@@ -25,8 +25,8 @@ public class TWGTTRHTests : BatchProcessorTests
     [Fact]
     public async Task BuildLoadsAsync_EmptyReceipt_ReturnsEmpty()
     {
-        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(Bucket, It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        _storage.Setup(s => s.GetFileAsString(Bucket, "receipt.csv")).ReturnsAsync(string.Empty);
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(string.Empty);
         var sut = CreateSut();
         var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
         Assert.Empty(list);
@@ -35,8 +35,8 @@ public class TWGTTRHTests : BatchProcessorTests
     [Fact]
     public async Task BuildLoadsAsync_InvalidColumns_ReturnsEmpty()
     {
-        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(Bucket, It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        _storage.Setup(s => s.GetFileAsString(Bucket, "receipt.csv")).ReturnsAsync("Wrong,Header\nval1,val2");
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync("Wrong,Header\nval1,val2");
         var sut = CreateSut();
         var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
         Assert.Empty(list);
@@ -45,9 +45,9 @@ public class TWGTTRHTests : BatchProcessorTests
     [Fact]
     public async Task BuildLoadsAsync_ValidSingleLoad_Inserts()
     {
-        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(Bucket, It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
         var content = "FileExtractName,Source\nTWGTTRH_12345.csv,SRC";
-        _storage.Setup(s => s.GetFileAsString(Bucket, "receipt.csv")).ReturnsAsync(content);
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TWGTTRH", 12345, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
             .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
@@ -64,7 +64,7 @@ public class TWGTTRHTests : BatchProcessorTests
         var load = new DataLoad { Id = 10, LoadTableName = "twgttrh", FileLocation = "gs://bucket/TWGTTRH_10.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<UPS.WWRR.Business.DTO.Models.LoadTableDto.PublishedLetterThresholdDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TWGTTRH_10.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TWGTTRH_10.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -77,7 +77,7 @@ public class TWGTTRHTests : BatchProcessorTests
         var load = new DataLoad { Id = 11, LoadTableName = "twgttrh", FileLocation = "gs://bucket/TWGTTRH_11.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<UPS.WWRR.Business.DTO.Models.LoadTableDto.PublishedLetterThresholdDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "e" }));
-        _storage.Setup(s => s.DownloadFile(Bucket, "TWGTTRH_11.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TWGTTRH_11.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -88,7 +88,7 @@ public class TWGTTRHTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 21, LoadTableName = "twgttrh", FileLocation = "gs://bucket/TWGTTRH_21.csv" };
-        _storage.Setup(s => s.DownloadFile(Bucket, "TWGTTRH_21.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TWGTTRH_21.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto { TableName = "twgttrh_stg", SourceFile = "temp", RowsLoaded = 5, TotalRowsAttempted = 5, StartedAt = DateTimeOffset.UtcNow, CompletedAt = DateTimeOffset.UtcNow });
         var sut = CreateSut();
