@@ -554,6 +554,12 @@ namespace UPS.WWRR.Business.Services
 				StoredProcConstant.FuelSurchargeMerge,
 				async path => await _csvValidator.ValidateCsvAsync<FuelSurchargeDto>(path)
 			),
+			nameof(TableEnum.TVASYLN) => new LoadTableDescriptor(
+				nameof(TableEnum.TVASYLN).ToLowerInvariant(),
+				(nameof(TableEnum.TVASYLN) + "_STG").ToLowerInvariant(),
+				StoredProcConstant.ValidAccessorialLaneMerge,
+				async path => await _csvValidator.ValidateCsvAsync<ValidAccessorialLaneDto>(path)
+			),
 			//Add other table descriptors here as needed
 			_ => LoadTableDescriptor.Unsupported
 		};

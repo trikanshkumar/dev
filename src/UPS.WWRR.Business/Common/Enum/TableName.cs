@@ -130,5 +130,8 @@ namespace UPS.WWRR.Business.Common.Constants
 
         [Description("Fuel Surcharge")]
         TSUBCHG,
+
+        [Description("Valid Accessorial Lane")]
+        TVASYLN,
     }
 }
