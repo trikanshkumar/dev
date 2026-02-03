@@ -18,7 +18,7 @@ public class TSUBCHGTests : BatchProcessorTests
         var load = new DataLoad { Id = 9979, LoadTableName = "tsubchg", FileLocation = "gs://bucket/TSUBCHG_9979.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<FuelSurchargeDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile("TSUBCHG_9979.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSUBCHG_9979.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -31,7 +31,7 @@ public class TSUBCHGTests : BatchProcessorTests
         var load = new DataLoad { Id = 9978, LoadTableName = "tsubchg", FileLocation = "gs://bucket/TSUBCHG_9978.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<FuelSurchargeDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "invalid" }));
-        _storage.Setup(s => s.DownloadFile("TSUBCHG_9978.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSUBCHG_9978.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -42,7 +42,7 @@ public class TSUBCHGTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TSUBCHG_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 9977, LoadTableName = "tsubchg", FileLocation = "gs://bucket/TSUBCHG_9977.csv" };
-        _storage.Setup(s => s.DownloadFile("TSUBCHG_9977.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSUBCHG_9977.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto
             {

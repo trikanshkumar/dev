@@ -98,6 +98,8 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<FuelSurchargeStaging> FuelSurchargeStating { get; set; }
         public virtual DbSet<ValidAccessorialLane> ValidAccessorialLanes { get; set; }
         public virtual DbSet<ValidAccessorialLaneStaging> ValidAccessorialLanesStaging { get; set; }
+        public virtual DbSet<FreightRates> FreightRates { get; set; }
+        public virtual DbSet<FreightRatesStaging> FreightRatesStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -446,6 +448,12 @@ namespace UPS.WWRR.Data.Models
             modelBuilder.Entity<ValidAccessorialLaneStaging>(e =>
             {
                 e.ToTable("tvasyln_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<FreightRatesStaging>(e =>
+            {
+                e.ToTable("trastd_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 

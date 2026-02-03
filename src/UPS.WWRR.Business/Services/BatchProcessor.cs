@@ -26,6 +26,7 @@ namespace UPS.WWRR.Business.Services
 		private readonly string _gcpBucketName;
 		private readonly string _tableNameFilter;
 		private readonly int _defaultChunkSize = 100_000;
+		private readonly int _batchLoadChunkSize;
 		private readonly HashSet<string> _movedObjects = new(StringComparer.OrdinalIgnoreCase);
 
 		public BatchProcessor(
@@ -44,6 +45,7 @@ namespace UPS.WWRR.Business.Services
 			_gcpBucketName = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_NAME")
 						?? throw new InvalidOperationException("GOOGLE_CLOUD_STORAGE_BUCKET_NAME environment variable is not set.");
 			_tableNameFilter = Environment.GetEnvironmentVariable("TABLE_NAME") ?? "ALL";
+			_batchLoadChunkSize = int.TryParse(Environment.GetEnvironmentVariable("BatchLoad_ChunkSize"), out var cs) ? cs : _defaultChunkSize;
 		}
 
 		/// <summary>
@@ -221,7 +223,7 @@ namespace UPS.WWRR.Business.Services
 				{
 					tempFile = Path.GetTempFileName();
 					var gcsFileName = Path.GetFileName(load.FileLocation);
-					await _storageService.DownloadFile(gcsFileName, tempFile);
+					await _storageService.DownloadFile(gcsFileName, tempFile, ct);
 				}
 
 				try
@@ -248,69 +250,68 @@ namespace UPS.WWRR.Business.Services
 			}
 		}
 
-		/// <summary>
-		/// merge from staging to main table
-		/// </summary>
-		/// <param name="loads"></param>
-		/// <param name="ct"></param>
-		/// <returns></returns>
-		private async Task PerformMergeLoadAsync(List<DataLoad> loads, CancellationToken ct)
-		{
-			foreach (var load in loads)
-			{
-				var descriptor = GetDescriptor(load.LoadTableName);
-				if (!descriptor.IsSupported) continue;
-				var tempFile = Path.GetTempFileName();
-				var gcsFileName = Path.GetFileName(load.FileLocation);
-				var sw = System.Diagnostics.Stopwatch.StartNew();
-				try
-				{
-					var (mergeResult, mergeDetail) = await PerformMergeAsync(load, descriptor, sw, ct);
-					bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
-					if (hasError)
-					{
-						int errorCode = 0;
-						if (!string.IsNullOrWhiteSpace(mergeResult.ErrorNumber) && int.TryParse(mergeResult.ErrorNumber, out var parsed)) errorCode = parsed;
-						var error = new DataLoadError
-						{
-							DataLoadDetailId = mergeDetail.Id,
-							ErrorCode = errorCode,
-							ErrorStoredProcedureName = mergeResult.ErrorProcedure,
-							ErrorMessage = mergeResult.ErrorMessage,
-							CreatedOn = DateTime.UtcNow
-						};
-						await _loadRepository.AddErrorsAsync(new[] { error }, ct);
-						await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
-					}
-					else
-					{
-						var updatedRef = await _loadRepository.UpdateLoadReferenceAsync(descriptor.StagingTableName, descriptor.TableName, load.Id, mergeDetail.Id, ct);
-						_logger.LogInformation("LOAD_REF_TE updated via stored procedure for staging {stg} and main {main} (value: {val})", descriptor.StagingTableName, descriptor.TableName, $"{load.Id}|{mergeDetail.Id}");
-						await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
-						_logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
-					}
-				}
-				catch (Exception ex)
-				{
-					_logger.LogError(ex, "Merge failed for table {tbl} load {id}", load.LoadTableName, load.Id);
-					await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
-				}
-				finally
-				{
-					try
-					{
-						await MoveObjectToProcessedAsync(gcsFileName);
-						// Move the associated receipt log file as well, if available, only once per cycle
-						var logObject = ExtractObjectName(load.LogFileLocation ?? string.Empty);
-						await MoveObjectToProcessedAsync(logObject);
-					}
-					catch (Exception moveEx)
-					{
-						_logger.LogWarning(moveEx, "Failed to move processed file {file}", gcsFileName);
-					}
-				}
-			}
-		}
+        /// <summary>
+        /// merge from staging to main table
+        /// </summary>
+        /// <param name="loads"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        private async Task PerformMergeLoadAsync(List<DataLoad> loads, CancellationToken ct)
+        {
+            foreach (var load in loads)
+            {
+                var descriptor = GetDescriptor(load.LoadTableName);
+                if (!descriptor.IsSupported) continue;
+                var gcsFileName = Path.GetFileName(load.FileLocation);
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                try
+                {
+                    var (mergeResult, mergeDetail) = await PerformMergeAsync(load, descriptor, sw, ct);
+                    bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
+                    if (hasError)
+                    {
+                        int errorCode = 0;
+                        if (!string.IsNullOrWhiteSpace(mergeResult.ErrorNumber) && int.TryParse(mergeResult.ErrorNumber, out var parsed)) errorCode = parsed;
+                        var error = new DataLoadError
+                        {
+                            DataLoadDetailId = mergeDetail.Id,
+                            ErrorCode = errorCode,
+                            ErrorStoredProcedureName = mergeResult.ErrorProcedure,
+                            ErrorMessage = mergeResult.ErrorMessage,
+                            CreatedOn = DateTime.UtcNow
+                        };
+                        await _loadRepository.AddErrorsAsync(new[] { error }, ct);
+                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+                    }
+                    else
+                    {
+                        var updatedRef = await _loadRepository.UpdateLoadReferenceAsync(descriptor.StagingTableName, descriptor.TableName, load.Id, mergeDetail.Id, ct);
+                        _logger.LogInformation("LOAD_REF_TE updated via stored procedure for staging {stg} and main {main} (value: {val})", descriptor.StagingTableName, descriptor.TableName, $"{load.Id}|{mergeDetail.Id}");
+                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
+                        _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Merge failed for table {tbl} load {id}", load.LoadTableName, load.Id);
+                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+                }
+                finally
+                {
+                    try
+                    {
+                        await MoveObjectToProcessedAsync(gcsFileName);
+                        // Move the associated receipt log file as well, if available, only once per cycle
+                        var logObject = ExtractObjectName(load.LogFileLocation ?? string.Empty);
+                        await MoveObjectToProcessedAsync(logObject);
+                    }
+                    catch (Exception moveEx)
+                    {
+                        _logger.LogWarning(moveEx, "Failed to move processed file {file}", gcsFileName);
+                    }
+                }
+            }
+        }
 
 		/// <summary>
 		/// descriptor for each table load
@@ -560,61 +561,86 @@ namespace UPS.WWRR.Business.Services
 				StoredProcConstant.ValidAccessorialLaneMerge,
 				async path => await _csvValidator.ValidateCsvAsync<ValidAccessorialLaneDto>(path)
 			),
-			//Add other table descriptors here as needed
-			_ => LoadTableDescriptor.Unsupported
+            nameof(TableEnum.TRASTD) => new LoadTableDescriptor(
+               nameof(TableEnum.TRASTD).ToLowerInvariant(),
+               (nameof(TableEnum.TRASTD) + "_STG").ToLowerInvariant(),
+               StoredProcConstant.FreightRatesMerge,
+               async path => await _csvValidator.ValidateCsvChunkedAsync<FreightRatesDto>(path, _batchLoadChunkSize)
+           ),
+            //Add other table descriptors here as needed
+            _ => LoadTableDescriptor.Unsupported
 		};
 
-		/// <summary>
-		/// validate loads
-		/// </summary>
-		/// <param name="loads"></param>
-		/// <param name="ct"></param>
-		/// <returns></returns>
-		private async Task ValidateLoadsAsync(List<DataLoad> loads, CancellationToken ct, Dictionary<string, string> tempFiles)
-		{
-			foreach (var load in loads)
-			{
-				var descriptor = GetDescriptor(load.LoadTableName);
-				if (!descriptor.IsSupported)
-				{
-					await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
-					_logger.LogWarning("Validation unsupported for table {tbl}", load.LoadTableName);
-					continue;
-				}
-				try
-				{
-					// Download once and keep for copy
-					var tempFile = Path.GetTempFileName();
-					var gcsFileName = Path.GetFileName(load.FileLocation);
-					await _storageService.DownloadFile(gcsFileName, tempFile);
-
-					var validation = await descriptor.ValidateAsync(tempFile);
-					bool valid = validation.Success;
-					// Keep the temp file in cache for copy step if valid
-					if (valid)
-					{
-						var key = ExtractObjectName(load.FileLocation);
-						tempFiles[key] = tempFile;
-					}
-					else
-					{
-						// Record validation errors
-						if (validation.ValidationErrors?.Count > 0)
-						{
-							// Create a DataLoadDetail to satisfy FK and track validation failure
-							var detail = new DataLoadDetail
-							{
-								DataLoadId = load.Id,
-								DataLoadType = "VAL",
-								ErrorIndicator = 1,
-								TimeProcessValue = 0,
-								TimePeriodTypeCode = "SECONDS",
-								RecordsInserted = 0,
-								RecordsUpdated = 0,
-								RecordsDeleted = 0,
-								BatchNumber = 1
-							};
-							await _loadRepository.AddDetailAsync(detail, ct);
+        /// <summary>
+        /// validate loads
+        /// </summary>
+        /// <param name="loads"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        private async Task ValidateLoadsAsync(List<DataLoad> loads, CancellationToken ct, Dictionary<string, string> tempFiles)
+        {
+            foreach (var load in loads)
+            {
+                var descriptor = GetDescriptor(load.LoadTableName);
+                if (!descriptor.IsSupported)
+                {
+                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+                    _logger.LogWarning("Validation unsupported for table {tbl}", load.LoadTableName);
+                    continue;
+                }
+                try
+                {
+                    // Download once and keep for copy
+                    var tempFile = Path.GetTempFileName();
+                    var gcsFileName = Path.GetFileName(load.FileLocation);
+                    
+                    // Check if file exists before attempting to download
+                    if (!await _storageService.FileExistsAsync(gcsFileName, ct))
+                    {
+                        _logger.LogError("File not found in GCS bucket. Bucket: {bucket}, Object: {object}, FileLocation: {fileLocation}", 
+                            _gcpBucketName, gcsFileName, load.FileLocation);
+                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+                        continue;
+                    }
+                    await _storageService.DownloadFile(gcsFileName, tempFile, ct);
+                    
+                    // Verify downloaded file size matches remote file size
+                    if (!await _storageService.VerifyFileSizeAsync(gcsFileName, tempFile, ct))
+                    {
+                        _logger.LogError("Downloaded file size mismatch. Remote file: {remoteFile}, Local file: {localFile}. Skipping load.",
+                            gcsFileName, tempFile);
+                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+                        try { File.Delete(tempFile); } catch { }
+                        continue;
+                    }
+                    
+                    var validation = await descriptor.ValidateAsync(tempFile);
+                    bool valid = validation.Success;
+                    // Keep the temp file in cache for copy step if valid
+                    if (valid)
+                    {
+                        var key = ExtractObjectName(load.FileLocation);
+                        tempFiles[key] = tempFile;
+                    }
+                    else
+                    {
+                        // Record validation errors
+                        if (validation.ValidationErrors?.Count > 0)
+                        {
+                            // Create a DataLoadDetail to satisfy FK and track validation failure
+                            var detail = new DataLoadDetail
+                            {
+                                DataLoadId = load.Id,
+                                DataLoadType = "VAL",
+                                ErrorIndicator = 1,
+                                TimeProcessValue = 0,
+                                TimePeriodTypeCode = "SECONDS",
+                                RecordsInserted = 0,
+                                RecordsUpdated = 0,
+                                RecordsDeleted = 0,
+                                BatchNumber = 1
+                            };
+                            await _loadRepository.AddDetailAsync(detail, ct);
 
 							var exceptions = validation.ValidationErrors.Select((msg, idx) => new DataLoadException
 							{

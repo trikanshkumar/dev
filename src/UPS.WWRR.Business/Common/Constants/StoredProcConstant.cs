@@ -42,5 +42,6 @@
         public const string DecodeValuesMerge = "sp_decodevalues_merge_proc";
         public const string FuelSurchargeMerge = "sp_fuelsurcharge_merge_proc";
         public const string ValidAccessorialLaneMerge = "sp_validaccessoriallane_merge_proc";
+        public const string FreightRatesMerge = "sp_freightrates_merge_proc";
     }
 }

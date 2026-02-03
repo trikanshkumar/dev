@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UPS.WWRR.Data.Models;
@@ -11,13 +12,14 @@ using UPS.WWRR.Data.Models;
 namespace UPS.WWRR.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260127120818_Script_Add_FreightRates_Merge_SP")]
+    partial class Script_Add_FreightRates_Merge_SP
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasDefaultSchema("a886aa_ao")
                 .HasAnnotation("ProductVersion", "8.0.20")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -95,7 +97,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("BusinessRuleTypeCode", "OriginGpuExportCountry", "DestinationGpuImportCountry", "PackageType", "BillTerm", "ServiceFeatureTypeCode", "ServiceType", "MovementDirectionCode", "CustomerRateType", "AccessorialCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tasybrl", "a886aa_ao");
+                    b.ToTable("tasybrl");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialExceptionStaging", b =>
@@ -176,7 +178,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("BusinessRuleTypeCode", "OriginGpuExportCountry", "DestinationGpuImportCountry", "PackageType", "BillTerm", "ServiceFeatureTypeCode", "ServiceType", "MovementDirectionCode", "CustomerRateType", "AccessorialCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tasybrl_stg", "a886aa_ao");
+                    b.ToTable("tasybrl_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialMinMaxCriteria", b =>
@@ -231,7 +233,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("Country", "AccessorialCode", "Currency", "AccessorialThresholdType", "EffectiveDate", "StatusCode");
 
-                    b.ToTable("tasytrh", "a886aa_ao");
+                    b.ToTable("tasytrh");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialMinMaxCriteriaStaging", b =>
@@ -280,9 +282,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("rec_eff_end_dt");
 
                     b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
                         .HasColumnName("is_completed_ir");
 
                     b.Property<string>("LoadReference")
@@ -292,7 +292,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("Country", "AccessorialCode", "Currency", "AccessorialThresholdType", "EffectiveDate", "StatusCode");
 
-                    b.ToTable("tasytrh_stg", "a886aa_ao");
+                    b.ToTable("tasytrh_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialRatingRules", b =>
@@ -391,7 +391,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "MovementDirectionTypeCode", "CustomerClassificationTypeCode", "AccessorialServiceTypeCode", "AccessorialServiceChargeEffectiveDate", "AccessorialServiceChargeEndDate", "ApprovalStatusCode");
 
-                    b.ToTable("tcnyasy", "a886aa_ao");
+                    b.ToTable("tcnyasy");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialRatingRulesStaging", b =>
@@ -496,7 +496,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "MovementDirectionTypeCode", "CustomerClassificationTypeCode", "AccessorialServiceTypeCode", "AccessorialServiceChargeEffectiveDate", "AccessorialServiceChargeEndDate", "ApprovalStatusCode");
 
-                    b.ToTable("tcnyasy_stg", "a886aa_ao");
+                    b.ToTable("tcnyasy_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialThreshold", b =>
@@ -539,7 +539,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "AccessorialServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tfputrh", "a886aa_ao");
+                    b.ToTable("tfputrh");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialThresholdStaging", b =>
@@ -588,7 +588,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "AccessorialServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tfputrh_stg", "a886aa_ao");
+                    b.ToTable("tfputrh_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AlternateCurrency", b =>
@@ -648,7 +648,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasDefaultValue("")
                         .HasColumnName("usr_nr");
 
-                    b.ToTable("taltccy", "a886aa_ao");
+                    b.ToTable("taltccy", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AlternateCurrencyStaging", b =>
@@ -713,7 +713,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasDefaultValue("")
                         .HasColumnName("usr_nr");
 
-                    b.ToTable("taltccy_stg", "a886aa_ao");
+                    b.ToTable("taltccy_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AreaClassificationDetail", b =>
@@ -835,7 +835,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ChartNumber", "ChartEffectiveDate", "ChartEndDate", "OriginCountry", "DestinationCountry", "ServiceType", "AreaClassificationRule", "OriginPolticialDivision2", "DestinationPoliticalDivision2", "OriginLowPostal", "OriginHighPostal", "DestinationLowPostal", "DestinationHighPostal", "StatusCode");
 
-                    b.ToTable("tarcldt", "a886aa_ao");
+                    b.ToTable("tarcldt");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AreaClassificationHeader", b =>
@@ -903,7 +903,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountry", "ServiceType", "AccessorialCode", "DestinationCountry", "ChartNumber", "ChartEffectiveDate", "ChartEndDate", "StatusCode");
 
-                    b.ToTable("tarclhd", "a886aa_ao");
+                    b.ToTable("tarclhd");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AuditHistory", b =>
@@ -969,7 +969,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("AuditTypeCode", "AuditActionCode", "AuditTransactionNumber", "AuditTransactionTypeCode", "RecordCreationTimeStamp");
 
-                    b.ToTable("tauhist", "a886aa_ao");
+                    b.ToTable("tauhist");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AuditHistoryStaging", b =>
@@ -1023,9 +1023,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("dat_tms_snd_ts");
 
                     b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
                         .HasColumnName("is_completed_ir");
 
                     b.Property<string>("LoadReference")
@@ -1041,7 +1039,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("AuditTypeCode", "AuditActionCode", "AuditTransactionNumber", "AuditTransactionTypeCode", "RecordCreationTimeStamp");
 
-                    b.ToTable("tauhist_stg", "a886aa_ao");
+                    b.ToTable("tauhist_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.BmaCapAmount", b =>
@@ -1086,7 +1084,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "ServiceType", "EffectiveDate", "StatusCode");
 
-                    b.ToTable("tbmavcs", "a886aa_ao");
+                    b.ToTable("tbmavcs");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.BmaCapAmountStaging", b =>
@@ -1137,7 +1135,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "ServiceType", "EffectiveDate", "StatusCode");
 
-                    b.ToTable("tbmavcs_stg", "a886aa_ao");
+                    b.ToTable("tbmavcs_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ColumnDecode", b =>
@@ -1164,7 +1162,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("TableColumnName", "TableColumnValue", "ScreenCodeValue");
 
-                    b.ToTable("tcoldec", "a886aa_ao");
+                    b.ToTable("tcoldec");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ColumnDecodeStaging", b =>
@@ -1197,7 +1195,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("TableColumnName", "TableColumnValue", "ScreenCodeValue");
 
-                    b.ToTable("tcoldec_stg", "a886aa_ao");
+                    b.ToTable("tcoldec_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.CountryBillType", b =>
@@ -1237,7 +1235,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "MovementDirectionCode", "BillingTermTypeCode", "CountryBillingTermStartDate", "CountryBillingTermEndDate", "ApprovalStatusCode");
 
-                    b.ToTable("tcyblty", "a886aa_ao");
+                    b.ToTable("tcyblty");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.CountryBillTypeStaging", b =>
@@ -1281,7 +1279,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "MovementDirectionCode", "BillingTermTypeCode", "CountryBillingTermStartDate", "CountryBillingTermEndDate", "ApprovalStatusCode");
 
-                    b.ToTable("tcyblty_stg", "a886aa_ao");
+                    b.ToTable("tcyblty_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.CzmSystemRules", b =>
@@ -1322,7 +1320,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CommandTableTypeCode", "CommandTableCode", "TableStartDate", "TableEndDate", "ApprovalStatusCode");
 
-                    b.ToTable("tczmsys", "a886aa_ao");
+                    b.ToTable("tczmsys");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.CzmSystemRulesStaging", b =>
@@ -1367,7 +1365,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CommandTableTypeCode", "CommandTableCode", "TableStartDate", "TableEndDate", "ApprovalStatusCode");
 
-                    b.ToTable("tczmsys_stg", "a886aa_ao");
+                    b.ToTable("tczmsys_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DataLoad", b =>
@@ -1431,7 +1429,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("data_loads", "a886aa_ao");
+                    b.ToTable("data_loads");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DataLoadDetail", b =>
@@ -1487,7 +1485,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasIndex("DataLoadId");
 
-                    b.ToTable("data_load_details", "a886aa_ao");
+                    b.ToTable("data_load_details");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DataLoadError", b =>
@@ -1525,7 +1523,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasIndex("DataLoadDetailId");
 
-                    b.ToTable("data_load_errors", "a886aa_ao");
+                    b.ToTable("data_load_errors");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DataLoadException", b =>
@@ -1572,85 +1570,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasIndex("DataLoadDetailId");
 
-                    b.ToTable("data_load_exceptions", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.DecodeValues", b =>
-                {
-                    b.Property<string>("FieldName")
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
-                        .HasColumnName("fld_na");
-
-                    b.Property<string>("TypeCodeFieldValueCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("char")
-                        .HasColumnName("typ_cd_fld_vlu_cd");
-
-                    b.Property<DateTime>("RecordEffectiveStartDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_stt_dt");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<DateTime>("RecordEffectiveEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_end_dt");
-
-                    b.Property<string>("TypeCodeFieldDescription")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("typ_cd_fld_dsc_te");
-
-                    b.HasKey("FieldName", "TypeCodeFieldValueCode", "RecordEffectiveStartDate");
-
-                    b.ToTable("tdecode", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.DecodeValuesStaging", b =>
-                {
-                    b.Property<string>("FieldName")
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
-                        .HasColumnName("fld_na");
-
-                    b.Property<string>("TypeCodeFieldValueCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("char")
-                        .HasColumnName("typ_cd_fld_vlu_cd");
-
-                    b.Property<DateTime>("RecordEffectiveStartDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_stt_dt");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<DateTime>("RecordEffectiveEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_end_dt");
-
-                    b.Property<string>("TypeCodeFieldDescription")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("typ_cd_fld_dsc_te");
-
-                    b.HasKey("FieldName", "TypeCodeFieldValueCode", "RecordEffectiveStartDate");
-
-                    b.ToTable("tdecode_stg", "a886aa_ao");
+                    b.ToTable("data_load_exceptions");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DeficitWeightThreshold", b =>
@@ -1695,7 +1615,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("Country", "WeightMeasurementUnitType", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tdfwthr", "a886aa_ao");
+                    b.ToTable("tdfwthr");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DeficitWeightThresholdStaging", b =>
@@ -1746,7 +1666,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("Country", "WeightMeasurementUnitType", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tdfwthr_stg", "a886aa_ao");
+                    b.ToTable("tdfwthr_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DestinationServiceFeatureType", b =>
@@ -1786,7 +1706,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ImportCountryCode", "ServiceTypeCode", "ServiceFeatureTypeCode", "TableRowEffectiveDate", "ApprovalStatusCode");
 
-                    b.ToTable("tvdsvcf", "a886aa_ao");
+                    b.ToTable("tvdsvcf");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DestinationServiceFeatureTypeStaging", b =>
@@ -1832,7 +1752,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ImportCountryCode", "ServiceTypeCode", "ServiceFeatureTypeCode", "TableRowEffectiveDate", "ApprovalStatusCode");
 
-                    b.ToTable("tvdsvcf_stg", "a886aa_ao");
+                    b.ToTable("tvdsvcf_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DestinationZipSvcAsyValidation", b =>
@@ -1866,7 +1786,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("Country", "DestinationPostalCode", "EffectiveDate");
 
-                    b.ToTable("tdstsvp", "a886aa_ao");
+                    b.ToTable("tdstsvp", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DestinationZipSvcAsyValidationStaging", b =>
@@ -1890,9 +1810,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("rec_eff_end_dt");
 
                     b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
                         .HasColumnName("is_completed_ir");
 
                     b.Property<string>("LoadReference")
@@ -1906,7 +1824,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("Country", "DestinationPostalCode", "EffectiveDate");
 
-                    b.ToTable("tdstsvp_stg", "a886aa_ao");
+                    b.ToTable("tdstsvp_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.FreightRates", b =>
@@ -1972,7 +1890,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ChartNumber", "ChartEffectiveDate", "ChartStatusCode", "CompanyClassCode", "CalculationMethodTypeCode", "DeliveryZoneNumber", "WeightMeasureUnitTypeCode", "WeightCategoryMinWeight");
 
-                    b.ToTable("trastd", "a886aa_ao");
+                    b.ToTable("trastd");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.FreightRatesStaging", b =>
@@ -2044,7 +1962,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ChartNumber", "ChartEffectiveDate", "ChartStatusCode", "CompanyClassCode", "CalculationMethodTypeCode", "DeliveryZoneNumber", "WeightMeasureUnitTypeCode", "WeightCategoryMinWeight");
 
-                    b.ToTable("trastd_stg", "a886aa_ao");
+                    b.ToTable("trastd_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.FreightRatingRules", b =>
@@ -2142,7 +2060,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("RatingCountry", "MovementDirection", "CustomerClassificationType", "ServiceType", "MultipieceIndicator", "EffectiveDate", "EndDate", "StatusCode");
 
-                    b.ToTable("tratrul", "a886aa_ao");
+                    b.ToTable("tratrul");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.FreightRatingRulesStaging", b =>
@@ -2228,9 +2146,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("ctl_vlu_2_te");
 
                     b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
                         .HasColumnName("is_completed_ir");
 
                     b.Property<string>("LoadReference")
@@ -2246,201 +2162,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("RatingCountry", "MovementDirection", "CustomerClassificationType", "ServiceType", "MultipieceIndicator", "EffectiveDate", "EndDate", "StatusCode");
 
-                    b.ToTable("tratrul_stg", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.FuelSurcharge", b =>
-                {
-                    b.Property<string>("ExportCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_xpt_cny_cd");
-
-                    b.Property<string>("ImportCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_ipt_cny_cd");
-
-                    b.Property<string>("Accessorial")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("asy_svc_typ_cd");
-
-                    b.Property<string>("MovementDirection")
-                        .HasMaxLength(1)
-                        .HasColumnType("char")
-                        .HasColumnName("mvm_drc_cd");
-
-                    b.Property<string>("ServiceType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("ServiceFeatureType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_fea_typ_cd");
-
-                    b.Property<string>("PackageCharacteristicType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_cha_typ_cd");
-
-                    b.Property<string>("PackageAcquisitionMethod")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_acq_mth_typ_cd");
-
-                    b.Property<string>("Currency")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("ccy_cd");
-
-                    b.Property<string>("BilingTermType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("bil_ter_typ_cd");
-
-                    b.Property<DateTime>("EffectveDate")
-                        .HasColumnType("Date")
-                        .HasColumnName("asy_svc_ra_eff_dt");
-
-                    b.Property<string>("StatusCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_ra_cht_sts_cd");
-
-                    b.Property<string>("CustomerClassificationType")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("cus_csf_typ_cd");
-
-                    b.Property<string>("CalculationMethod")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("ccl_mth_typ_cd");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("Date")
-                        .HasColumnName("asy_svc_ra_end_dt");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<decimal>("MinimumRate")
-                        .HasColumnType("decimal(17,4)")
-                        .HasColumnName("asy_svc_min_amt");
-
-                    b.Property<decimal>("Rate")
-                        .HasColumnType("decimal(17,4)")
-                        .HasColumnName("asy_svc_ra");
-
-                    b.HasKey("ExportCountry", "ImportCountry", "Accessorial", "MovementDirection", "ServiceType", "ServiceFeatureType", "PackageCharacteristicType", "PackageAcquisitionMethod", "Currency", "BilingTermType", "EffectveDate", "StatusCode", "CustomerClassificationType");
-
-                    b.ToTable("tsubchg", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.FuelSurchargeStaging", b =>
-                {
-                    b.Property<string>("ExportCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_xpt_cny_cd");
-
-                    b.Property<string>("ImportCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_ipt_cny_cd");
-
-                    b.Property<string>("Accessorial")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("asy_svc_typ_cd");
-
-                    b.Property<string>("MovementDirection")
-                        .HasMaxLength(1)
-                        .HasColumnType("char")
-                        .HasColumnName("mvm_drc_cd");
-
-                    b.Property<string>("ServiceType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("ServiceFeatureType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_fea_typ_cd");
-
-                    b.Property<string>("PackageCharacteristicType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_cha_typ_cd");
-
-                    b.Property<string>("PackageAcquisitionMethod")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_acq_mth_typ_cd");
-
-                    b.Property<string>("Currency")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("ccy_cd");
-
-                    b.Property<string>("BilingTermType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("bil_ter_typ_cd");
-
-                    b.Property<DateTime>("EffectveDate")
-                        .HasColumnType("Date")
-                        .HasColumnName("asy_svc_ra_eff_dt");
-
-                    b.Property<string>("StatusCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_ra_cht_sts_cd");
-
-                    b.Property<string>("CustomerClassificationType")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("cus_csf_typ_cd");
-
-                    b.Property<string>("CalculationMethod")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("ccl_mth_typ_cd");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("Date")
-                        .HasColumnName("asy_svc_ra_end_dt");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<decimal>("MinimumRate")
-                        .HasColumnType("decimal(17,4)")
-                        .HasColumnName("asy_svc_min_amt");
-
-                    b.Property<decimal>("Rate")
-                        .HasColumnType("decimal(17,4)")
-                        .HasColumnName("asy_svc_ra");
-
-                    b.HasKey("ExportCountry", "ImportCountry", "Accessorial", "MovementDirection", "ServiceType", "ServiceFeatureType", "PackageCharacteristicType", "PackageAcquisitionMethod", "Currency", "BilingTermType", "EffectveDate", "StatusCode", "CustomerClassificationType");
-
-                    b.ToTable("tsubchg_stg", "a886aa_ao");
+                    b.ToTable("tratrul_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ImportServiceValidation", b =>
@@ -2475,7 +2197,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountry", "DestinationCountry", "ServiceType", "EffectiveDate");
 
-                    b.ToTable("timpsvc", "a886aa_ao");
+                    b.ToTable("timpsvc");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ImportServiceValidationStaging", b =>
@@ -2504,9 +2226,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("rec_eff_end_dt");
 
                     b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
                         .HasColumnName("is_completed_ir");
 
                     b.Property<string>("LoadReference")
@@ -2516,7 +2236,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountry", "DestinationCountry", "ServiceType", "EffectiveDate");
 
-                    b.ToTable("timpsvc_stg", "a886aa_ao");
+                    b.ToTable("timpsvc_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.InformationalAccessorialCharge", b =>
@@ -2565,7 +2285,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("Country", "AccessorialCode", "TimePeriodType", "Currency", "EffectiveDate", "CustomerClassificationType");
 
-                    b.ToTable("tinfchg", "a886aa_ao");
+                    b.ToTable("tinfchg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.InformationalAccessorialChargeStaging", b =>
@@ -2608,9 +2328,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("dtr_cri_end_dt");
 
                     b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
                         .HasColumnName("is_completed_ir");
 
                     b.Property<string>("LoadReference")
@@ -2620,7 +2338,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("Country", "AccessorialCode", "TimePeriodType", "Currency", "EffectiveDate", "CustomerClassificationType");
 
-                    b.ToTable("tinfchg_stg", "a886aa_ao");
+                    b.ToTable("tinfchg_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.InformationalAccessorialRate", b =>
@@ -2683,7 +2401,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("Country", "AccessorialCode", "TimePeriodType", "Currency", "EffectiveDate", "DeterminingCriteriaLowRange", "CustomerClassificationType");
 
-                    b.ToTable("tinfrat", "a886aa_ao");
+                    b.ToTable("tinfrat");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.InformationalAccessorialRateStaging", b =>
@@ -2740,9 +2458,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("dtr_cri_end_dt");
 
                     b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
                         .HasColumnName("is_completed_ir");
 
                     b.Property<string>("LoadReference")
@@ -2752,7 +2468,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("Country", "AccessorialCode", "TimePeriodType", "Currency", "EffectiveDate", "DeterminingCriteriaLowRange", "CustomerClassificationType");
 
-                    b.ToTable("tinfrat_stg", "a886aa_ao");
+                    b.ToTable("tinfrat_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.InformationalAccessorialThreshold", b =>
@@ -2796,7 +2512,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "AccessorialServiceTypeCode", "TimePeriodTypeCode", "DeterminingCriteriaEffectiveDate", "CustomerClassificationTypeCode");
 
-                    b.ToTable("tinftrh", "a886aa_ao");
+                    b.ToTable("tinftrh");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.InformationalAccessorialThresholdStaging", b =>
@@ -2846,7 +2562,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "AccessorialServiceTypeCode", "TimePeriodTypeCode", "DeterminingCriteriaEffectiveDate", "CustomerClassificationTypeCode");
 
-                    b.ToTable("tinftrh_stg", "a886aa_ao");
+                    b.ToTable("tinftrh_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.InsuranceCriteria", b =>
@@ -2930,7 +2646,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CustomerClassificationTypeCode", "CountryCode", "AccessorialServiceTypeCode", "ServiceFeatureTypeCode", "WeightMeasurementUnitTypeCode", "CurrencyCode", "InsuranceCriteriaEffectiveStartDate", "ServiceTypeCode", "ApprovalStatusCode");
 
-                    b.ToTable("tinscri", "a886aa_ao");
+                    b.ToTable("tinscri");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.InsuranceCriteriaStaging", b =>
@@ -3020,7 +2736,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CustomerClassificationTypeCode", "CountryCode", "AccessorialServiceTypeCode", "ServiceFeatureTypeCode", "WeightMeasurementUnitTypeCode", "CurrencyCode", "InsuranceCriteriaEffectiveStartDate", "ServiceTypeCode", "ApprovalStatusCode");
 
-                    b.ToTable("tinscri_stg", "a886aa_ao");
+                    b.ToTable("tinscri_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.InternationalRatingCurrency", b =>
@@ -3055,7 +2771,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "RatingCurrencyCode", "RatingCurrencyStartDate", "ApprovalStatusCode");
 
-                    b.ToTable("tiraccy", "a886aa_ao");
+                    b.ToTable("tiraccy");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.InternationalRatingCurrencyStaging", b =>
@@ -3096,7 +2812,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "RatingCurrencyCode", "RatingCurrencyStartDate", "ApprovalStatusCode");
 
-                    b.ToTable("tiraccy_stg", "a886aa_ao");
+                    b.ToTable("tiraccy_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.LimitValuesBasedOnCriteria", b =>
@@ -3145,7 +2861,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "CriteriaGroupCode", "CriteriaTypeCode", "ApprovalStatusCode", "CurrencyCode", "DeterminingCriteriaEffectiveDate");
 
-                    b.ToTable("tlmtvlu", "a886aa_ao");
+                    b.ToTable("tlmtvlu");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.LimitValuesBasedOnCriteriaStaging", b =>
@@ -3200,7 +2916,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "CriteriaGroupCode", "CriteriaTypeCode", "ApprovalStatusCode", "CurrencyCode", "DeterminingCriteriaEffectiveDate");
 
-                    b.ToTable("tlmtvlu_stg", "a886aa_ao");
+                    b.ToTable("tlmtvlu_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.MinimumCriteria", b =>
@@ -3268,7 +2984,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("GeopoliticalExportCountryCode", "ServiceFeatureTypeCode", "PackageCharacteristicTypeCode", "ServiceTypeCode", "DeterminingCriteriaTypeCode", "DeterminingCriteriaUnitTypeCode", "CommodityClassificationCode", "DeliveryZoneNumber", "DeterminingCriteriaEffectiveDate", "ApprovalStatusCode");
 
-                    b.ToTable("tmincri", "a886aa_ao");
+                    b.ToTable("tmincri");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.MinimumCriteriaStaging", b =>
@@ -3342,7 +3058,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("GeopoliticalExportCountryCode", "ServiceFeatureTypeCode", "PackageCharacteristicTypeCode", "ServiceTypeCode", "DeterminingCriteriaTypeCode", "DeterminingCriteriaUnitTypeCode", "CommodityClassificationCode", "DeliveryZoneNumber", "DeterminingCriteriaEffectiveDate", "ApprovalStatusCode");
 
-                    b.ToTable("tmincri_stg", "a886aa_ao");
+                    b.ToTable("tmincri_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.OriginServiceFeatureTypes", b =>
@@ -3382,7 +3098,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountryCode", "ServiceType", "ServiceFeatureType", "EffectiveDate", "Status");
 
-                    b.ToTable("tvosvcf", "a886aa_ao");
+                    b.ToTable("tvosvcf");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.OriginServiceFeatureTypesStaging", b =>
@@ -3416,9 +3132,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("tbl_row_exp_dt");
 
                     b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
                         .HasColumnName("is_completed_ir");
 
                     b.Property<string>("LoadReference")
@@ -3428,7 +3142,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountryCode", "ServiceType", "ServiceFeatureType", "EffectiveDate", "Status");
 
-                    b.ToTable("tvosvcf_stg", "a886aa_ao");
+                    b.ToTable("tvosvcf_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.PostalException", b =>
@@ -3488,7 +3202,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("BusinessRuleCode", "ExportCountryCode", "ImportCountryCode", "PostalCodeLowRange", "PostalCodeHighRange", "RecordEffectiveStartDate", "ApprovalStatusCode");
 
-                    b.ToTable("tpslbur", "a886aa_ao");
+                    b.ToTable("tpslbur");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.PostalExceptionStaging", b =>
@@ -3554,7 +3268,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("BusinessRuleCode", "ExportCountryCode", "ImportCountryCode", "PostalCodeLowRange", "PostalCodeHighRange", "RecordEffectiveStartDate", "ApprovalStatusCode");
 
-                    b.ToTable("tpslbur_stg", "a886aa_ao");
+                    b.ToTable("tpslbur_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.PublishedLetterThreshold", b =>
@@ -3611,7 +3325,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "ServiceTypeCode", "PackageCharacteristicTypeCode", "WeightMeasurementUnitTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("twgttrh", "a886aa_ao");
+                    b.ToTable("twgttrh");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.PublishedLetterThresholdStaging", b =>
@@ -3674,7 +3388,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "ServiceTypeCode", "PackageCharacteristicTypeCode", "WeightMeasurementUnitTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("twgttrh_stg", "a886aa_ao");
+                    b.ToTable("twgttrh_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.SameDayRate", b =>
@@ -3773,7 +3487,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountry", "DestinationCountry", "ServiceType", "DeliveryZoneNumber", "Currency", "PackageCharacteristicType", "CustomerClassificationType", "ServiceFeatureType", "MovementDirection", "WeightMeasurementUnitType", "MinimumWeightRange", "StatusCode", "EffectiveDate");
 
-                    b.ToTable("tsdrwsf", "a886aa_ao");
+                    b.ToTable("tsdrwsf");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.SameDayRateStaging", b =>
@@ -3856,9 +3570,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("svc_ra_cht_end_dt");
 
                     b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
                         .HasColumnName("is_completed_ir");
 
                     b.Property<string>("LoadReference")
@@ -3878,7 +3590,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountry", "DestinationCountry", "ServiceType", "DeliveryZoneNumber", "Currency", "PackageCharacteristicType", "CustomerClassificationType", "ServiceFeatureType", "MovementDirection", "WeightMeasurementUnitType", "MinimumWeightRange", "StatusCode", "EffectiveDate");
 
-                    b.ToTable("tsdrwsf_stg", "a886aa_ao");
+                    b.ToTable("tsdrwsf_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ServiceDefaultRules", b =>
@@ -3951,7 +3663,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "ServiceTypeCode", "ServiceDefaultUnitTypeCode", "ServiceDefaultTypeCode", "MovementDirectionCode", "RecordEffectiveStartDate", "DeterminingChartTypeCode", "ApprovalStatusCode", "ControlValueRangeLowQuantity");
 
-                    b.ToTable("tsvcdfl", "a886aa_ao");
+                    b.ToTable("tsvcdfl");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ServiceDefaultRulesStaging", b =>
@@ -4030,7 +3742,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "ServiceTypeCode", "ServiceDefaultUnitTypeCode", "ServiceDefaultTypeCode", "MovementDirectionCode", "RecordEffectiveStartDate", "DeterminingChartTypeCode", "ApprovalStatusCode", "ControlValueRangeLowQuantity");
 
-                    b.ToTable("tsvcdfl_stg", "a886aa_ao");
+                    b.ToTable("tsvcdfl_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ServiceDowngradeRules", b =>
@@ -4066,7 +3778,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tsvcdgr", "a886aa_ao");
+                    b.ToTable("tsvcdgr");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ServiceDowngradeRulesStaging", b =>
@@ -4108,7 +3820,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tsvcdgr_stg", "a886aa_ao");
+                    b.ToTable("tsvcdgr_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ServiceDowngradeValidAccessorialRules", b =>
@@ -4147,7 +3859,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("AccessoryServiceTypeCode", "ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tsvcacp", "a886aa_ao");
+                    b.ToTable("tsvcacp");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ServiceDowngradeValidAccessorialRulesStaging", b =>
@@ -4192,7 +3904,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("AccessoryServiceTypeCode", "ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tsvcacp_stg", "a886aa_ao");
+                    b.ToTable("tsvcacp_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.SimpleRateVolumeRange", b =>
@@ -4288,7 +4000,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginGpuExportCountryCode", "DestinationGpuImportCountryCode", "PackageTypeCode", "BillingTermTypeCode", "ServiceFeatureTypeCode", "ServiceTypeCode", "MovementDirectionCode", "CustomerRateTypeCode", "WeightMeasurementUnitTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tsiarav", "a886aa_ao");
+                    b.ToTable("tsiarav");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.SimpleRateVolumeRangeStaging", b =>
@@ -4390,7 +4102,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginGpuExportCountryCode", "DestinationGpuImportCountryCode", "PackageTypeCode", "BillingTermTypeCode", "ServiceFeatureTypeCode", "ServiceTypeCode", "MovementDirectionCode", "CustomerRateTypeCode", "WeightMeasurementUnitTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tsiarav_stg", "a886aa_ao");
+                    b.ToTable("tsiarav_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.TemplateAccessorialRules", b =>
@@ -4464,7 +4176,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountry", "ImportCountry", "MovementDirection", "ServiceType", "Accessorial", "DeterminingCriteriaStatus", "EffectiveDate");
 
-                    b.ToTable("tspmycd", "a886aa_ao");
+                    b.ToTable("tspmycd");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.TemplateAccessorialRulesStaging", b =>
@@ -4520,9 +4232,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("inf_xmp_ir");
 
                     b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
                         .HasColumnName("is_completed_ir");
 
                     b.Property<string>("LoadReference")
@@ -4544,7 +4254,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountry", "ImportCountry", "MovementDirection", "ServiceType", "Accessorial", "DeterminingCriteriaStatus", "EffectiveDate");
 
-                    b.ToTable("tspmycd_stg", "a886aa_ao");
+                    b.ToTable("tspmycd_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ThresholdSimpleRates", b =>
@@ -4628,7 +4338,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("BusinessRuleTypeCode", "OriginGpuExportCountry", "DestinationGpuImportCountry", "PackageTypeCode", "BillTermTypeCode", "ServiceFeatureTypeCode", "ServiceTypeCode", "MovementDirectionCode", "CustomerRateTypeCode", "DeterminingCriteriaTypeCode", "MeasurementUnitTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tbrchac", "a886aa_ao");
+                    b.ToTable("tbrchac");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ThresholdSimpleRatesStaging", b =>
@@ -4718,165 +4428,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("BusinessRuleTypeCode", "OriginGpuExportCountry", "DestinationGpuImportCountry", "PackageTypeCode", "BillTermTypeCode", "ServiceFeatureTypeCode", "ServiceTypeCode", "MovementDirectionCode", "CustomerRateTypeCode", "DeterminingCriteriaTypeCode", "MeasurementUnitTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tbrchac_stg", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.ValidAccessorialLane", b =>
-                {
-                    b.Property<string>("OriginCountryCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("org_cny_cd");
-
-                    b.Property<string>("DestinationCountryCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("dtn_cny_cd");
-
-                    b.Property<string>("AccessorialServiceTypeCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("asy_svc_typ_cd");
-
-                    b.Property<string>("ServiceTypeCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("MovementDirectionCode")
-                        .HasMaxLength(1)
-                        .HasColumnType("char")
-                        .HasColumnName("mvm_drc_cd");
-
-                    b.Property<string>("LaneClassTypeCode")
-                        .HasMaxLength(1)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_unt_pir_csf_cd");
-
-                    b.Property<string>("ApprovalStatusCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("apv_sts_cd");
-
-                    b.Property<DateTime>("RecordEffectiveStartDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_stt_dt");
-
-                    b.Property<string>("AccessorialAlternateNumericCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("asy_svc_alt_nmc_cd");
-
-                    b.Property<string>("OriginGeopoliticalCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("org_gpn_mnm_te");
-
-                    b.Property<string>("DestinationGeopoliticalCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("dtn_gpn_mnm_te");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<DateTime>("RecordEffectiveEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_end_dt");
-
-                    b.Property<string>("ServiceTypeAlternateNumericCode")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_alt_nmc_cd");
-
-                    b.HasKey("OriginCountryCode", "DestinationCountryCode", "AccessorialServiceTypeCode", "ServiceTypeCode", "MovementDirectionCode", "LaneClassTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate", "AccessorialAlternateNumericCode", "OriginGeopoliticalCountry", "DestinationGeopoliticalCountry");
-
-                    b.ToTable("tvasyln", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.ValidAccessorialLaneStaging", b =>
-                {
-                    b.Property<string>("OriginCountryCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("org_cny_cd");
-
-                    b.Property<string>("DestinationCountryCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("dtn_cny_cd");
-
-                    b.Property<string>("AccessorialServiceTypeCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("asy_svc_typ_cd");
-
-                    b.Property<string>("ServiceTypeCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("MovementDirectionCode")
-                        .HasMaxLength(1)
-                        .HasColumnType("char")
-                        .HasColumnName("mvm_drc_cd");
-
-                    b.Property<string>("LaneClassTypeCode")
-                        .HasMaxLength(1)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_unt_pir_csf_cd");
-
-                    b.Property<string>("ApprovalStatusCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("apv_sts_cd");
-
-                    b.Property<DateTime>("RecordEffectiveStartDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_stt_dt");
-
-                    b.Property<string>("AccessorialAlternateNumericCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("asy_svc_alt_nmc_cd");
-
-                    b.Property<string>("OriginGeopoliticalCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("org_gpn_mnm_te");
-
-                    b.Property<string>("DestinationGeopoliticalCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("dtn_gpn_mnm_te");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<DateTime>("RecordEffectiveEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_end_dt");
-
-                    b.Property<string>("ServiceTypeAlternateNumericCode")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_alt_nmc_cd");
-
-                    b.HasKey("OriginCountryCode", "DestinationCountryCode", "AccessorialServiceTypeCode", "ServiceTypeCode", "MovementDirectionCode", "LaneClassTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate", "AccessorialAlternateNumericCode", "OriginGeopoliticalCountry", "DestinationGeopoliticalCountry");
-
-                    b.ToTable("tvasyln_stg", "a886aa_ao");
+                    b.ToTable("tbrchac_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ValidAcquisitionMethod", b =>
@@ -4927,7 +4479,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountry", "ImportCountry", "ServiceType", "PackageAcquisitionMethodType", "MovementDirection", "EffectiveDate");
 
-                    b.ToTable("tvpaqmt", "a886aa_ao");
+                    b.ToTable("tvpaqmt");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ValidAcquisitionMethodStaging", b =>
@@ -4966,9 +4518,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("tbl_row_exp_dt");
 
                     b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
                         .HasColumnName("is_completed_ir");
 
                     b.Property<string>("LoadReference")
@@ -4984,7 +4534,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountry", "ImportCountry", "ServiceType", "PackageAcquisitionMethodType", "MovementDirection", "EffectiveDate");
 
-                    b.ToTable("tvpaqmt_stg", "a886aa_ao");
+                    b.ToTable("tvpaqmt_stg");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ValidDestinationBillTerm", b =>
@@ -5019,7 +4569,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ImportCountryCode", "BillingTermTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tvdstbt", "a886aa_ao");
+                    b.ToTable("tvdstbt");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ValidDestinationBillTermStaging", b =>
@@ -5060,7 +4610,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ImportCountryCode", "BillingTermTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tvdstbt_stg", "a886aa_ao");
+                    b.ToTable("tvdstbt_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ValidLaneService", b =>
@@ -5095,7 +4645,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountryCode", "ImportCountryCode", "ServiceTypeCode", "TableRowEffectiveDate", "TableRowEndDate");
 
-                    b.ToTable("tvlnsvc", "a886aa_ao");
+                    b.ToTable("tvlnsvc");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ValidLaneServiceStaging", b =>
@@ -5136,7 +4686,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountryCode", "ImportCountryCode", "ServiceTypeCode", "TableRowEffectiveDate", "TableRowEndDate");
 
-                    b.ToTable("tvlnsvc_stg", "a886aa_ao");
+                    b.ToTable("tvlnsvc_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ValidOriginBillTerm", b =>
@@ -5171,7 +4721,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountryCode", "BillingTermTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tvorgbt", "a886aa_ao");
+                    b.ToTable("tvorgbt");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ValidOriginBillTermStaging", b =>
@@ -5212,7 +4762,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountryCode", "BillingTermTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tvorgbt_stg", "a886aa_ao");
+                    b.ToTable("tvorgbt_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ValidOriginServicePackage", b =>
@@ -5252,7 +4802,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountryCode", "ServiceTypeCode", "PackageCharacteristicTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tvsvcpk", "a886aa_ao");
+                    b.ToTable("tvsvcpk");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ValidOriginServicePackageStaging", b =>
@@ -5298,7 +4848,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountryCode", "ServiceTypeCode", "PackageCharacteristicTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.ToTable("tvsvcpk_stg", "a886aa_ao");
+                    b.ToTable("tvsvcpk_stg", (string)null);
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.DataLoadDetail", b =>

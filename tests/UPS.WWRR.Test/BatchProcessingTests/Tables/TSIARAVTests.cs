@@ -17,7 +17,7 @@ public class TSIARAVTests : BatchProcessorTests
         var load = new DataLoad { Id = 501, LoadTableName = "tsiarav", FileLocation = "gs://bucket/TSIARAV_501.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<UPS.WWRR.Business.DTO.Models.LoadTableDto.SimpleRateVolumeRangeDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile("TSIARAV_501.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSIARAV_501.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -30,7 +30,7 @@ public class TSIARAVTests : BatchProcessorTests
         var load = new DataLoad { Id = 502, LoadTableName = "tsiarav", FileLocation = "gs://bucket/TSIARAV_502.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<UPS.WWRR.Business.DTO.Models.LoadTableDto.SimpleRateVolumeRangeDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "e" }));
-        _storage.Setup(s => s.DownloadFile("TSIARAV_502.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSIARAV_502.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -41,7 +41,7 @@ public class TSIARAVTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TSIARAV_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 511, LoadTableName = "tsiarav", FileLocation = "gs://bucket/TSIARAV_511.csv" };
-        _storage.Setup(s => s.DownloadFile("TSIARAV_511.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TSIARAV_511.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto
             {

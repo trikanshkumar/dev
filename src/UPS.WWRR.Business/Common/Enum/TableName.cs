@@ -133,5 +133,8 @@ namespace UPS.WWRR.Business.Common.Constants
 
         [Description("Valid Accessorial Lane")]
         TVASYLN,
+
+        [Description("Freight Rates")]
+        TRASTD,
     }
 }

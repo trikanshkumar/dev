@@ -85,7 +85,7 @@ namespace UPS.WWRR.Business.Repositories
                 DbCommand cmd = _db.Database.GetDbConnection().CreateCommand();
                 cmd.CommandText = callSql;
                 cmd.CommandType = CommandType.Text;
-                cmd.CommandTimeout = (int)TimeSpan.FromMinutes(15).TotalSeconds;
+                cmd.CommandTimeout = (int)TimeSpan.FromMinutes(120).TotalSeconds;
 
                 var result = await cmd.ExecuteStoredProcedureAsync(async reader =>
                 {
@@ -134,7 +134,7 @@ namespace UPS.WWRR.Business.Repositories
             DbCommand cmd = _db.Database.GetDbConnection().CreateCommand();
             cmd.CommandText = callSql;
             cmd.CommandType = CommandType.Text;
-            cmd.CommandTimeout = (int)TimeSpan.FromMinutes(15).TotalSeconds;
+            cmd.CommandTimeout = (int)TimeSpan.FromMinutes(120).TotalSeconds;
 
 
             var p1 = cmd.CreateParameter();

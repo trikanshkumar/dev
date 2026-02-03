@@ -86,7 +86,7 @@ public class TVORGBTTests : BatchProcessorTests
         var load = new DataLoad { Id = 3601, LoadTableName = "tvorgbt", FileLocation = "gs://bucket/TVORGBT_3601.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidOriginBillTermDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile("TVORGBT_3601.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TVORGBT_3601.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -99,7 +99,7 @@ public class TVORGBTTests : BatchProcessorTests
         var load = new DataLoad { Id = 3602, LoadTableName = "tvorgbt", FileLocation = "gs://bucket/TVORGBT_3602.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidOriginBillTermDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Invalid export country code" }));
-        _storage.Setup(s => s.DownloadFile("TVORGBT_3602.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TVORGBT_3602.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -118,7 +118,7 @@ public class TVORGBTTests : BatchProcessorTests
         };
         _validator.Setup(v => v.ValidateCsvAsync<ValidOriginBillTermDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, errors));
-        _storage.Setup(s => s.DownloadFile("TVORGBT_3603.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TVORGBT_3603.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         _repo.Setup(r => r.AddExceptionsAsync(It.IsAny<IEnumerable<DataLoadException>>(), It.IsAny<CancellationToken>()))
@@ -138,7 +138,7 @@ public class TVORGBTTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TVORGBT_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 3611, LoadTableName = "tvorgbt", FileLocation = "gs://bucket/TVORGBT_3611.csv" };
-        _storage.Setup(s => s.DownloadFile("TVORGBT_3611.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TVORGBT_3611.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto
             {
@@ -159,7 +159,7 @@ public class TVORGBTTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TVORGBT_CopyFails_SetsFailedStatus()
     {
         var load = new DataLoad { Id = 3612, LoadTableName = "tvorgbt", FileLocation = "gs://bucket/TVORGBT_3612.csv" };
-        _storage.Setup(s => s.DownloadFile("TVORGBT_3612.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TVORGBT_3612.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var failedResult = new CopyBatchResultDto
         {
             TableName = "tvorgbt_stg",
@@ -182,7 +182,7 @@ public class TVORGBTTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TVORGBT_UsesCorrectStagingTable()
     {
         var load = new DataLoad { Id = 3613, LoadTableName = "tvorgbt", FileLocation = "gs://bucket/TVORGBT_3613.csv" };
-        _storage.Setup(s => s.DownloadFile("TVORGBT_3613.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TVORGBT_3613.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         TableConfigurationRequest? capturedConfig = null;
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .Callback<string, TableConfigurationRequest, CancellationToken>((_, cfg, _) => capturedConfig = cfg)

@@ -22,7 +22,9 @@
             "yyyy-MM-ddTHH:mm:ss.ffffff",
             "M/d/yyyy",
             "M/d/yyyy HH:mm:ss",
-            "M/d/yyyy h:mm:ss tt"
+            "M/d/yyyy h:mm:ss tt",
+            "dd-MMM-yyyy",          
+            "dd-MMM-yyyy HH:mm:ss"  
         };
     }
 }

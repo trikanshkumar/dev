@@ -101,7 +101,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5801, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5801.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5801.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5801.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -114,7 +114,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5802, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5802.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Invalid origin country code" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5802.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5802.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -135,7 +135,7 @@ public class TVASYLNTests : BatchProcessorTests
         };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, errors));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5803.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5803.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         _repo.Setup(r => r.AddExceptionsAsync(It.IsAny<IEnumerable<DataLoadException>>(), It.IsAny<CancellationToken>()))
@@ -153,7 +153,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5804, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5804.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: ORG_CNY_CD exceeds maximum length of 2" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5804.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5804.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -168,7 +168,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5805, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5805.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: DTN_CNY_CD exceeds maximum length of 2" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5805.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5805.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -183,7 +183,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5806, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5806.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: ASY_SVC_TYP_CD exceeds maximum length of 3" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5806.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5806.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -198,7 +198,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5807, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5807.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: SVC_TYP_CD exceeds maximum length of 3" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5807.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5807.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -213,7 +213,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5808, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5808.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: MVM_DRC_CD exceeds maximum length of 1" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5808.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5808.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -228,7 +228,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5809, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5809.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: APV_STS_CD exceeds maximum length of 2" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5809.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5809.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -243,7 +243,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5810, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5810.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5810.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5810.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -258,7 +258,7 @@ public class TVASYLNTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TVASYLN_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 5811, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5811.csv" };
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5811.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5811.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto
             {
@@ -279,7 +279,7 @@ public class TVASYLNTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TVASYLN_CopyFails_SetsFailedStatus()
     {
         var load = new DataLoad { Id = 5812, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5812.csv" };
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5812.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5812.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var failedResult = new CopyBatchResultDto
         {
             TableName = "tvasyln_stg",
@@ -302,7 +302,7 @@ public class TVASYLNTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TVASYLN_UsesCorrectStagingTable()
     {
         var load = new DataLoad { Id = 5813, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5813.csv" };
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5813.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5813.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         TableConfigurationRequest? capturedConfig = null;
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .Callback<string, TableConfigurationRequest, CancellationToken>((_, cfg, _) => capturedConfig = cfg)
@@ -326,7 +326,7 @@ public class TVASYLNTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TVASYLN_LargeFile_ProcessesSuccessfully()
     {
         var load = new DataLoad { Id = 5814, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5814.csv" };
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5814.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5814.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto
             {
@@ -347,7 +347,7 @@ public class TVASYLNTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TVASYLN_PartialFailure_ReportsErrors()
     {
         var load = new DataLoad { Id = 5815, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5815.csv" };
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5815.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5815.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var partialResult = new CopyBatchResultDto
         {
             TableName = "tvasyln_stg",
@@ -500,7 +500,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5850, LoadTableName = "TVASYLN", FileLocation = "gs://bucket/TVASYLN_5850.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5850.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5850.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -513,7 +513,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5851, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5851.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5851.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5851.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -551,7 +551,7 @@ public class TVASYLNTests : BatchProcessorTests
         // Validation
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5861.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5861.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
@@ -582,7 +582,7 @@ public class TVASYLNTests : BatchProcessorTests
         // Validation
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5862.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5862.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
@@ -624,7 +624,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5870, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5870.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: GPN_UNT_PIR_CSF_CD exceeds maximum length of 1" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5870.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5870.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -639,7 +639,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5871, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5871.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: ASY_SVC_ALT_NMC_CD exceeds maximum length of 3" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5871.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5871.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -654,7 +654,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5872, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5872.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: SVC_TYP_ALT_NMC_CD exceeds maximum length of 2" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5872.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5872.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -669,7 +669,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5873, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5873.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: ORG_GPN_MNM_TE exceeds maximum length of 4" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5873.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5873.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -684,7 +684,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5874, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5874.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: DTN_GPN_MNM_TE exceeds maximum length of 4" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5874.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5874.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -699,7 +699,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5875, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5875.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: REC_EFF_STT_DT is not a valid date" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5875.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5875.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();
@@ -714,7 +714,7 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5876, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5876.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<ValidAccessorialLaneDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "Line 2: REC_EFF_END_DT is not a valid date" }));
-		_storage.Setup(s => s.DownloadFile("TVASYLN_5876.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+		_storage.Setup(s => s.DownloadFile("TVASYLN_5876.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
         var sut = CreateSut();

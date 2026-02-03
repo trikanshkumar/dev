@@ -23,7 +23,7 @@ public class GoogleCloudStorageServiceTests
 
         _bucketName = _fixture.Create<string>();
 
-        _service = new GoogleCloudStorageService(_mockStorageClient.Object, _bucketName, "");
+        _service = new GoogleCloudStorageService(_mockStorageClient.Object, _bucketName, "", 1024 * 1024);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class GoogleCloudStorageServiceTests
     {
         var baseDirectory = _fixture.Create<string>();
         var fileName = $"{_fixture.Create<string>()}.csv";
-        var serviceWithBaseDirectory = new GoogleCloudStorageService(_mockStorageClient.Object, _bucketName, baseDirectory);
+        var serviceWithBaseDirectory = new GoogleCloudStorageService(_mockStorageClient.Object, _bucketName, baseDirectory, 1024 * 1024);
 
         await serviceWithBaseDirectory.GetFileAsString(fileName);
 

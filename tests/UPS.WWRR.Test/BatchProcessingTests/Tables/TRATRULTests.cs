@@ -18,7 +18,7 @@ public class TRATRULTests : BatchProcessorTests
         var load = new DataLoad { Id = 3541, LoadTableName = "tratrul", FileLocation = "gs://bucket/TRATRUL_3541.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<FreightRatingRulesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(true, new List<string>()));
-        _storage.Setup(s => s.DownloadFile("TRATRUL_3541.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TRATRUL_3541.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -31,7 +31,7 @@ public class TRATRULTests : BatchProcessorTests
         var load = new DataLoad { Id = 3542, LoadTableName = "tratrul", FileLocation = "gs://bucket/TRATRUL_3542.csv" };
         _validator.Setup(v => v.ValidateCsvAsync<FreightRatingRulesDto>(It.IsAny<string>()))
             .ReturnsAsync(new CsvValidationResponse(false, new List<string> { "invalid" }));
-        _storage.Setup(s => s.DownloadFile("TRATRUL_3542.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TRATRUL_3542.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
@@ -42,7 +42,7 @@ public class TRATRULTests : BatchProcessorTests
     public async Task CopyBatchLoadAsync_TRATRUL_SetsProcessingOnStart()
     {
         var load = new DataLoad { Id = 3551, LoadTableName = "tratrul", FileLocation = "gs://bucket/TRATRUL_3551.csv" };
-        _storage.Setup(s => s.DownloadFile("TRATRUL_3551.csv", It.IsAny<string>())).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.DownloadFile("TRATRUL_3551.csv", It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CopyBatchResultDto
             {

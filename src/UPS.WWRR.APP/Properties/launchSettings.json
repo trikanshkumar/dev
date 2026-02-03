@@ -13,7 +13,8 @@
         "BatchLoad_ChunkSize": "10000",
         "BatchLoad_Delimiter": ",",
         "BatchLoad_HasHeader": "true",
-        "LOAD_INTERVAL_MINUTES": "2"
+        "LOAD_INTERVAL_MINUTES": "30",
+        "GCS_DOWNLOAD_CHUNK_SIZE": "4194304"
       }
     }
   }

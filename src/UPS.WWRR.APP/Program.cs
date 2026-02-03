@@ -28,11 +28,15 @@ class Program
         var tableName = Environment.GetEnvironmentVariable("TABLE_NAME")
             ?? throw new InvalidOperationException("Required environment variable 'TABLE_NAME' not set.");
         var batchSize = int.TryParse(Environment.GetEnvironmentVariable("BATCH_SIZE"), out var bs) ? bs : 100;
-        var chunkSize = int.TryParse(Environment.GetEnvironmentVariable("BatchLoad_ChunkSize"), out var cs) ? cs : 10000;
+        var chunkSize = int.TryParse(Environment.GetEnvironmentVariable("BatchLoad_ChunkSize"), out var cs) ? cs : 10000; 
         var delimiter = Environment.GetEnvironmentVariable("BatchLoad_Delimiter") ?? ",";
         var hasHeader = bool.TryParse(Environment.GetEnvironmentVariable("BatchLoad_HasHeader"), out var hh) ? hh : true;
         var bucket = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_NAME") ?? string.Empty;
         var bucketSubName = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_SUB_NAME") ?? string.Empty;
+
+        
+        // GCS download chunk size (separate from CSV batch processing)
+        var gcsDownloadChunkSize = int.TryParse(Environment.GetEnvironmentVariable("GCS_DOWNLOAD_CHUNK_SIZE"), out var gcs) ? gcs : 4 * 1024 * 1024; // 4 MB default
 
         var host = Host.CreateDefaultBuilder(args)
             .ConfigureServices(services =>
@@ -47,7 +51,7 @@ class Program
                 services.AddHostedService<BatchProcessor>();
 
                 var storageClient = StorageClient.Create();
-                services.AddSingleton<IStorageService>(_ => new GoogleCloudStorageService(storageClient, bucket, bucketSubName));
+                services.AddSingleton<IStorageService>(_ => new GoogleCloudStorageService(storageClient, bucket, bucketSubName, gcsDownloadChunkSize));
                 services.AddSingleton(new LocalRuntimeSettings(connectionString, tableName, batchSize, chunkSize, delimiter, hasHeader, bucket));
             })
             .UseSerilog()
