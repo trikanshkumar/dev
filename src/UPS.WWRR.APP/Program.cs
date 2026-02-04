@@ -48,6 +48,9 @@ class Program
                 services.AddScoped<ICopyBatchDataService, CopyBatchDataService>();
                 services.AddScoped<ICsvValidator, CsvValidator>();
                 services.AddScoped<ILoadRepository, LoadRepository>();
+                // Worker is scoped (so it can use DbContext safely)
+                services.AddScoped<IBatchProcessorWorker, BatchProcessorWorker>();
+
                 services.AddHostedService<BatchProcessor>();
 
                 var storageClient = StorageClient.Create();

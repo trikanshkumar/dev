@@ -23,5 +23,7 @@ namespace UPS.WWRR.Business.Interfaces
         /// <param name="ct">Cancellation token.</param>
         /// <returns>True if the file sizes match, false otherwise.</returns>
         Task<bool> VerifyFileSizeAsync(string remoteFileName, string localFilePath, CancellationToken ct = default);
+
+        string PrependBaseDirectory(string objectName);
     }
 }

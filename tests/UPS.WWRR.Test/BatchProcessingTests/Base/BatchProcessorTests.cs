@@ -10,7 +10,7 @@ namespace UPS.WWRR.UnitTests.BatchProcessing.Base;
 public abstract class BatchProcessorTests
 {
     protected const string Bucket = "test-bucket";
-    protected readonly Mock<ILogger<BatchProcessor>> _logger = new();
+    protected readonly Mock<ILogger<BatchProcessorWorker>> _logger = new();
     protected readonly Mock<IStorageService> _storage = new();
     protected readonly Mock<ICsvValidator> _validator = new();
     protected readonly Mock<ICopyBatchDataService> _copy = new();
@@ -31,7 +31,7 @@ public abstract class BatchProcessorTests
         }
     }
 
-    protected BatchProcessor CreateSut() => new(_logger.Object, _storage.Object, _validator.Object, _copy.Object, _repo.Object);
+    protected BatchProcessorWorker CreateSut() => new(_logger.Object, _storage.Object, _validator.Object, _copy.Object, _repo.Object);
 
     protected static async Task<T> InvokeAsync<T>(object target, string name, params object[] args)
     {

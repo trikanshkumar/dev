@@ -8,7 +8,7 @@ public class GoogleCloudStorageService(StorageClient storageClient, string bucke
 {
     public async Task<long> GetFileSizeAsync(string fileName, CancellationToken ct = default)
     {
-        var obj = await storageClient.GetObjectAsync(bucketName, fileName, cancellationToken: ct);
+        var obj = await storageClient.GetObjectAsync(bucketName, PrependBaseDirectory(fileName), cancellationToken: ct);
         return (long)(obj.Size ?? 0);
     }
     public async Task<string> GetFileAsString(string fileName)
@@ -84,7 +84,7 @@ public class GoogleCloudStorageService(StorageClient storageClient, string bucke
             try
             {
                 using var chunkStream = new MemoryStream();
-                await storageClient.DownloadObjectAsync(bucketName, storageFileName, chunkStream, options, ct);
+                await storageClient.DownloadObjectAsync(bucketName, PrependBaseDirectory(storageFileName), chunkStream, options, ct);
 
                 await using var fs = new FileStream(
                     localFileName,
@@ -131,7 +131,7 @@ public class GoogleCloudStorageService(StorageClient storageClient, string bucke
     {
         try
         {
-            await storageClient.GetObjectAsync(bucketName, fileName, cancellationToken: ct);
+            await storageClient.GetObjectAsync(bucketName, PrependBaseDirectory(fileName), cancellationToken: ct);
             return true;
         }
         catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
@@ -191,5 +191,5 @@ public class GoogleCloudStorageService(StorageClient storageClient, string bucke
         return receiptByLoadIdAndDate.FileName;
     }
 
-    private string PrependBaseDirectory(string objectName) => !string.IsNullOrWhiteSpace(baseDirectory) ? $"{baseDirectory}/{objectName}" : objectName;
+    public string PrependBaseDirectory(string objectName) => !string.IsNullOrWhiteSpace(baseDirectory) ? $"{baseDirectory}/{objectName}" : objectName;
 }
