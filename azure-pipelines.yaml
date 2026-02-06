@@ -1,0 +1,128 @@
+trigger:
+  branches:
+    include:
+      - dev
+
+parameters:
+  - name: environment
+    displayName: Select environment
+    type: string
+    default: dev
+    values:
+      - dev
+      - qa
+      - prod
+
+pool:
+  name: WWRR Mod Custom Agent Pool
+  demands:
+    - Agent.Name -equals wwrr-agent
+
+variables:
+  - group: wwrr-${{ parameters.environment }}-pipeline-password
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: $(Agent.TempDirectory)/gcp-key.json
+
+stages:
+  - stage: BuildAndDeploy
+    displayName: Build and Deploy
+    jobs:
+      - job: BuildAndDeployJob
+        workspace:
+          clean: all
+        steps:
+          - checkout: self
+          # Authenticate with AlloyDB App Service Account
+          - task: Bash@3
+            displayName: Setup GCP Credentials (App SA)
+            inputs:
+              targetType: inline
+              script: |
+                printf "%s" "$(ALLOYDB_APP_SA_KEY)" | base64 --decode > $(GOOGLE_APPLICATION_CREDENTIALS)
+                gcloud auth activate-service-account --key-file=$(GOOGLE_APPLICATION_CREDENTIALS)
+                gcloud config set project $(GCP_PROJECT_ID)
+                gcloud config set compute/region $(GCP_REGION)
+                gcloud config set compute/zone $(GCP_ZONE)
+                gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet
+                gcloud auth list
+            env:
+              ALLOYDB_APP_SA_KEY: $(ALLOYDB_APP_SA_KEY)
+
+          # Build EF Bundle
+          - task: UseDotNet@2
+            inputs:
+              version: "8.x"
+          - bash: |
+              dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj --runtime linux-x64
+              dotnet restore src/UPS.WWRR.Data/UPS.WWRR.Data.csproj --runtime linux-x64
+              BASE_CONNECTION=$(gcloud secrets versions access latest \
+                  --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
+                  --project=$(GCP_PROJECT_ID))
+
+              # IAM token
+              IAM_TOKEN=$(gcloud auth print-access-token)
+              export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
+              dotnet ef migrations bundle \
+                --project src/UPS.WWRR.Data \
+                --startup-project src/UPS.WWRR.APP \
+                --output efbundle
+              chmod +x efbundle
+            displayName: Build EFBundle
+
+          # Run EF migrations with IAM token
+          - task: Bash@3
+            displayName: Run EFBundle (DB Migration)
+            inputs:
+              targetType: inline
+              script: |
+                BASE_CONNECTION=$(gcloud secrets versions access latest \
+                  --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
+                  --project=$(GCP_PROJECT_ID))
+
+                # IAM token
+                IAM_TOKEN=$(gcloud auth print-access-token)
+                export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
+                ./efbundle --connection "$ALLOYDB_CONNECTION"
+
+          # Build & Push Docker Image
+          - task: Bash@3
+            displayName: Build and Push Image
+            inputs:
+              targetType: inline
+              script: |
+                IMAGE_URI=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/$(IMAGE_NAME)
+                docker build -t $IMAGE_URI:latest .
+                docker push $IMAGE_URI:latest
+                docker image prune -f
+
+          # Deploy to GKE with App connection string
+          - task: Bash@3
+            displayName: Deploy to GKE
+            inputs:
+              targetType: inline
+              script: |
+                gcloud container clusters get-credentials $(GKE_CLUSTER_NAME) --region $(GCP_REGION) --project $(GCP_PROJECT_ID)
+                export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+                BASE_CONNECTION=$(gcloud secrets versions access latest \
+                  --secret=wwrr-${{ parameters.environment }}-alloydb-app-conn \
+                  --project=$(GCP_PROJECT_ID))
+
+                # IAM token
+                IAM_TOKEN=$(gcloud auth print-access-token)
+                export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
+
+                helm upgrade --install ups-wwrr-batch ./manifests/ups-wwrr-batch \
+                  --namespace default \
+                  --create-namespace \
+                  --wait \
+                  --timeout 600s \
+                  --force \
+                  --set-string env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME="$(GOOGLE_CLOUD_STORAGE_BUCKET_NAME)" \
+                  --set-string env.LOAD_INTERVAL_MINUTES="$(LOAD_INTERVAL_MINUTES)" \
+                  --set-string env.TABLE_NAME="$(TABLE_NAME)" \
+                  --set-string env.BATCH_SIZE="$(BATCH_SIZE)" \
+                  --set-string env.ASPNETCORE_ENVIRONMENT="$(ASPNETCORE_ENVIRONMENT)" \
+                  --set-string env.ALLOYDB_CONNECTION="$ALLOYDB_CONNECTION" \
+                  --set-string env.BatchLoad_ChunkSize="$(BatchLoad_ChunkSize)" \
+                  --set-string env.BatchLoad_Delimiter="$(BatchLoad_Delimiter)" \
+                  --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)"

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ups-wwrr-batch
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: ups-wwrr-batch
+  template:
+    metadata:
+      labels:
+        app: ups-wwrr-batch
+    spec:
+      serviceAccountName: {{ include "ups-wwrr-batch.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: ups-wwrr-batch
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: GOOGLE_CLOUD_STORAGE_BUCKET_NAME
+              value: {{ .Values.env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME | quote }}
+            - name: LOAD_INTERVAL_MINUTES
+              value: {{ .Values.env.LOAD_INTERVAL_MINUTES | quote }}
+            - name: TABLE_NAME
+              value: {{ .Values.env.TABLE_NAME | quote }}
+            - name: BATCH_SIZE
+              value: {{ .Values.env.BATCH_SIZE | quote }}
+            - name: ALLOYDB_CONNECTION
+              value: {{ .Values.env.ALLOYDB_CONNECTION | quote }} 
+            - name: ASPNETCORE_ENVIRONMENT
+              value: {{ .Values.env.ASPNETCORE_ENVIRONMENT | quote }} 
+            - name: BatchLoad_ChunkSize
+              value: {{ .Values.env.BatchLoad_ChunkSize | quote }}              
+            - name: BatchLoad_Delimiter
+              value: {{ .Values.env.BatchLoad_Delimiter | quote }}              
+            - name: BatchLoad_HasHeader
+              value: {{ .Values.env.BatchLoad_HasHeader | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
