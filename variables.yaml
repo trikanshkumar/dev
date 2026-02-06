@@ -1,0 +1,11 @@
+variables:
+- group: wwrr-mod-app-pipeline-library
+
+- name: AppName
+  value: wwrr-mod-app
+
+- name: CsprojName
+  value: UPS.WWRR.App.csproj
+
+- name: SourcePath
+  value: ./src/UPS.WWRR.APP

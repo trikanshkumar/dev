@@ -1,0 +1,35 @@
+replicaCount: 1
+
+image:
+  repository: us-central1-docker.pkg.dev/gcp-cti-wwrr-dev/wwrr-dev-docker-repo/ups-wwrr-batch
+  tag: latest
+  pullPolicy: Always
+
+serviceAccount:
+  create: true
+  annotations:
+    iam.gke.io/gcp-service-account: terraform-infra@gcp-cti-wwrr-dev.iam.gserviceaccount.com
+  name: ups-wwrr-batch
+
+env:
+  GOOGLE_CLOUD_STORAGE_BUCKET_NAME: ""
+  LOAD_INTERVAL_MINUTES: ""
+  TABLE_NAME: ""
+  BATCH_SIZE: ""
+  ASPNETCORE_ENVIRONMENT: ""
+  ALLOYDB_CONNECTION: ""
+  BatchLoad_ChunkSize: ""
+  BatchLoad_Delimiter: ""
+  BatchLoad_HasHeader: ""
+
+resources:
+  requests:
+    memory: "1Gi"
+    cpu: "500m"
+  limits:
+    memory: "2Gi"
+    cpu: "1"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
