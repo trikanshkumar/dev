@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - dev
+      - main
 
 parameters:
   - name: environment
@@ -38,7 +38,7 @@ stages:
             inputs:
               targetType: inline
               script: |
-                printf "%s" "$(ALLOYDB_APP_SA_KEY)" | base64 --decode > $(GOOGLE_APPLICATION_CREDENTIALS)
+                printf "%s" "$(ALLOYDB_ADMIN_SA_KEY)" | base64 --decode > $(GOOGLE_APPLICATION_CREDENTIALS)
                 gcloud auth activate-service-account --key-file=$(GOOGLE_APPLICATION_CREDENTIALS)
                 gcloud config set project $(GCP_PROJECT_ID)
                 gcloud config set compute/region $(GCP_REGION)
@@ -46,7 +46,10 @@ stages:
                 gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet
                 gcloud auth list
             env:
-              ALLOYDB_APP_SA_KEY: $(ALLOYDB_APP_SA_KEY)
+              ALLOYDB_ADMIN_SA_KEY: $(ALLOYDB_ADMIN_SA_KEY)
+              GCP_PROJECT_ID: $(GCP_PROJECT_ID)
+              GCP_REGION: $(GCP_REGION)
+              GCP_ZONE: $(GCP_ZONE)
 
           # Build EF Bundle
           - task: UseDotNet@2
@@ -60,7 +63,7 @@ stages:
                   --project=$(GCP_PROJECT_ID))
 
               # IAM token
-              IAM_TOKEN=$(gcloud auth print-access-token)
+              IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-admin-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
               export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
               dotnet ef migrations bundle \
                 --project src/UPS.WWRR.Data \
@@ -80,7 +83,7 @@ stages:
                   --project=$(GCP_PROJECT_ID))
 
                 # IAM token
-                IAM_TOKEN=$(gcloud auth print-access-token)
+                IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-admin-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
                 export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
                 ./efbundle --connection "$ALLOYDB_CONNECTION"
 
@@ -108,7 +111,7 @@ stages:
                   --project=$(GCP_PROJECT_ID))
 
                 # IAM token
-                IAM_TOKEN=$(gcloud auth print-access-token)
+                IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
                 export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
 
                 helm upgrade --install ups-wwrr-batch ./manifests/ups-wwrr-batch \
