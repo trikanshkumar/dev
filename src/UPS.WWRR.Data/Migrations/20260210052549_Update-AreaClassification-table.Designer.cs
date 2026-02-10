@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UPS.WWRR.Data.Models;
@@ -11,9 +12,11 @@ using UPS.WWRR.Data.Models;
 namespace UPS.WWRR.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260210052549_Update-AreaClassification-table")]
+    partial class UpdateAreaClassificationtable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -946,6 +949,7 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("asy_svc_typ_cd");
 
                     b.Property<string>("LoadReference")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)")
                         .HasColumnName("load_ref_te");
@@ -1768,9 +1772,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("bus_eny_acs_sts_cd");
 
                     b.HasKey("ChartStatusNumber");
-
-                    b.HasIndex("ChartNumber", "ChartEffectiveStartDate", "ChartEffectiveEndDate")
-                        .IsUnique();
 
                     b.ToTable("zchartsts", "a886aa_ao");
                 });

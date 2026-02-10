@@ -1,12 +1,18 @@
-﻿#nullable enable
+#nullable enable
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace UPS.WWRR.Data.Models
 {
-    [Table("tarcldt")]
-    public class AreaClassificationDetail
+    /// <summary>
+    /// Represents the TARCLHD_NEW_STG (Area Classification Header New Staging) table.
+    /// </summary>
+    [Table("tarclhd_new_stg")]
+    [PrimaryKey(nameof(ChartStatusNumber))]
+    public class AreaClassificationHeaderNewStaging
     {
+        [Key]
         [Column("zch_sts_nr")]
         [Required]
         public int ChartStatusNumber { get; set; }
@@ -17,18 +23,13 @@ namespace UPS.WWRR.Data.Models
         public string ServiceTypeCode { get; set; } = string.Empty;
 
         [StringLength(3)]
-        [Column("ra_chg_csf_typ_cd", TypeName = "char")]
+        [Column("asy_svc_typ_cd", TypeName = "char")]
         [Required]
-        public string RateChargeClassificationTypeCode { get; set; } = string.Empty;
+        public string AccessorialServiceTypeCode { get; set; } = string.Empty;
 
-        [StringLength(2)]
-        [Column("ara_csf_dtl_rul_cd", TypeName = "char")]
         [Required]
-        public string AreaClassificationDetailRuleCode { get; set; } = string.Empty;
-
-        [StringLength(2)]
-        [Column("ara_csf_dtl_mnt_cd", TypeName = "char")]
-        public string AreaClassificationDetailMntCode { get; set; } = string.Empty;
+        [Column("is_completed_ir", TypeName = "smallint")]
+        public short IsCompletedIndicator { get; set; } = 0;
 
         [StringLength(100)]
         [Column("load_ref_te", TypeName = "varchar(100)")]

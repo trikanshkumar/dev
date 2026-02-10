@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -25,8 +25,6 @@ namespace UPS.WWRR.Business.Services
 		/// <summary>
 		/// Processor execution loop
 		/// </summary>
-		/// <param name="stoppingToken"></param>
-		/// <returns></returns>
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 		{
 			while (!stoppingToken.IsCancellationRequested)

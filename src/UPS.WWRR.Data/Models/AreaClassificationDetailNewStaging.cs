@@ -1,11 +1,20 @@
-﻿#nullable enable
+#nullable enable
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace UPS.WWRR.Data.Models
 {
-    [Table("tarcldt")]
-    public class AreaClassificationDetail
+    /// <summary>
+    /// Represents the TARCLDT_NEW_STG (Area Classification Detail New Staging) table.
+    /// </summary>
+    [Table("tarcldt_new_stg")]
+    [PrimaryKey(
+        nameof(ChartStatusNumber),
+        nameof(ServiceTypeCode),
+        nameof(RateChargeClassificationTypeCode)
+    )]
+    public class AreaClassificationDetailNewStaging
     {
         [Column("zch_sts_nr")]
         [Required]
@@ -28,7 +37,11 @@ namespace UPS.WWRR.Data.Models
 
         [StringLength(2)]
         [Column("ara_csf_dtl_mnt_cd", TypeName = "char")]
-        public string AreaClassificationDetailMntCode { get; set; } = string.Empty;
+        public string? AreaClassificationDetailMntCode { get; set; }
+
+        [Required]
+        [Column("is_completed_ir", TypeName = "smallint")]
+        public short IsCompletedIndicator { get; set; } = 0;
 
         [StringLength(100)]
         [Column("load_ref_te", TypeName = "varchar(100)")]

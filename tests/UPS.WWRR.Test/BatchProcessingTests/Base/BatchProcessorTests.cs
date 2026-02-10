@@ -29,6 +29,10 @@ public abstract class BatchProcessorTests
         {
             Environment.SetEnvironmentVariable(kv.Key, kv.Value);
         }
+
+        // Setup default mocks for file validation that are required by ValidateLoadsAsync
+        _storage.Setup(s => s.FileExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _storage.Setup(s => s.VerifyFileSizeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
     }
 
     protected BatchProcessorWorker CreateSut() => new(_logger.Object, _storage.Object, _validator.Object, _copy.Object, _repo.Object);

@@ -26,7 +26,17 @@ namespace UPS.WWRR.Business.Repositories
         Task<MergeResult> ExecuteMergeStoredProcedureAsync(string storedProcedureName, CancellationToken ct = default);
 
         Task<int> UpdateLoadReferenceAsync(string stagingTableName, string mainTableName, long dataLoadId, long dataLoadDetailId, CancellationToken ct = default);
-    }
+
+        /// <summary>
+            /// Updates load reference for multiple staging and main table pairs (used for Area Classification tables).
+            /// </summary>
+            /// <param name="tableMapping">Dictionary of staging table name to main table name pairs</param>
+            /// <param name="dataLoadId">The DataLoad ID</param>
+            /// <param name="dataLoadDetailId">The DataLoadDetail ID</param>
+            /// <param name="ct">Cancellation token</param>
+            /// <returns>Total number of affected records</returns>
+            Task<int> UpdateLoadReferenceForMultipleTablesAsync(Dictionary<string, string> tableMapping, long dataLoadId, long dataLoadDetailId, CancellationToken ct = default);
+        }
 
     public record MergeResult(int Inserted, int Updated, int Deleted,
         string? ErrorNumber,

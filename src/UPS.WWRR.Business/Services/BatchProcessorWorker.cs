@@ -26,6 +26,15 @@ namespace UPS.WWRR.Business.Services
         private readonly int _batchLoadChunkSize;
         private readonly HashSet<string> _movedObjects = new(StringComparer.OrdinalIgnoreCase);
 
+        /// <summary>
+        /// Defines groups of tables that must be processed together.
+        /// All tables in a group must be present in the receipt file for any of them to be processed.
+        /// </summary>
+        private static readonly List<HashSet<string>> _pairedTableGroups =
+        [
+            new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TARCLHD), nameof(TableEnum.TARCLDT) }
+        ];
+
         public BatchProcessorWorker(ILogger<BatchProcessorWorker> logger,
                                 IStorageService storageService,
                                 ICsvValidator csvValidator,
@@ -100,8 +109,53 @@ namespace UPS.WWRR.Business.Services
         }
 
         private List<DataLoad> FilterByTableName(List<DataLoad> loads) => _tableNameFilter.Equals("ALL", StringComparison.OrdinalIgnoreCase)
-    ? loads
-    : loads.Where(l => string.Equals(l.LoadTableName, _tableNameFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+        ? loads
+        : loads.Where(l => string.Equals(l.LoadTableName, _tableNameFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            /// <summary>
+            /// Validates that all tables in paired groups are present together.
+            /// If a group has some but not all tables present, those tables are removed and a warning is logged.
+            /// </summary>
+            /// <param name="loads">The list of loads to validate</param>
+            /// <returns>Filtered list with incomplete paired groups removed</returns>
+            private List<DataLoad> ValidateAndFilterPairedTableGroups(List<DataLoad> loads)
+            {
+                if (loads.Count == 0) return loads;
+
+                var tableNamesInLoads = new HashSet<string>(
+                    loads.Select(l => l.LoadTableName),
+                    StringComparer.OrdinalIgnoreCase);
+
+                var tablesToRemove = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var group in _pairedTableGroups)
+                {
+                    var presentTables = group.Where(t => tableNamesInLoads.Contains(t)).ToList();
+                    var missingTables = group.Where(t => !tableNamesInLoads.Contains(t)).ToList();
+
+                    // If some but not all tables in the group are present, remove the present ones
+                    if (presentTables.Count > 0 && missingTables.Count > 0)
+                    {
+                        _logger.LogWarning(
+                            "Paired table group validation failed. Present: [{presentTables}], Missing: [{missingTables}]. " +
+                            "All tables in the group must be present together. Skipping present tables.",
+                            string.Join(", ", presentTables),
+                            string.Join(", ", missingTables));
+
+                        foreach (var table in presentTables)
+                        {
+                            tablesToRemove.Add(table);
+                        }
+                    }
+                }
+
+                if (tablesToRemove.Count > 0)
+                {
+                    return loads.Where(l => !tablesToRemove.Contains(l.LoadTableName)).ToList();
+                }
+
+                return loads;
+            }
 
         /// <summary>
         /// Discover the receipt CSV directly from GCS bucket
@@ -193,6 +247,10 @@ namespace UPS.WWRR.Business.Services
             if (newLoads.Count > 0)
             {
                 newLoads = FilterByTableName(newLoads);
+                
+                // Validate paired table groups - all tables in a group must be present together
+                newLoads = ValidateAndFilterPairedTableGroups(newLoads);
+                
                 if (newLoads.Count > 0)
                     await _loadRepository.AddLoadsAsync(newLoads, ct);
             }
@@ -261,29 +319,36 @@ namespace UPS.WWRR.Business.Services
                 var sw = System.Diagnostics.Stopwatch.StartNew();
                 try
                 {
-                    var (mergeResult, mergeDetail) = await PerformMergeAsync(load, descriptor, sw, ct);
-                    bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
-                    if (hasError)
+                if (descriptor.IsNormalizedTableGroup)
                     {
-                        int errorCode = 0;
-                        if (!string.IsNullOrWhiteSpace(mergeResult.ErrorNumber) && int.TryParse(mergeResult.ErrorNumber, out var parsed)) errorCode = parsed;
-                        var error = new DataLoadError
-                        {
-                            DataLoadDetailId = mergeDetail.Id,
-                            ErrorCode = errorCode,
-                            ErrorStoredProcedureName = mergeResult.ErrorProcedure,
-                            ErrorMessage = mergeResult.ErrorMessage,
-                            CreatedOn = DateTime.UtcNow
-                        };
-                        await _loadRepository.AddErrorsAsync(new[] { error }, ct);
-                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+                        await ProcessNormalizedTableGroupAsync(load, descriptor, sw, ct);
                     }
                     else
                     {
-                        var updatedRef = await _loadRepository.UpdateLoadReferenceAsync(descriptor.StagingTableName, descriptor.TableName, load.Id, mergeDetail.Id, ct);
-                        _logger.LogInformation("LOAD_REF_TE updated via stored procedure for staging {stg} and main {main} (value: {val})", descriptor.StagingTableName, descriptor.TableName, $"{load.Id}|{mergeDetail.Id}");
-                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
-                        _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
+                        var (mergeResult, mergeDetail) = await PerformMergeAsync(load, descriptor, sw, ct);
+                        bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
+                        if (hasError)
+                        {
+                            int errorCode = 0;
+                            if (!string.IsNullOrWhiteSpace(mergeResult.ErrorNumber) && int.TryParse(mergeResult.ErrorNumber, out var parsed)) errorCode = parsed;
+                            var error = new DataLoadError
+                            {
+                                DataLoadDetailId = mergeDetail.Id,
+                                ErrorCode = errorCode,
+                                ErrorStoredProcedureName = mergeResult.ErrorProcedure,
+                                ErrorMessage = mergeResult.ErrorMessage,
+                                CreatedOn = DateTime.UtcNow
+                            };
+                            await _loadRepository.AddErrorsAsync(new[] { error }, ct);
+                            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+                        }
+                        else
+                        {
+                            var updatedRef = await _loadRepository.UpdateLoadReferenceAsync(descriptor.StagingTableName, descriptor.TableName, load.Id, mergeDetail.Id, ct);
+                            _logger.LogInformation("LOAD_REF_TE updated via stored procedure for staging {stg} and main {main} (value: {val})", descriptor.StagingTableName, descriptor.TableName, $"{load.Id}|{mergeDetail.Id}");
+                            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
+                            _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -551,20 +616,38 @@ namespace UPS.WWRR.Business.Services
                 async path => await _csvValidator.ValidateCsvAsync<FuelSurchargeDto>(path)
             ),
             nameof(TableEnum.TVASYLN) => new LoadTableDescriptor(
-                nameof(TableEnum.TVASYLN).ToLowerInvariant(),
-                (nameof(TableEnum.TVASYLN) + "_STG").ToLowerInvariant(),
-                StoredProcConstant.ValidAccessorialLaneMerge,
-                async path => await _csvValidator.ValidateCsvAsync<ValidAccessorialLaneDto>(path)
-            ),
-            nameof(TableEnum.TRASTD) => new LoadTableDescriptor(
-               nameof(TableEnum.TRASTD).ToLowerInvariant(),
-               (nameof(TableEnum.TRASTD) + "_STG").ToLowerInvariant(),
-               StoredProcConstant.FreightRatesMerge,
-               async path => await _csvValidator.ValidateCsvChunkedAsync<FreightRatesDto>(path, _batchLoadChunkSize)
-           ),
-            //Add other table descriptors here as needed
-            _ => LoadTableDescriptor.Unsupported
-        };
+                    nameof(TableEnum.TVASYLN).ToLowerInvariant(),
+                    (nameof(TableEnum.TVASYLN) + "_STG").ToLowerInvariant(),
+                    StoredProcConstant.ValidAccessorialLaneMerge,
+                    async path => await _csvValidator.ValidateCsvAsync<ValidAccessorialLaneDto>(path)
+                ),
+                nameof(TableEnum.TRASTD) => new LoadTableDescriptor(
+                   nameof(TableEnum.TRASTD).ToLowerInvariant(),
+                   (nameof(TableEnum.TRASTD) + "_STG").ToLowerInvariant(),
+                   StoredProcConstant.FreightRatesMerge,
+                   async path => await _csvValidator.ValidateCsvChunkedAsync<FreightRatesDto>(path, _batchLoadChunkSize)
+               ),
+                // Area Classification Header - uses special multi-step process with staging dataset normalization
+                nameof(TableEnum.TARCLHD) => new LoadTableDescriptor(
+                    nameof(TableEnum.TARCLHD).ToLowerInvariant(),
+                    (nameof(TableEnum.TARCLHD) + "_STG").ToLowerInvariant(),
+                    StoredProcConstant.AreaClassificationHeaderMerge,
+                    async path => await _csvValidator.ValidateCsvAsync<AreaClassificationHeaderDto>(path),
+                    StoredProcConstant.AreaClassificationHeaderNormalizeStaging,
+                    GetAreaClassificationTableMapping()
+                ),
+                // Area Classification Detail - uses special multi-step process with staging dataset normalization
+                nameof(TableEnum.TARCLDT) => new LoadTableDescriptor(
+                    nameof(TableEnum.TARCLDT).ToLowerInvariant(),
+                    (nameof(TableEnum.TARCLDT) + "_STG").ToLowerInvariant(),
+                    StoredProcConstant.AreaClassificationHeaderMerge,
+                    async path => await _csvValidator.ValidateCsvAsync<AreaClassificationDetailDto>(path),
+                    StoredProcConstant.AreaClassificationHeaderNormalizeStaging,
+                    GetAreaClassificationTableMapping()
+                ),
+                //Add other table descriptors here as needed
+                _ => LoadTableDescriptor.Unsupported
+            };
 
         /// <summary>
         /// validate loads
@@ -748,9 +831,18 @@ namespace UPS.WWRR.Business.Services
         /// <param name="StagingTableName"></param>
         /// <param name="MergeStoredProcedure"></param>
         /// <param name="ValidateAsync"></param>
-        private sealed record LoadTableDescriptor(string TableName, string StagingTableName, string MergeStoredProcedure, Func<string, Task<CsvValidationResponse>> ValidateAsync)
+        /// <param name="StagingDatasetProcedure">Optional stored procedure to normalize raw staging data before merge (used for normalized table groups)</param>
+        /// <param name="NormalizedTableMapping">Optional dictionary mapping normalized staging tables to their main tables for load reference update</param>
+        private sealed record LoadTableDescriptor(
+            string TableName,
+            string StagingTableName,
+            string MergeStoredProcedure,
+            Func<string, Task<CsvValidationResponse>> ValidateAsync,
+            string? StagingDatasetProcedure = null,
+            Dictionary<string, string>? NormalizedTableMapping = null)
         {
             public bool IsSupported => TableName != "UNSUPPORTED";
+            public bool IsNormalizedTableGroup => !string.IsNullOrEmpty(StagingDatasetProcedure);
             public static LoadTableDescriptor Unsupported => new("UNSUPPORTED", string.Empty, string.Empty, _ => Task.FromResult(new CsvValidationResponse(false, new List<string> { "Unsupported table" })));
         }
 
@@ -761,6 +853,131 @@ namespace UPS.WWRR.Business.Services
             var parts = gsUrl.Substring(scheme.Length).Split('/', 2, StringSplitOptions.RemoveEmptyEntries);
             return parts.Length == 2 ? parts[1] : gsUrl; // return object path after bucket
         }
+
+        /// <summary>
+        /// Performs a multi-step merge process for normalized table groups:
+        /// 1. Execute staging dataset procedure to normalize data from raw staging tables to normalized staging tables
+        /// 2. Execute merge procedure to move data from normalized staging to actual tables
+        /// This method is used for table groups like Area Classification that require data normalization before merge.
+        /// </summary>
+        private async Task<(MergeResult MergeResult, DataLoadDetail MergeDetail)> PerformNormalizedTableGroupMergeAsync(
+            DataLoad load, LoadTableDescriptor descriptor, System.Diagnostics.Stopwatch sw, CancellationToken ct)
+        {
+            _logger.LogInformation("Executing staging dataset normalization for table {tbl} load {id}", load.LoadTableName, load.Id);
+            var stagingResult = await _loadRepository.ExecuteMergeStoredProcedureAsync(descriptor.StagingDatasetProcedure!, ct);
+
+            if (!string.IsNullOrWhiteSpace(stagingResult.ErrorMessage))
+            {
+                _logger.LogError("Staging dataset normalization failed for table {tbl} load {id}: {error}",
+                    load.LoadTableName, load.Id, stagingResult.ErrorMessage);
+                sw.Stop();
+                var stagingDetail = new DataLoadDetail
+                {
+                    DataLoadId = load.Id,
+                    DataLoadType = "NRM",
+                    ErrorIndicator = 1,
+                    TimeProcessValue = (int)sw.Elapsed.TotalSeconds,
+                    TimePeriodTypeCode = "SECONDS",
+                    RecordsInserted = stagingResult.Inserted,
+                    RecordsUpdated = stagingResult.Updated,
+                    RecordsDeleted = stagingResult.Deleted,
+                    BatchNumber = 1
+                };
+                await _loadRepository.AddDetailAsync(stagingDetail, ct);
+                return (stagingResult, stagingDetail);
+            }
+
+            _logger.LogInformation("Staging dataset normalization completed for table {tbl} load {id}. Inserted: {ins}",
+                load.LoadTableName, load.Id, stagingResult.Inserted);
+
+            _logger.LogInformation("Executing merge for table {tbl} load {id}", load.LoadTableName, load.Id);
+            var mergeResult = await _loadRepository.ExecuteMergeStoredProcedureAsync(descriptor.MergeStoredProcedure, ct);
+
+            sw.Stop();
+            var mergeDetail = new DataLoadDetail
+            {
+                DataLoadId = load.Id,
+                DataLoadType = "ACL",
+                ErrorIndicator = (short)(!string.IsNullOrWhiteSpace(mergeResult.ErrorMessage) ? 1 : 0),
+                TimeProcessValue = (int)sw.Elapsed.TotalSeconds,
+                TimePeriodTypeCode = "SECONDS",
+                RecordsInserted = mergeResult.Inserted,
+                RecordsUpdated = mergeResult.Updated,
+                RecordsDeleted = mergeResult.Deleted,
+                BatchNumber = 1
+            };
+            await _loadRepository.AddDetailAsync(mergeDetail, ct);
+
+            if (!string.IsNullOrWhiteSpace(mergeResult.ErrorMessage))
+            {
+                _logger.LogError("Merge failed for table {tbl} load {id}: {error}",
+                    load.LoadTableName, load.Id, mergeResult.ErrorMessage);
+            }
+            else
+            {
+                _logger.LogInformation("Merge completed for table {tbl} load {id}. Inserted: {ins}, Updated: {upd}, Deleted: {del}",
+                    load.LoadTableName, load.Id, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
+            }
+
+            return (mergeResult, mergeDetail);
+        }
+
+        /// <summary>
+        /// Processes a normalized table group load including merge, error handling, and status updates.
+        /// </summary>
+        private async Task ProcessNormalizedTableGroupAsync(DataLoad load, LoadTableDescriptor descriptor, System.Diagnostics.Stopwatch sw, CancellationToken ct)
+        {
+            var (mergeResult, mergeDetail) = await PerformNormalizedTableGroupMergeAsync(load, descriptor, sw, ct);
+            bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
+            
+            if (hasError)
+            {
+                int errorCode = 0;
+                if (!string.IsNullOrWhiteSpace(mergeResult.ErrorNumber) && int.TryParse(mergeResult.ErrorNumber, out var parsed)) 
+                    errorCode = parsed;
+                    
+                var error = new DataLoadError
+                {
+                    DataLoadDetailId = mergeDetail.Id,
+                    ErrorCode = errorCode,
+                    ErrorStoredProcedureName = mergeResult.ErrorProcedure,
+                    ErrorMessage = mergeResult.ErrorMessage,
+                    CreatedOn = DateTime.UtcNow
+                };
+                await _loadRepository.AddErrorsAsync(new[] { error }, ct);
+                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+            }
+            else
+            {
+                if (descriptor.NormalizedTableMapping != null)
+                {
+                    await _loadRepository.UpdateLoadReferenceForMultipleTablesAsync(descriptor.NormalizedTableMapping, load.Id, mergeDetail.Id, ct);
+                    _logger.LogInformation("LOAD_REF_TE updated for {count} normalized tables (DataLoad: {loadId}, Detail: {detailId})", 
+                        descriptor.NormalizedTableMapping.Count, load.Id, mergeDetail.Id);
+                }
+                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
+                _logger.LogInformation("Normalized table group load process completed for table {tbl} load {id}", load.LoadTableName, load.Id);
+            }
+        }
+
+        /// <summary>
+        /// Gets the table mapping for Area Classification tables (staging -> main tables)
+        /// Used for updating LOAD_REF_TE and IS_COMPLETED_IR across all related tables after merge
+        /// </summary>
+        private static Dictionary<string, string> GetAreaClassificationTableMapping() => new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "tarclhd_stg", "tarclhd_stg" },
+            { "tarcldt_stg", "tarcldt_stg" },
+            { "zchartsts_stg", "zchartsts" },
+            { "zchartlkup_stg", "zchartlkup" },
+            { "tarclhd_new_stg", "tarclhd" },
+            { "tarcldt_new_stg", "tarcldt" },
+            { "zchartdtngeo_stg", "zchartdtngeo" },
+            { "zchartdtngpu_stg", "zchartdtngpu" },
+            { "zchartorggeo_stg", "zchartorggeo" },
+            { "zchartorggpu_stg", "zchartorggpu" },
+            { "zchartsvctyp_stg", "zchartsvctyp" }
+        };
 
         private async Task MoveObjectToProcessedAsync(string objectName)
         {

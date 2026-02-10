@@ -100,6 +100,24 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<ValidAccessorialLaneStaging> ValidAccessorialLanesStaging { get; set; }
         public virtual DbSet<FreightRates> FreightRates { get; set; }
         public virtual DbSet<FreightRatesStaging> FreightRatesStaging { get; set; }
+        public virtual DbSet<AreaClassificationHeaderStaging> AreaClassificationHeaderStaging { get; set; }
+        public virtual DbSet<AreaClassificationDetailStaging> AreaClassificationDetailStaging { get; set; }
+        public virtual DbSet<AreaClassificationHeaderNewStaging> AreaClassificationHeaderNewStaging { get; set; }
+        public virtual DbSet<AreaClassificationDetailNewStaging> AreaClassificationDetailNewStaging { get; set; }
+        public virtual DbSet<ChartLookup> ChartLookups { get; set; }
+        public virtual DbSet<ChartLookupStaging> ChartLookupsStaging { get; set; }
+        public virtual DbSet<ChartServiceType> ChartServiceTypes { get; set; }
+        public virtual DbSet<ChartServiceTypeStaging> ChartServiceTypesStaging { get; set; }
+        public virtual DbSet<ChartStatus> ChartStatuses { get; set; }
+        public virtual DbSet<ChartStatusStaging> ChartStatusesStaging { get; set; }
+        public virtual DbSet<ChartOriginGeo> ChartOriginGeos { get; set; }
+        public virtual DbSet<ChartOriginGeoStaging> ChartOriginGeosStaging { get; set; }
+        public virtual DbSet<ChartOriginGpu> ChartOriginGpus { get; set; }
+        public virtual DbSet<ChartOriginGpuStaging> ChartOriginGpusStaging { get; set; }
+        public virtual DbSet<ChartDestinationGeo> ChartDestinationGeos { get; set; }
+        public virtual DbSet<ChartDestinationGeoStaging> ChartDestinationGeosStaging { get; set; }
+        public virtual DbSet<ChartDestinationGpu> ChartDestinationGpus { get; set; }
+        public virtual DbSet<ChartDestinationGpuStaging> ChartDestinationGpusStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -107,36 +125,15 @@ namespace UPS.WWRR.Data.Models
             modelBuilder.HasDefaultSchema(DataConstants.defaultSchema);
 
             modelBuilder.Entity<AreaClassificationHeader>(e =>
-                e.HasKey(t => new
-                {
-                    t.OriginCountry,
-                    t.ServiceType,
-                    t.AccessorialCode,
-                    t.DestinationCountry,
-                    t.ChartNumber,
-                    t.ChartEffectiveDate,
-                    t.ChartEndDate,
-                    t.StatusCode
-                })
+                e.HasKey(t => t.ChartStatusNumber)
             );
 
             modelBuilder.Entity<AreaClassificationDetail>(e =>
                 e.HasKey(t => new
                 {
-                    t.ChartNumber,
-                    t.ChartEffectiveDate,
-                    t.ChartEndDate,
-                    t.OriginCountry,
-                    t.DestinationCountry,
-                    t.ServiceType,
-                    t.AreaClassificationRule,
-                    t.OriginPolticialDivision2,
-                    t.DestinationPoliticalDivision2,
-                    t.OriginLowPostal,
-                    t.OriginHighPostal,
-                    t.DestinationLowPostal,
-                    t.DestinationHighPostal,
-                    t.StatusCode
+                    t.ChartStatusNumber,
+                    t.ServiceTypeCode,
+                    t.RateChargeClassificationTypeCode
                 })
             );
 
@@ -454,6 +451,83 @@ namespace UPS.WWRR.Data.Models
             modelBuilder.Entity<FreightRatesStaging>(e =>
             {
                 e.ToTable("trastd_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<AreaClassificationHeaderStaging>(e =>
+            {
+                e.ToTable("tarclhd_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<AreaClassificationDetailStaging>(e =>
+            {
+                e.ToTable("tarcldt_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<AreaClassificationHeaderNewStaging>(e =>
+            {
+                e.ToTable("tarclhd_new_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<AreaClassificationDetailNewStaging>(e =>
+            {
+                e.ToTable("tarcldt_new_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ChartLookupStaging>(e =>
+            {
+                e.ToTable("zchartlkup_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ChartServiceTypeStaging>(e =>
+            {
+                e.ToTable("zchartsvctyp_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ChartStatusStaging>(e =>
+            {
+                e.ToTable("zchartsts_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            // Add unique constraint for ChartStatus (matches CONSTRAINT uq_ZCHARTSTS in DB schema)
+            modelBuilder.Entity<ChartStatus>(e =>
+            {
+                e.HasIndex(t => new
+                {
+                    t.ChartNumber,
+                    t.ChartEffectiveStartDate,
+                    t.ChartEffectiveEndDate
+                }).IsUnique();
+            });
+
+            modelBuilder.Entity<ChartOriginGeoStaging>(e =>
+            {
+                e.ToTable("zchartorggeo_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ChartOriginGpuStaging>(e =>
+            {
+                e.ToTable("zchartorggpu_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ChartDestinationGeoStaging>(e =>
+            {
+                e.ToTable("zchartdtngeo_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ChartDestinationGpuStaging>(e =>
+            {
+                e.ToTable("zchartdtngpu_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 

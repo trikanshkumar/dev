@@ -85,6 +85,8 @@
 	  <EmbeddedResource Include="Scripts\sp_ValidOriginBillTerm_MergeProc.sql" />
 	  <EmbeddedResource Include="Scripts\sp_ValidOriginServicePackage_MergeProc.sql" />
 	  <EmbeddedResource Include="Scripts\sp_ValidAccessorialLane_MergeProc.sql" />
+	  <EmbeddedResource Include="Scripts\sp_AreaClassification_StagingDataset_Proc.sql" />
+	  <EmbeddedResource Include="Scripts\sp_AreaClassification_MergeProc.sql" />
   </ItemGroup>
 
   <ItemGroup>
