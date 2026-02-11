@@ -106,10 +106,10 @@ stages:
               script: |
                 gcloud container clusters get-credentials $(GKE_CLUSTER_NAME) --region $(GCP_REGION) --project $(GCP_PROJECT_ID)
                 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-                BASE_CONNECTION=$(gcloud secrets versions access latest \
-                  --secret=wwrr-${{ parameters.environment }}-alloydb-app-conn \
-                  --project=$(GCP_PROJECT_ID))
-                export ALLOYDB_CONNECTION="${BASE_CONNECTION}"
+                # BASE_CONNECTION=$(gcloud secrets versions access latest \
+                #   --secret=wwrr-${{ parameters.environment }}-alloydb-app-conn \
+                #   --project=$(GCP_PROJECT_ID))
+                export ALLOYDB_CONNECTION="Host=127.0.0.1;Port=5432;Database=dev_u7x_001;Username=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam;SslMode=Require"
                 # # IAM token
                 # IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
                 # export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
