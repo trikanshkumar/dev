@@ -111,8 +111,9 @@ stages:
                   --project=$(GCP_PROJECT_ID))
 
                 # IAM token
-                IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
-                export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
+                # IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
+                # export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
+                export ALLOYDB_CONNECTION="Host=10.120.0.23;Port=5432;Database=dev_u7x_001;Username=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam;Search Path=a886aa_ao;SslMode=Require"
 
                 helm upgrade --install ups-wwrr-batch ./manifests/ups-wwrr-batch \
                   --namespace default \
