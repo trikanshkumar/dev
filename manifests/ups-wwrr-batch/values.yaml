@@ -17,7 +17,7 @@ env:
   TABLE_NAME: ""
   BATCH_SIZE: ""
   ASPNETCORE_ENVIRONMENT: ""
-  ALLOYDB_CONNECTION: "Host=127.0.0.1;Port=5432;Database=dev_u7x_001;Username=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam;SslMode=Require"
+  ALLOYDB_CONNECTION: "Host=127.0.0.1;Port=5432;Database=dev_u7x_001;Username='wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam';Search Path=a886aa_ao;SslMode=Require"
   BatchLoad_ChunkSize: ""
   BatchLoad_Delimiter: ""
   BatchLoad_HasHeader: ""
