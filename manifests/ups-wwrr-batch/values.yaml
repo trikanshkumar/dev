@@ -24,7 +24,7 @@ env:
 
 alloydbAuthProxy:
   enabled: true
-  image: gcr.io/alloydb-auth-proxy/alloydb-auth-proxy:latest
+  image: us.gcr.io/alloydb-connectors/alloydb-auth-proxy:latest
   port: 5432
   address: 127.0.0.1
   instance: gcp-cti-wwrr-dev:us-central1:wwrr-dev-alloydb
