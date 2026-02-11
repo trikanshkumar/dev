@@ -44,6 +44,7 @@ spec:
           image: {{ .Values.alloydbAuthProxy.image }}
           args:
             - "--auto-iam-authn"
+            - "--iam-service-account={{ .Values.alloydbAuthProxy.iamServiceAccount }}"
             - "--address={{ .Values.alloydbAuthProxy.address }}"
             - "--port={{ .Values.alloydbAuthProxy.port }}"
             - "{{ .Values.alloydbAuthProxy.instance }}"

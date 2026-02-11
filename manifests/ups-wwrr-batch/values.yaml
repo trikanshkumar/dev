@@ -28,7 +28,7 @@ alloydbAuthProxy:
   port: 5432
   address: 127.0.0.1
   instance: projects/gcp-cti-wwrr-dev/locations/us-central1/clusters/wwrr-dev-alloydb/instances/primary
-
+  iamServiceAccount: wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam
 resources:
   requests:
     memory: "1Gi"
