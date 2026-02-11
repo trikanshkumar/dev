@@ -39,3 +39,14 @@ spec:
               value: {{ .Values.env.BatchLoad_HasHeader | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+
+        - name: alloydb-auth-proxy
+          image: {{ .Values.alloydbAuthProxy.image }}
+          args:
+            - "--auto-iam-authn"
+            - "--address={{ .Values.alloydbAuthProxy.address }}"
+            - "--port={{ .Values.alloydbAuthProxy.port }}"
+            - "--instances={{ .Values.alloydbAuthProxy.instance }}"
+          ports:
+            - name: alloydb
+              containerPort: {{ .Values.alloydbAuthProxy.port }}
