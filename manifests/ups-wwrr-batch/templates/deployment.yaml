@@ -46,7 +46,7 @@ spec:
             - "--auto-iam-authn"
             - "--address={{ .Values.alloydbAuthProxy.address }}"
             - "--port={{ .Values.alloydbAuthProxy.port }}"
-            - "--instances={{ .Values.alloydbAuthProxy.instance }}"
+            - "{{ .Values.alloydbAuthProxy.instance }}"
           ports:
             - name: alloydb
               containerPort: {{ .Values.alloydbAuthProxy.port }}

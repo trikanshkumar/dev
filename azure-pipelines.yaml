@@ -109,7 +109,7 @@ stages:
                 # BASE_CONNECTION=$(gcloud secrets versions access latest \
                 #   --secret=wwrr-${{ parameters.environment }}-alloydb-app-conn \
                 #   --project=$(GCP_PROJECT_ID))
-                export ALLOYDB_CONNECTION="Host=127.0.0.1;Port=5432;Database=dev_u7x_001;Username='wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam';Search Path=a886aa_ao;SslMode=Require"
+                export ALLOYDB_CONNECTION="Host=127.0.0.1;Port=5432;Database=dev_u7x_001;Username='wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam';Search Path=a886aa_ao;SslMode=Disable"
                 # # IAM token
                 # IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
                 # export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
