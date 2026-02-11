@@ -38,11 +38,25 @@ class Program
         // GCS download chunk size (separate from CSV batch processing)
         var gcsDownloadChunkSize = int.TryParse(Environment.GetEnvironmentVariable("GCS_DOWNLOAD_CHUNK_SIZE"), out var gcs) ? gcs : 4 * 1024 * 1024; // 4 MB default
 
+        // Pull stable values from configuration / Secret Manager(NOT the token)
+        var (db_host, database, iamDbUser) = PgDataSourceFactory.Parse(connectionString);
+
+
+        // Create a single shared NpgsqlDataSource for pooling
+        var dataSource = await PgDataSourceFactory.CreateAsync(
+                host: db_host,
+                database: database,
+                iamDbUser: iamDbUser,
+                requireSsl: true);
+
         var host = Host.CreateDefaultBuilder(args)
             .ConfigureServices(services =>
             {
+                services.AddSingleton(dataSource);
+
                 services.AddDbContext<DataContext>(options => options.UseNpgsql(connectionString, npgSqlOptions =>
                     npgSqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", DataConstants.defaultSchema)));
+
                 services.AddScoped<INpgsqlConnectionHelper, NpgsqlConnectionHelper>();
                 services.AddScoped<ICsvSplitterService, CsvSplitterService>();
                 services.AddScoped<ICopyBatchDataService, CopyBatchDataService>();
