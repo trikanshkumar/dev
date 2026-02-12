@@ -53,9 +53,9 @@ class Program
             .ConfigureServices(services =>
             {
                 services.AddSingleton(dataSource);
-
-                services.AddDbContext<DataContext>(options => options.UseNpgsql(connectionString, npgSqlOptions =>
-                    npgSqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", DataConstants.defaultSchema)));
+                services.AddDbContext<DataContext>(options =>
+                   options.UseNpgsql(dataSource, npgSqlOptions =>
+                       npgSqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", DataConstants.defaultSchema)));
 
                 services.AddScoped<INpgsqlConnectionHelper, NpgsqlConnectionHelper>();
                 services.AddScoped<ICsvSplitterService, CsvSplitterService>();

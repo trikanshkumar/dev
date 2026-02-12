@@ -8,7 +8,7 @@ image:
 serviceAccount:
   create: true
   annotations:
-    iam.gke.io/gcp-service-account: terraform-infra@gcp-cti-wwrr-dev.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com
   name: ups-wwrr-batch
 
 env:
@@ -17,7 +17,7 @@ env:
   TABLE_NAME: ""
   BATCH_SIZE: ""
   ASPNETCORE_ENVIRONMENT: ""
-  ALLOYDB_CONNECTION: ""
+  ALLOYDB_CONNECTION: "Host=10.120.0.23;Port=5432;Database=dev_u7x_001;Username=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam;Search Path=a886aa_ao;SslMode=Require"
   BatchLoad_ChunkSize: ""
   BatchLoad_Delimiter: ""
   BatchLoad_HasHeader: ""
