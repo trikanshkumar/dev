@@ -6,8 +6,8 @@ namespace UPS.WWRR.Business.Common.Helper
     public static class PgDataSourceFactory
     {
         // Cloud SQL IAM DB auth scope
-        private static readonly string[] SqlLoginScope =
-            { "https://www.googleapis.com/auth/sqlservice.login" }; // Cloud SQL IAM scope [1](https://eplus.dev/securing-a-cloud-sql-for-postgresql-instance-gsp920)
+        private static readonly string[] AlloyDbScope =
+            { "https://www.googleapis.com/auth/cloud-platform" }; // Cloud SQL IAM scope [1](https://eplus.dev/securing-a-cloud-sql-for-postgresql-instance-gsp920)
 
         public static async Task<NpgsqlDataSource> CreateAsync(
             string host,
@@ -17,7 +17,7 @@ namespace UPS.WWRR.Business.Common.Helper
             CancellationToken cancellationToken = default)
         {
             var adc = await GoogleCredential.GetApplicationDefaultAsync(cancellationToken);
-            var scoped = adc.CreateScoped(SqlLoginScope); // GoogleCredential handles caching/refresh [4](https://docs.cloud.google.com/alloydb/docs/database-users/iam-authentication)
+            var scoped = adc.CreateScoped(AlloyDbScope); // GoogleCredential handles caching/refresh [4](https://docs.cloud.google.com/alloydb/docs/database-users/iam-authentication)
 
             var builder = new NpgsqlDataSourceBuilder
             {
