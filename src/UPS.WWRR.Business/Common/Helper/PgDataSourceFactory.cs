@@ -7,7 +7,7 @@ namespace UPS.WWRR.Business.Common.Helper
     {
         // Cloud SQL IAM DB auth scope
         private static readonly string[] SqlLoginScope =
-            { "https://www.googleapis.com/auth/sqlservice.login" }; // Cloud SQL IAM scope [1](https://eplus.dev/securing-a-cloud-sql-for-postgresql-instance-gsp920)
+            { "https://www.googleapis.com/auth/cloud-platform" }; // Cloud SQL IAM scope [1](https://eplus.dev/securing-a-cloud-sql-for-postgresql-instance-gsp920)
 
         public static async Task<NpgsqlDataSource> CreateAsync(
             string host,
