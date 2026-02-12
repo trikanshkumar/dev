@@ -8,7 +8,7 @@ image:
 serviceAccount:
   create: true
   annotations:
-    iam.gke.io/gcp-service-account: wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: terraform-infra@gcp-cti-wwrr-dev.iam.gserviceaccount.com
   name: ups-wwrr-batch
 
 env:
