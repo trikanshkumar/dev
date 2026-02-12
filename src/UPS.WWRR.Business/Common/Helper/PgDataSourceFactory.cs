@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Npgsql;
+using System.Data.Common;
 
 namespace UPS.WWRR.Business.Common.Helper
 {
@@ -42,20 +43,30 @@ namespace UPS.WWRR.Business.Common.Helper
 
             return builder.Build();
         }
-
-
         public static (string db_host, string database, string iamDbUser) Parse(string connectionString)
         {
-            var csb = new NpgsqlConnectionStringBuilder(connectionString);
+            var builder = new DbConnectionStringBuilder
+            {
+                ConnectionString = connectionString
+            };
 
-            // These map directly to the properties exposed by the builder
-            string db_host = csb.Host;
-            string database = csb.Database;
-            string iamDbUser = csb.Username;
+            string db_host = Get(builder, "Host", "Server");
+            string database = Get(builder, "Database");
+            string iamDbUser = Get(builder, "Username", "User Id", "UserID", "UID");
 
             return (db_host, database, iamDbUser);
         }
 
+        private static string Get(DbConnectionStringBuilder b, params string[] keys)
+        {
+            foreach (var k in keys)
+                if (b.ContainsKey(k))
+                    return b[k].ToString();
+
+            return "";
+        }
     }
+
+
 }
 
