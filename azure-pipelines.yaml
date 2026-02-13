@@ -38,7 +38,11 @@ stages:
             inputs:
               targetType: inline
               script: |
-                echo "$(ALLOYDB_ADMIN_SA_KEY)" | base64 -d > $(GOOGLE_APPLICATION_CREDENTIALS)
+                printf "%s" "$(ALLOYDB_ADMIN_SA_KEY)" | base64 --decode > $(GOOGLE_APPLICATION_CREDENTIALS)
+                if [ ! -s $(GOOGLE_APPLICATION_CREDENTIALS) ]; then
+                  echo "ERROR: GCP_SERVICE_ACCOUNT_KEY is empty. Check your Variable Group."
+                  exit 1
+                fi
                 gcloud auth activate-service-account --key-file=$(GOOGLE_APPLICATION_CREDENTIALS)
                 gcloud config set project $(GCP_PROJECT_ID)
                 gcloud config set compute/region $(GCP_REGION)
