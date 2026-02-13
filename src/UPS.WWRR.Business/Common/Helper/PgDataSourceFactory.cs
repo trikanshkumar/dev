@@ -1,6 +1,7 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Npgsql;
 using System.Data.Common;
+using UPS.WWRR.Data.Common;
 
 namespace UPS.WWRR.Business.Common.Helper
 {
@@ -27,7 +28,8 @@ namespace UPS.WWRR.Business.Common.Helper
                     Host = host,
                     Database = database,
                     Username = iamDbUser,
-                    SslMode = requireSsl ? SslMode.Require : SslMode.Disable
+                    SslMode = requireSsl ? SslMode.Require : SslMode.Disable,
+                    SearchPath = DataConstants.defaultSchema
                 }
             };
 
