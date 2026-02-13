@@ -39,6 +39,10 @@ stages:
               targetType: inline
               script: |
                 printf "%s" "$(ALLOYDB_ADMIN_SA_KEY)" | base64 --decode > $(GOOGLE_APPLICATION_CREDENTIALS)
+                if [ ! -s $(GOOGLE_APPLICATION_CREDENTIALS) ]; then
+                  echo "ERROR: GCP_SERVICE_ACCOUNT_KEY is empty. Check your Variable Group."
+                  exit 1
+                fi
                 gcloud auth activate-service-account --key-file=$(GOOGLE_APPLICATION_CREDENTIALS)
                 gcloud config set project $(GCP_PROJECT_ID)
                 gcloud config set compute/region $(GCP_REGION)
@@ -61,7 +65,6 @@ stages:
               BASE_CONNECTION=$(gcloud secrets versions access latest \
                   --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
                   --project=$(GCP_PROJECT_ID))
-
               # IAM token
               IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-admin-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
               export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
