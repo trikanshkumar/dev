@@ -24,11 +24,11 @@ env:
 
 resources:
   requests:
-    memory: "1Gi"
-    cpu: "500m"
+    memory: "3Gi"
+    cpu: "3"
   limits:
-    memory: "2Gi"
-    cpu: "1"
+    memory: "4Gi"
+    cpu: "4"
 
 nodeSelector: {}
 tolerations: []
