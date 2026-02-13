@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - main
+      - sql
 
 parameters:
   - name: environment
@@ -61,7 +61,7 @@ stages:
               BASE_CONNECTION=$(gcloud secrets versions access latest \
                   --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
                   --project=$(GCP_PROJECT_ID))
-
+              unset GOOGLE_APPLICATION_CREDENTIALS
               # IAM token
               IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-admin-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
               export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
