@@ -32,7 +32,8 @@ namespace UPS.WWRR.Business.Services
         /// </summary>
         private static readonly List<HashSet<string>> _pairedTableGroups =
         [
-            new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TARCLHD), nameof(TableEnum.TARCLDT) }
+            new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TARCLHD), nameof(TableEnum.TARCLDT) },
+            new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TDOZNHD), nameof(TableEnum.TDOZNDT) }
         ];
 
         public BatchProcessorWorker(ILogger<BatchProcessorWorker> logger,
@@ -319,9 +320,9 @@ namespace UPS.WWRR.Business.Services
                 var sw = System.Diagnostics.Stopwatch.StartNew();
                 try
                 {
-                if (descriptor.IsNormalizedTableGroup)
+                    if (descriptor.RequiresStagingNormalization)
                     {
-                        await ProcessNormalizedTableGroupAsync(load, descriptor, sw, ct);
+                        await HandleStagingNormalizationLoadAsync(load, descriptor, sw, ct);
                     }
                     else
                     {
@@ -645,8 +646,26 @@ namespace UPS.WWRR.Business.Services
                     StoredProcConstant.AreaClassificationHeaderNormalizeStaging,
                     GetAreaClassificationTableMapping()
                 ),
-                //Add other table descriptors here as needed
-                _ => LoadTableDescriptor.Unsupported
+            // Domestic Zone Header - uses special multi-step process with staging dataset normalization
+            nameof(TableEnum.TDOZNHD) => new LoadTableDescriptor(
+                nameof(TableEnum.TDOZNHD).ToLowerInvariant(),
+                (nameof(TableEnum.TDOZNHD) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.DomesticZoneMerge,
+                async path => await _csvValidator.ValidateCsvAsync<DomesticZoneHeaderDto>(path),
+                StoredProcConstant.DomesticZoneNormalizeStaging,
+                GetDomesticZoneTableMapping()
+            ),
+            // Domestic Zone Detail - uses special multi-step process with staging dataset normalization
+            nameof(TableEnum.TDOZNDT) => new LoadTableDescriptor(
+                nameof(TableEnum.TDOZNDT).ToLowerInvariant(),
+                (nameof(TableEnum.TDOZNDT) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.DomesticZoneMerge,
+                async path => await _csvValidator.ValidateCsvAsync<DomesticZoneDetailDto>(path),
+                StoredProcConstant.DomesticZoneNormalizeStaging,
+                GetDomesticZoneTableMapping()
+            ),
+            //Add other table descriptors here as needed
+            _ => LoadTableDescriptor.Unsupported
             };
 
         /// <summary>
@@ -831,7 +850,7 @@ namespace UPS.WWRR.Business.Services
         /// <param name="StagingTableName"></param>
         /// <param name="MergeStoredProcedure"></param>
         /// <param name="ValidateAsync"></param>
-        /// <param name="StagingDatasetProcedure">Optional stored procedure to normalize raw staging data before merge (used for normalized table groups)</param>
+        /// <param name="StagingDatasetProcedure">Optional stored procedure to normalize raw staging data before merge (used for Area Classification and Domestic Zone tables)</param>
         /// <param name="NormalizedTableMapping">Optional dictionary mapping normalized staging tables to their main tables for load reference update</param>
         private sealed record LoadTableDescriptor(
             string TableName,
@@ -842,7 +861,7 @@ namespace UPS.WWRR.Business.Services
             Dictionary<string, string>? NormalizedTableMapping = null)
         {
             public bool IsSupported => TableName != "UNSUPPORTED";
-            public bool IsNormalizedTableGroup => !string.IsNullOrEmpty(StagingDatasetProcedure);
+            public bool RequiresStagingNormalization => !string.IsNullOrEmpty(StagingDatasetProcedure);
             public static LoadTableDescriptor Unsupported => new("UNSUPPORTED", string.Empty, string.Empty, _ => Task.FromResult(new CsvValidationResponse(false, new List<string> { "Unsupported table" })));
         }
 
@@ -855,12 +874,57 @@ namespace UPS.WWRR.Business.Services
         }
 
         /// <summary>
-        /// Performs a multi-step merge process for normalized table groups:
+        /// Handles the complete staging normalization load process including merge execution and result handling.
+        /// Executes staging normalization merge and updates load status based on result.
+        /// </summary>
+        /// <param name="load">The data load being processed</param>
+        /// <param name="descriptor">The table descriptor with normalization settings</param>
+        /// <param name="sw">Stopwatch for timing the operation</param>
+        /// <param name="ct">Cancellation token</param>
+        private async Task HandleStagingNormalizationLoadAsync(
+            DataLoad load, LoadTableDescriptor descriptor, System.Diagnostics.Stopwatch sw, CancellationToken ct)
+        {
+            var (mergeResult, mergeDetail) = await PerformStagingNormalizationMergeAsync(load, descriptor, sw, ct);
+            bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
+
+            if (hasError)
+            {
+                int errorCode = 0;
+                if (!string.IsNullOrWhiteSpace(mergeResult.ErrorNumber) && int.TryParse(mergeResult.ErrorNumber, out var parsed))
+                    errorCode = parsed;
+
+                var error = new DataLoadError
+                {
+                    DataLoadDetailId = mergeDetail.Id,
+                    ErrorCode = errorCode,
+                    ErrorStoredProcedureName = mergeResult.ErrorProcedure,
+                    ErrorMessage = mergeResult.ErrorMessage,
+                    CreatedOn = DateTime.UtcNow
+                };
+                await _loadRepository.AddErrorsAsync(new[] { error }, ct);
+                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+            }
+            else
+            {
+                if (descriptor.NormalizedTableMapping != null)
+                {
+                    await _loadRepository.UpdateLoadReferenceForMultipleTablesAsync(
+                        descriptor.NormalizedTableMapping, load.Id, mergeDetail.Id, ct);
+                    _logger.LogInformation(
+                        "LOAD_REF_TE updated for {count} tables (DataLoad: {loadId}, Detail: {detailId})",
+                        descriptor.NormalizedTableMapping.Count, load.Id, mergeDetail.Id);
+                }
+                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
+                _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
+            }
+        }
+
+        /// <summary>
+        /// Performs the staging normalization merge process for tables that require staging dataset normalization:
         /// 1. Execute staging dataset procedure to normalize data from raw staging tables to normalized staging tables
         /// 2. Execute merge procedure to move data from normalized staging to actual tables
-        /// This method is used for table groups like Area Classification that require data normalization before merge.
         /// </summary>
-        private async Task<(MergeResult MergeResult, DataLoadDetail MergeDetail)> PerformNormalizedTableGroupMergeAsync(
+        private async Task<(MergeResult MergeResult, DataLoadDetail MergeDetail)> PerformStagingNormalizationMergeAsync(
             DataLoad load, LoadTableDescriptor descriptor, System.Diagnostics.Stopwatch sw, CancellationToken ct)
         {
             _logger.LogInformation("Executing staging dataset normalization for table {tbl} load {id}", load.LoadTableName, load.Id);
@@ -923,44 +987,6 @@ namespace UPS.WWRR.Business.Services
         }
 
         /// <summary>
-        /// Processes a normalized table group load including merge, error handling, and status updates.
-        /// </summary>
-        private async Task ProcessNormalizedTableGroupAsync(DataLoad load, LoadTableDescriptor descriptor, System.Diagnostics.Stopwatch sw, CancellationToken ct)
-        {
-            var (mergeResult, mergeDetail) = await PerformNormalizedTableGroupMergeAsync(load, descriptor, sw, ct);
-            bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
-            
-            if (hasError)
-            {
-                int errorCode = 0;
-                if (!string.IsNullOrWhiteSpace(mergeResult.ErrorNumber) && int.TryParse(mergeResult.ErrorNumber, out var parsed)) 
-                    errorCode = parsed;
-                    
-                var error = new DataLoadError
-                {
-                    DataLoadDetailId = mergeDetail.Id,
-                    ErrorCode = errorCode,
-                    ErrorStoredProcedureName = mergeResult.ErrorProcedure,
-                    ErrorMessage = mergeResult.ErrorMessage,
-                    CreatedOn = DateTime.UtcNow
-                };
-                await _loadRepository.AddErrorsAsync(new[] { error }, ct);
-                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
-            }
-            else
-            {
-                if (descriptor.NormalizedTableMapping != null)
-                {
-                    await _loadRepository.UpdateLoadReferenceForMultipleTablesAsync(descriptor.NormalizedTableMapping, load.Id, mergeDetail.Id, ct);
-                    _logger.LogInformation("LOAD_REF_TE updated for {count} normalized tables (DataLoad: {loadId}, Detail: {detailId})", 
-                        descriptor.NormalizedTableMapping.Count, load.Id, mergeDetail.Id);
-                }
-                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
-                _logger.LogInformation("Normalized table group load process completed for table {tbl} load {id}", load.LoadTableName, load.Id);
-            }
-        }
-
-        /// <summary>
         /// Gets the table mapping for Area Classification tables (staging -> main tables)
         /// Used for updating LOAD_REF_TE and IS_COMPLETED_IR across all related tables after merge
         /// </summary>
@@ -977,6 +1003,22 @@ namespace UPS.WWRR.Business.Services
             { "zchartorggeo_stg", "zchartorggeo" },
             { "zchartorggpu_stg", "zchartorggpu" },
             { "zchartsvctyp_stg", "zchartsvctyp" }
+        };
+
+        /// <summary>
+        /// Gets the table mapping for Domestic Zone tables (staging -> main tables)
+        /// Used for updating LOAD_REF_TE and IS_COMPLETED_IR across all related tables after merge
+        /// </summary>
+        private static Dictionary<string, string> GetDomesticZoneTableMapping() => new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "tdoznhd_stg", "tdoznhd_stg" },
+            { "tdozndt_stg", "tdozndt_stg" },
+            { "domzchartsts_stg", "domzchartsts" },
+            { "domzchartlkup_stg", "domzchartlkup" },
+            { "tdoznhd_new_stg", "tdoznhd" },
+            { "tdozndt_new_stg", "tdozndt" },
+            { "domzchartdtngeo_stg", "domzchartdtngeo" },
+            { "domzchartorggeo_stg", "domzchartorggeo" }
         };
 
         private async Task MoveObjectToProcessedAsync(string objectName)

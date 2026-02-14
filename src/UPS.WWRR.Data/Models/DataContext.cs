@@ -118,6 +118,21 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<ChartDestinationGeoStaging> ChartDestinationGeosStaging { get; set; }
         public virtual DbSet<ChartDestinationGpu> ChartDestinationGpus { get; set; }
         public virtual DbSet<ChartDestinationGpuStaging> ChartDestinationGpusStaging { get; set; }
+       
+        public virtual DbSet<DomesticZoneDetailStaging> DomesticZoneDetailsStaging { get; set; }
+        public virtual DbSet<DomesticZoneHeaderStaging> DomesticZoneHeadersStaging { get; set; }
+        public virtual DbSet<DomesticZoneChartLookup> DomesticZoneChartLookups { get; set; }
+        public virtual DbSet<DomesticZoneChartLookupStaging> DomesticZoneChartLookupsStaging { get; set; }
+        public virtual DbSet<DomesticZoneHeader> DomesticZoneHeaderNew { get; set; }
+        public virtual DbSet<DomesticZoneHeaderNewStaging> DomesticZoneHeaderNewStaging { get; set; }
+        public virtual DbSet<DomesticZoneDetail> DomesticZoneDetailNew { get; set; }
+        public virtual DbSet<DomesticZoneDetailNewStaging> DomesticZoneDetailNewStaging { get; set; }
+        public virtual DbSet<DomesticZoneChartStatus> DomesticZoneChartStatuses { get; set; }
+        public virtual DbSet<DomesticZoneChartStatusStaging> DomesticZoneChartStatusesStaging { get; set; }
+        public virtual DbSet<DomesticZoneChartDestinationGeo> DomesticZoneChartDestinationGeos { get; set; }
+        public virtual DbSet<DomesticZoneChartDestinationGeoStaging> DomesticZoneChartDestinationGeosStaging { get; set; }
+        public virtual DbSet<DomesticZoneChartOriginGeo> DomesticZoneChartOriginGeos { get; set; }
+        public virtual DbSet<DomesticZoneChartOriginGeoStaging> DomesticZoneChartOriginGeosStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -528,6 +543,72 @@ namespace UPS.WWRR.Data.Models
             modelBuilder.Entity<ChartDestinationGpuStaging>(e =>
             {
                 e.ToTable("zchartdtngpu_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<DomesticZoneDetailStaging>(e =>
+            {
+                e.ToTable("tdozndt_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<DomesticZoneHeaderStaging>(e =>
+            {
+                e.ToTable("tdoznhd_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<DomesticZoneChartLookupStaging>(e =>
+            {
+                e.ToTable("domzchartlkup_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<DomesticZoneHeaderNewStaging>(e =>
+            {
+                e.ToTable("tdoznhd_new_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<DomesticZoneDetailNewStaging>(e =>
+            {
+                e.ToTable("tdozndt_new_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            // Add unique constraint for DomesticZoneChartStatus (matches CONSTRAINT uq_domzchartsts in DB schema)
+            modelBuilder.Entity<DomesticZoneChartStatus>(e =>
+            {
+                e.HasIndex(t => new
+                {
+                    t.ZoneChartNumber,
+                    t.DomesticZoneHeaderStartDate,
+                    t.DomesticZoneHeaderEndDate
+                }).IsUnique();
+            });
+
+            modelBuilder.Entity<DomesticZoneChartStatusStaging>(e =>
+            {
+                e.ToTable("domzchartsts_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+                // Add unique constraint for DomesticZoneChartStatusStaging (matches CONSTRAINT uq_domzchartsts_stg in DB schema)
+                e.HasIndex(t => new
+                {
+                    t.ZoneChartNumber,
+                    t.DomesticZoneHeaderStartDate,
+                    t.DomesticZoneHeaderEndDate
+                }).IsUnique();
+            });
+
+            modelBuilder.Entity<DomesticZoneChartDestinationGeoStaging>(e =>
+            {
+                e.ToTable("domzchartdtngeo_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<DomesticZoneChartOriginGeoStaging>(e =>
+            {
+                e.ToTable("domzchartorggeo_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 

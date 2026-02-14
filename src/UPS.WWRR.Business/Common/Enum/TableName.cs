@@ -136,5 +136,11 @@ namespace UPS.WWRR.Business.Common.Constants
 
         [Description("Freight Rates")]
         TRASTD,
+
+        [Description("Domestic Zone Header")]
+        TDOZNHD,
+
+        [Description("Domestic Zone Detail")]
+        TDOZNDT,
     }
 }

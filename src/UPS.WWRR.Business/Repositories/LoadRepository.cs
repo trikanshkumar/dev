@@ -164,13 +164,13 @@ namespace UPS.WWRR.Business.Repositories
         }
 
         public async Task<int> UpdateLoadReferenceForMultipleTablesAsync(Dictionary<string, string> tableMapping, long dataLoadId, long dataLoadDetailId, CancellationToken ct = default)
-                {
-                    int totalAffected = 0;
-                    foreach (var kvp in tableMapping)
-                    {
-                        totalAffected += await UpdateLoadReferenceAsync(kvp.Key, kvp.Value, dataLoadId, dataLoadDetailId, ct);
-                    }
-                    return totalAffected;
-                }
+        {
+            int totalAffected = 0;
+            foreach (var kvp in tableMapping)
+            {
+                totalAffected += await UpdateLoadReferenceAsync(kvp.Key, kvp.Value, dataLoadId, dataLoadDetailId, ct);
             }
+            return totalAffected;
         }
+    }
+}
