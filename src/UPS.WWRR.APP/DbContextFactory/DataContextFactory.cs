@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using System.Diagnostics.CodeAnalysis;
-using UPS.WWRR.Data.Models;
-using UPS.WWRR.Data.Common;
 using UPS.WWRR.Business.Common.Helper;
+using UPS.WWRR.Data.Common;
+using UPS.WWRR.Data.Models;
 
 namespace UPS.WWRR.API.DbContextFactory
 {
@@ -16,14 +17,32 @@ namespace UPS.WWRR.API.DbContextFactory
             var connectionString = Environment.GetEnvironmentVariable("ALLOYDB_CONNECTION")
                 ?? throw new InvalidOperationException("ALLOYDB_CONNECTION environment variable is not set.");
 
-            // Parse host, db, user from connection string
-            var (db_host, database, iamDbUser) = PgDataSourceFactory.Parse(connectionString);
+            var enableIAMTokenAuth = bool.TryParse(Environment.GetEnvironmentVariable("EnableIAMTokenAuth"), out var iam_tok) ? iam_tok : true;
 
-            // Create DataSource with IAM token provider
-            var dataSource = PgDataSourceFactory
-                .CreateAsync(db_host, database, iamDbUser, requireSsl: true)
-                .GetAwaiter()
-                .GetResult();
+
+            NpgsqlDataSource dataSource = null;
+
+            if (enableIAMTokenAuth)
+            {
+                // Parse host, db, user from connection string
+                var (db_host, database, iamDbUser) = PgDataSourceFactory.Parse(connectionString);
+
+                // Create DataSource with IAM token provider
+                dataSource = PgDataSourceFactory
+                    .CreateAsync(db_host, database, iamDbUser, requireSsl: true)
+                    .GetAwaiter()
+                    .GetResult();
+            }
+            else
+            {
+                // Local dev: use the full connection string with Username/Password
+                // e.g., Host=localhost;Port=5432;Database=mydb;Username=myuser;Password=mypwd;
+                dataSource = PgDataSourceFactory.Create(
+                    localConnectionString: connectionString,  // includes user & password
+                    requireSsl: false)
+                    .GetAwaiter()
+                    .GetResult();
+            }
 
             var optionsBuilder = new DbContextOptionsBuilder<DataContext>();
 

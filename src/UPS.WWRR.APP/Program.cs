@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Npgsql;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using UPS.WWRR.API.Infrastructure;
@@ -33,46 +34,63 @@ class Program
         var hasHeader = bool.TryParse(Environment.GetEnvironmentVariable("BatchLoad_HasHeader"), out var hh) ? hh : true;
         var bucket = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_NAME") ?? string.Empty;
         var bucketSubName = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_SUB_NAME") ?? string.Empty;
+        var enableIAMTokenAuth = bool.TryParse(Environment.GetEnvironmentVariable("EnableIAMTokenAuth"), out var iam_tok) ? iam_tok : true;
 
-        
+
         // GCS download chunk size (separate from CSV batch processing)
         var gcsDownloadChunkSize = int.TryParse(Environment.GetEnvironmentVariable("GCS_DOWNLOAD_CHUNK_SIZE"), out var gcs) ? gcs : 4 * 1024 * 1024; // 4 MB default
 
-        // Pull stable values from configuration / Secret Manager(NOT the token)
-        var (db_host, database, iamDbUser) = PgDataSourceFactory.Parse(connectionString);
+        NpgsqlDataSource dataSource = null;
+
+        if (enableIAMTokenAuth)
+        {
+            // Pull stable values from configuration / Secret Manager(NOT the token)
+            var (db_host, database, iamDbUser) = PgDataSourceFactory.Parse(connectionString);
 
 
-        // Create a single shared NpgsqlDataSource for pooling
-        var dataSource = await PgDataSourceFactory.CreateAsync(
-                host: db_host,
-                database: database,
-                iamDbUser: iamDbUser,
-                requireSsl: true);
+            // Create a single shared NpgsqlDataSource for pooling
+            dataSource = await PgDataSourceFactory.CreateAsync(
+                    host: db_host,
+                    database: database,
+                    iamDbUser: iamDbUser,
+                    requireSsl: true);
+        }
+        else
+        {
+            // Local dev: use the full connection string with Username/Password
+            // e.g., Host=localhost;Port=5432;Database=mydb;Username=myuser;Password=mypwd;
+            dataSource = PgDataSourceFactory.Create(
+                localConnectionString: connectionString,  // includes user & password
+                requireSsl: false)
+                .GetAwaiter()
+                .GetResult();
+        }
 
         var host = Host.CreateDefaultBuilder(args)
-            .ConfigureServices(services =>
-            {
-                services.AddSingleton(dataSource);
-                services.AddDbContext<DataContext>(options =>
-                   options.UseNpgsql(dataSource, npgSqlOptions =>
-                       npgSqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", DataConstants.defaultSchema)));
+                .ConfigureServices(services =>
+                {
+                    services.AddSingleton(dataSource);
 
-                services.AddScoped<INpgsqlConnectionHelper, NpgsqlConnectionHelper>();
-                services.AddScoped<ICsvSplitterService, CsvSplitterService>();
-                services.AddScoped<ICopyBatchDataService, CopyBatchDataService>();
-                services.AddScoped<ICsvValidator, CsvValidator>();
-                services.AddScoped<ILoadRepository, LoadRepository>();
-                // Worker is scoped (so it can use DbContext safely)
-                services.AddScoped<IBatchProcessorWorker, BatchProcessorWorker>();
+                    services.AddDbContext<DataContext>(options =>
+                        options.UseNpgsql(dataSource, npgSqlOptions =>
+                            npgSqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", DataConstants.defaultSchema)));
+     
+                    services.AddScoped<INpgsqlConnectionHelper, NpgsqlConnectionHelper>();
+                    services.AddScoped<ICsvSplitterService, CsvSplitterService>();
+                    services.AddScoped<ICopyBatchDataService, CopyBatchDataService>();
+                    services.AddScoped<ICsvValidator, CsvValidator>();
+                    services.AddScoped<ILoadRepository, LoadRepository>();
+                    // Worker is scoped (so it can use DbContext safely)
+                    services.AddScoped<IBatchProcessorWorker, BatchProcessorWorker>();
 
-                services.AddHostedService<BatchProcessor>();
+                    services.AddHostedService<BatchProcessor>();
 
-                var storageClient = StorageClient.Create();
-                services.AddSingleton<IStorageService>(_ => new GoogleCloudStorageService(storageClient, bucket, bucketSubName, gcsDownloadChunkSize));
-                services.AddSingleton(new LocalRuntimeSettings(connectionString, tableName, batchSize, chunkSize, delimiter, hasHeader, bucket));
-            })
-            .UseSerilog()
-            .Build();
+                    var storageClient = StorageClient.Create();
+                    services.AddSingleton<IStorageService>(_ => new GoogleCloudStorageService(storageClient, bucket, bucketSubName, gcsDownloadChunkSize));
+                    services.AddSingleton(new LocalRuntimeSettings(connectionString, tableName, batchSize, chunkSize, delimiter, hasHeader, bucket));
+                })
+                .UseSerilog()
+                .Build();
 
         await host.RunAsync();
     }

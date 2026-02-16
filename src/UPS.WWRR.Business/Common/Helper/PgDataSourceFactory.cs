@@ -45,6 +45,28 @@ namespace UPS.WWRR.Business.Common.Helper
 
             return builder.Build();
         }
+
+
+        /// <summary>
+        /// Local dev mode: build a DataSource from a regular username/password connection string.
+        /// </summary>
+        public static Task<NpgsqlDataSource> Create(
+            string localConnectionString,
+            bool requireSsl,
+            CancellationToken ct = default)
+        {
+            var dsb = new NpgsqlDataSourceBuilder(localConnectionString);
+
+            // Many local setups don't use TLS; change as needed.
+            if (!requireSsl)
+            {
+                dsb.ConnectionStringBuilder.SslMode = SslMode.Disable;
+            }
+
+            return Task.FromResult(dsb.Build());
+        }
+
+
         public static (string db_host, string database, string iamDbUser) Parse(string connectionString)
         {
             var builder = new DbConnectionStringBuilder
