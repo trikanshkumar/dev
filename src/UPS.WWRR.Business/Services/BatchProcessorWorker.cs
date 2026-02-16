@@ -700,6 +700,29 @@ namespace UPS.WWRR.Business.Services
                     // Check if file exists before attempting to download
                     if (!await _storageService.FileExistsAsync(gcsFileName, ct))
                     {
+                        // See if the filename was correct but the casing is wrong.
+                        var actualName = _storageService.GetFilenameCaseInsensitive(gcsFileName);
+                        if (actualName is not null)
+                        {
+                            // Still skip processing and log this as an error, but with a special FilenameCaseMismatch status
+                            var errorMessage = $"Filename has incorrect casing in receipt file. Searched for {gcsFileName} but found {actualName}. Bucket: {_gcpBucketName}, FileLocation: {load.FileLocation}";
+                            _logger.LogError(errorMessage);
+                            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+
+                            DataLoadDetail detail = await CreateDataLoadDetailForError(load, ct);
+                            var exception = new DataLoadException
+                            {
+                                DataLoadDetailId = detail.Id,
+                                TableName = descriptor.TableName,
+                                TableKey = $"LOAD:{load.Id}",
+                                ErrorFieldName = ServiceConstants.filenameCaseMismatchError,
+                                ErrorFieldValue = errorMessage[..100],
+                                CreatedOn = DateTime.UtcNow
+                            };
+
+                            await _loadRepository.AddExceptionsAsync([exception], ct);
+                            continue;
+                        }
                         _logger.LogError("File not found in GCS bucket. Bucket: {bucket}, Object: {object}, FileLocation: {fileLocation}",
                             _gcpBucketName, gcsFileName, load.FileLocation);
                         await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
@@ -730,20 +753,7 @@ namespace UPS.WWRR.Business.Services
                         // Record validation errors
                         if (validation.ValidationErrors?.Count > 0)
                         {
-                            // Create a DataLoadDetail to satisfy FK and track validation failure
-                            var detail = new DataLoadDetail
-                            {
-                                DataLoadId = load.Id,
-                                DataLoadType = "VAL",
-                                ErrorIndicator = 1,
-                                TimeProcessValue = 0,
-                                TimePeriodTypeCode = "SECONDS",
-                                RecordsInserted = 0,
-                                RecordsUpdated = 0,
-                                RecordsDeleted = 0,
-                                BatchNumber = 1
-                            };
-                            await _loadRepository.AddDetailAsync(detail, ct);
+                            DataLoadDetail detail = await CreateDataLoadDetailForError(load, ct);
 
                             var exceptions = validation.ValidationErrors.Select((msg, idx) => new DataLoadException
                             {
@@ -771,6 +781,25 @@ namespace UPS.WWRR.Business.Services
                     await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null);
                 }
             }
+        }
+
+        private async Task<DataLoadDetail> CreateDataLoadDetailForError(DataLoad load, CancellationToken ct)
+        {
+            // Create a DataLoadDetail to satisfy FK and track validation failure
+            var detail = new DataLoadDetail
+            {
+                DataLoadId = load.Id,
+                DataLoadType = "VAL",
+                ErrorIndicator = 1,
+                TimeProcessValue = 0,
+                TimePeriodTypeCode = "SECONDS",
+                RecordsInserted = 0,
+                RecordsUpdated = 0,
+                RecordsDeleted = 0,
+                BatchNumber = 1
+            };
+            await _loadRepository.AddDetailAsync(detail, ct);
+            return detail;
         }
 
         /// <summary>

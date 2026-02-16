@@ -139,6 +139,25 @@ public class GoogleCloudStorageService(StorageClient storageClient, string bucke
             return false;
         }
     }
+
+    public string? GetFilenameCaseInsensitive(string expectedName)
+    {
+        var objects = storageClient.ListObjects(bucketName);
+
+        var expectedNameWithBaseDirectory = PrependBaseDirectory(expectedName);
+
+        var match = objects.FirstOrDefault(o => o.Name.Equals(expectedNameWithBaseDirectory, StringComparison.OrdinalIgnoreCase));
+
+        if (match == null) return null;
+
+        var resolvedName = match.Name;
+
+        var resolvedNameWithoutBaseDirectory =
+            !string.IsNullOrWhiteSpace(baseDirectory) ? resolvedName[(baseDirectory.Length + 1)..] : resolvedName;
+
+        return resolvedNameWithoutBaseDirectory;
+    }
+
     public async Task<bool> VerifyFileSizeAsync(string remoteFileName, string localFilePath, CancellationToken ct = default)
     {
         var remoteSize = await GetFileSizeAsync(remoteFileName, ct);
