@@ -142,5 +142,8 @@ namespace UPS.WWRR.Business.Common.Constants
 
         [Description("Domestic Zone Detail")]
         TDOZNDT,
+
+        [Description("Fuel Surcharge Index")]
+        TFSCIDX,
     }
 }

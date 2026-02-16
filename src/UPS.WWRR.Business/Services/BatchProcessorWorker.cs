@@ -664,6 +664,12 @@ namespace UPS.WWRR.Business.Services
                 StoredProcConstant.DomesticZoneNormalizeStaging,
                 GetDomesticZoneTableMapping()
             ),
+            nameof(TableEnum.TFSCIDX) => new LoadTableDescriptor(
+                nameof(TableEnum.TFSCIDX).ToLowerInvariant(),
+                (nameof(TableEnum.TFSCIDX) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.FuelSurchargeIndexMerge,
+                async path => await _csvValidator.ValidateCsvAsync<FuelSurchargeIndexDto>(path)
+            ),
             //Add other table descriptors here as needed
             _ => LoadTableDescriptor.Unsupported
             };

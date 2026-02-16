@@ -47,5 +47,6 @@
         public const string AreaClassificationHeaderMerge = "sp_areaclassification_merge_proc";
         public const string DomesticZoneNormalizeStaging = "sp_domesticzone_stagingdataset_proc";
         public const string DomesticZoneMerge = "sp_domesticzone_merge_proc";
+        public const string FuelSurchargeIndexMerge = "sp_fuelsurchargeindex_merge_proc";
     }
 }

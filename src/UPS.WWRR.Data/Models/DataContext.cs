@@ -133,6 +133,8 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<DomesticZoneChartDestinationGeoStaging> DomesticZoneChartDestinationGeosStaging { get; set; }
         public virtual DbSet<DomesticZoneChartOriginGeo> DomesticZoneChartOriginGeos { get; set; }
         public virtual DbSet<DomesticZoneChartOriginGeoStaging> DomesticZoneChartOriginGeosStaging { get; set; }
+        public virtual DbSet<FuelSurchargeIndex> FuelSurchargeIndex { get; set; }
+        public virtual DbSet<FuelSurchargeIndexStaging> FuelSurchargeIndexStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -609,6 +611,12 @@ namespace UPS.WWRR.Data.Models
             modelBuilder.Entity<DomesticZoneChartOriginGeoStaging>(e =>
             {
                 e.ToTable("domzchartorggeo_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<FuelSurchargeIndexStaging>(e =>
+            {
+                e.ToTable("tfscidx_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 
