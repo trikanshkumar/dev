@@ -41,7 +41,8 @@ variables:
     
 pool:
   name: WWRR Mod Custom Agent Pool
-        
+  demands:
+    - Agent.Name -equals $(agentName)
 stages:
   - stage: BuildAndDeploy
     displayName: Build and Deploy
