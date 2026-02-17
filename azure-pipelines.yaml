@@ -1,13 +1,13 @@
 trigger:
   branches:
     include:
-      - main
+      - uat
 
 parameters:
   - name: environment
     displayName: Select environment
     type: string
-    default: dev
+    default: uat
     values:
       - dev
       - uat
@@ -41,7 +41,8 @@ variables:
     
 pool:
   name: WWRR Mod Custom Agent Pool
-        
+  demands:
+    - Agent.Name -equals $(agentName)
 stages:
   - stage: BuildAndDeploy
     displayName: Build and Deploy
