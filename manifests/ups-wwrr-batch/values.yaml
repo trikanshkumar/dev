@@ -1,14 +1,14 @@
 replicaCount: 1
 
 image:
-  repository: us-central1-docker.pkg.dev/gcp-cti-wwrr-dev/wwrr-dev-docker-repo/ups-wwrr-batch
+  repository: ""
   tag: latest
   pullPolicy: Always
 
 serviceAccount:
   create: true
   annotations:
-    iam.gke.io/gcp-service-account: wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: ""
   name: ups-wwrr-batch
 
 env:
@@ -17,7 +17,7 @@ env:
   TABLE_NAME: ""
   BATCH_SIZE: ""
   ASPNETCORE_ENVIRONMENT: ""
-  ALLOYDB_CONNECTION: "Host=10.120.0.23;Port=5432;Database=dev_u7x_001;Username=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam;Search Path=a886aa_ao;SslMode=Require"
+  ALLOYDB_CONNECTION: ""
   BatchLoad_ChunkSize: ""
   BatchLoad_Delimiter: ""
   BatchLoad_HasHeader: ""
