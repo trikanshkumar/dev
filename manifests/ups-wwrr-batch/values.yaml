@@ -8,7 +8,7 @@ image:
 serviceAccount:
   create: true
   annotations:
-    iam.gke.io/gcp-service-account: ""
+    iam.gke.io/gcp-service-account: "{{ .Env.ALLOYDB_APP_EMAIL }}"
   name: ups-wwrr-batch
 
 env:
