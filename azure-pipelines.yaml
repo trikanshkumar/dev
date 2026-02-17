@@ -1,13 +1,13 @@
 trigger:
   branches:
     include:
-      - uat
+      - main
 
 parameters:
   - name: environment
     displayName: Select environment
     type: string
-    default: uat
+    default: dev
     values:
       - dev
       - uat
