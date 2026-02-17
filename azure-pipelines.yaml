@@ -10,19 +10,38 @@ parameters:
     default: dev
     values:
       - dev
-      - qa
+      - uat
       - prod
-
-pool:
-  name: WWRR Mod Custom Agent Pool
-  demands:
-    - Agent.Name -equals wwrr-agent
 
 variables:
   - group: wwrr-${{ parameters.environment }}-pipeline-password
   - name: GOOGLE_APPLICATION_CREDENTIALS
     value: $(Agent.TempDirectory)/gcp-key.json
-
+  - name: agentName
+    ${{ if eq(parameters.environment, 'dev') }}:
+      value: 'wwrr-agent'
+    ${{ if eq(parameters.environment, 'uat') }}:
+      value: 'wwrr-uat-agent'
+    ${{ if eq(parameters.environment, 'prod') }}:
+      value: 'wwrr-prod-agent'
+  - name: ALLOYDB_ADMIN_EMAIL
+    ${{ if eq(parameters.environment, 'dev') }}:
+      value: 'wwrr-mod-admin-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com'
+    ${{ if eq(parameters.environment, 'uat') }}:
+      value: 'wwrr-mod-admin-alloydb@gcp-cti-wwrr-uat.iam.gserviceaccount.com'
+    ${{ if eq(parameters.environment, 'prod') }}:
+      value: 'wwrr-mod-admin-alloydb@gcp-cti-wwrr-prod.iam.gserviceaccount.com'    
+  - name: ALLOYDB_APP_EMAIL
+    ${{ if eq(parameters.environment, 'dev') }}:
+      value: 'wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com'
+    ${{ if eq(parameters.environment, 'uat') }}:
+      value: 'wwrr-mod-app-alloydb@gcp-cti-wwrr-uat.iam.gserviceaccount.com'
+    ${{ if eq(parameters.environment, 'prod') }}:
+      value: 'wwrr-mod-app-alloydb@gcp-cti-wwrr-prod.iam.gserviceaccount.com'
+    
+pool:
+  name: WWRR Mod Custom Agent Pool
+        
 stages:
   - stage: BuildAndDeploy
     displayName: Build and Deploy
@@ -66,7 +85,7 @@ stages:
                   --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
                   --project=$(GCP_PROJECT_ID))
               # IAM token
-              IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-admin-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
+              IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=$ALLOYDB_ADMIN_EMAIL)
               export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
               dotnet ef migrations bundle \
                 --project src/UPS.WWRR.Data \
@@ -86,7 +105,7 @@ stages:
                   --project=$(GCP_PROJECT_ID))
 
                 # IAM token
-                IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-admin-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
+                IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=$ALLOYDB_ADMIN_EMAIL)
                 export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
                 ./efbundle --connection "$ALLOYDB_CONNECTION"
 
@@ -109,21 +128,20 @@ stages:
               script: |
                 gcloud container clusters get-credentials $(GKE_CLUSTER_NAME) --region $(GCP_REGION) --project $(GCP_PROJECT_ID)
                 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-                BASE_CONNECTION=$(gcloud secrets versions access latest \
-                  --secret=wwrr-${{ parameters.environment }}-alloydb-app-conn \
-                  --project=$(GCP_PROJECT_ID))
-
-                # IAM token
-                # IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com)
-                # export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
-                export ALLOYDB_CONNECTION="Host=10.120.0.23;Port=5432;Database=dev_u7x_001;Username=wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam;Search Path=a886aa_ao;SslMode=Require"
-
+                export ALLOYDB_CONNECTION="$(gcloud secrets versions access latest --secret=wwrr-${{ parameters.environment }}-alloydb-app-conn)"
+                export ALLOYDB_APP_EMAIL="$ALLOYDB_APP_EMAIL"
+                if [ -z "$ALLOYDB_CONNECTION" ]; then
+                    echo "ERROR: AlloyDB connection string not retrieved"
+                    exit 1
+                fi
+                echo "Deploying to GKE using dynamic AlloyDB connection"    
                 helm upgrade --install ups-wwrr-batch ./manifests/ups-wwrr-batch \
                   --namespace default \
                   --create-namespace \
                   --wait \
                   --timeout 600s \
                   --force \
+                  --set image.repository="$(IMAGE_REPOSITORY)" \
                   --set-string env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME="$(GOOGLE_CLOUD_STORAGE_BUCKET_NAME)" \
                   --set-string env.LOAD_INTERVAL_MINUTES="$(LOAD_INTERVAL_MINUTES)" \
                   --set-string env.TABLE_NAME="$(TABLE_NAME)" \
@@ -133,3 +151,17 @@ stages:
                   --set-string env.BatchLoad_ChunkSize="$(BatchLoad_ChunkSize)" \
                   --set-string env.BatchLoad_Delimiter="$(BatchLoad_Delimiter)" \
                   --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)"
+          - task: Bash@3
+            displayName: Cleanup Agent
+            condition: always()
+            inputs:
+              targetType: inline
+              script: |
+                echo "Cleaning credentials..."
+                rm -f $(GOOGLE_APPLICATION_CREDENTIALS) || true
+                echo "Cleaning docker..."
+                docker system prune -af --volumes || true
+                echo "Cleaning apt..."
+                sudo apt-get clean
+                sudo apt-get autoremove -y
+                echo "Done."
