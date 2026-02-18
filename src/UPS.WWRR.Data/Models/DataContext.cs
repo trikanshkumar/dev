@@ -135,6 +135,20 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<DomesticZoneChartOriginGeoStaging> DomesticZoneChartOriginGeosStaging { get; set; }
         public virtual DbSet<FuelSurchargeIndex> FuelSurchargeIndex { get; set; }
         public virtual DbSet<FuelSurchargeIndexStaging> FuelSurchargeIndexStaging { get; set; }
+        public virtual DbSet<AccessorialRatesCriteria> AccessorialRatesCriteria { get; set; }
+        public virtual DbSet<AccessorialRatesCriteriaStaging> AccessorialRatesCriteriaStaging { get; set; }
+        public virtual DbSet<AccessorialRatesNew> AccessorialRatesNew { get; set; }
+        public virtual DbSet<AccessorialRatesNewStaging> AccessorialRatesNewStaging { get; set; }
+        public virtual DbSet<AccessorialRatesStaging> AccessorialRatesStaging { get; set; }
+        public virtual DbSet<ChartAccessorialCode> ChartAccessorialCode { get; set; }
+        public virtual DbSet<ChartAccessorialCodeStaging> ChartAccessorialCodeStaging { get; set; }
+        public virtual DbSet<ChartGeo> ChartGeo { get; set; }
+        public virtual DbSet<ChartGeoStaging> ChartGeoStaging { get; set; }
+        public virtual DbSet<RateChartHeaderStaging> RateChartHeaderStaging { get; set; }
+        public virtual DbSet<RateChartLookup> RateChartLookup { get; set; }
+        public virtual DbSet<RateChartLookupStaging> RateChartLookupStaging { get; set; }
+        public virtual DbSet<ChartServicePackage> ChartServicePackage { get; set; }
+        public virtual DbSet<ChartServicePackageStaging> ChartServicePackageStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -618,6 +632,71 @@ namespace UPS.WWRR.Data.Models
             {
                 e.ToTable("tfscidx_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<AccessorialRatesCriteriaStaging>(e =>
+            {
+                e.ToTable("accratecrit_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<AccessorialRatesNewStaging>(e =>
+            {
+                e.ToTable("accrate_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<AccessorialRatesStaging>(e =>
+            {
+                e.ToTable("tasyra_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ChartAccessorialCodeStaging>(e =>
+            {
+                e.ToTable("chartacccd_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ChartGeoStaging>(e =>
+            {
+                e.ToTable("chartorggeo_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<ChartServicePackageStaging>(e =>
+            {
+                e.ToTable("chartsvcpkg_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<RateChartHeaderStaging>(e =>
+            {
+                e.ToTable("tchart_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<RateChartLookupStaging>(e =>
+            {
+                e.ToTable("chartsts_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+                e.HasIndex(t => new
+                {
+                    t.ChartNumber,
+                    t.ChartEffectiveDate,
+                    t.ChartEndDate
+                }).IsUnique();
+            });
+
+            modelBuilder.Entity<RateChartLookup>(e =>
+            {
+                e.ToTable("chartsts");
+                e.HasIndex(t => new
+                {
+                    t.ChartNumber,
+                    t.ChartEffectiveDate,
+                    t.ChartEndDate
+                }).IsUnique();
             });
 
             // Relationships

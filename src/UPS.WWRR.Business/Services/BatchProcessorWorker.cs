@@ -33,7 +33,8 @@ namespace UPS.WWRR.Business.Services
         private static readonly List<HashSet<string>> _pairedTableGroups =
         [
             new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TARCLHD), nameof(TableEnum.TARCLDT) },
-            new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TDOZNHD), nameof(TableEnum.TDOZNDT) }
+            new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TDOZNHD), nameof(TableEnum.TDOZNDT) },
+            new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TASYRA), nameof(TableEnum.TCHART) }
         ];
 
         public BatchProcessorWorker(ILogger<BatchProcessorWorker> logger,
@@ -670,6 +671,24 @@ namespace UPS.WWRR.Business.Services
                 StoredProcConstant.FuelSurchargeIndexMerge,
                 async path => await _csvValidator.ValidateCsvAsync<FuelSurchargeIndexDto>(path)
             ),
+            // Accessorial Rates - uses special multi-step process with staging dataset normalization
+            nameof(TableEnum.TASYRA) => new LoadTableDescriptor(
+                nameof(TableEnum.TASYRA).ToLowerInvariant(),
+                (nameof(TableEnum.TASYRA) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.RateChartAccessorialRatesMerge,
+                async path => await _csvValidator.ValidateCsvAsync<AccessorialRatesDto>(path),
+                StoredProcConstant.RateChartAccessorialRatesNormalizeStaging,
+                GetRateChartAccessorialRateTableMapping()
+            ),
+            // Rate Chart Header - uses special multi-step process with staging dataset normalization
+            nameof(TableEnum.TCHART) => new LoadTableDescriptor(
+                nameof(TableEnum.TCHART).ToLowerInvariant(),
+                (nameof(TableEnum.TCHART) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.RateChartAccessorialRatesMerge,
+                async path => await _csvValidator.ValidateCsvAsync<RateChartHeaderDto>(path),
+                StoredProcConstant.RateChartAccessorialRatesNormalizeStaging,
+                GetRateChartAccessorialRateTableMapping()
+            ),
             //Add other table descriptors here as needed
             _ => LoadTableDescriptor.Unsupported
             };
@@ -1054,6 +1073,22 @@ namespace UPS.WWRR.Business.Services
             { "tdozndt_new_stg", "tdozndt" },
             { "domzchartdtngeo_stg", "domzchartdtngeo" },
             { "domzchartorggeo_stg", "domzchartorggeo" }
+        };
+
+        /// <summary>
+        /// Gets the table mapping for Rate Chart / Accessorial Rates tables (staging -> main tables)
+        /// Used for updating LOAD_REF_TE and IS_COMPLETED_IR across all related tables after merge
+        /// </summary>
+        private static Dictionary<string, string> GetRateChartAccessorialRateTableMapping() => new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "tasyra_stg", "tasyra_stg" },
+            { "tchart_stg", "tchart_stg" },
+            { "accrate_stg", "accrate" },
+            { "accratecrit_stg", "accratecrit" },
+            { "chartacccd_stg", "chartacccd" },
+            { "chartorggeo_stg", "chartorggeo" },
+            { "chartsts_stg", "chartsts" },
+            { "chartsvcpkg_stg", "chartsvcpkg" }
         };
 
         private async Task MoveObjectToProcessedAsync(string objectName)

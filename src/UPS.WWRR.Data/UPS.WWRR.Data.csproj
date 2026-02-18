@@ -27,6 +27,8 @@
     <None Remove="Scripts\sp_MinimumCriteria_MergeProc.sql" />
     <None Remove="Scripts\sp_PostalException_MergeProc.sql" />
     <None Remove="Scripts\sp_PublishedLetterThreshold_MergeProc.sql" />
+    <None Remove="Scripts\sp_RateChart_AccessorialRates_MergeProc.sql" />
+    <None Remove="Scripts\sp_RateChart_AccessorialRates_StagingDataset_Proc.sql" />
     <None Remove="Scripts\sp_ServiceDefaultRules_MergeProc.sql" />
     <None Remove="Scripts\sp_ServiceDowngradeRules_MergeProc.sql" />
     <None Remove="Scripts\sp_SimpleRateVolumeRange_MergeProc.sql" />
@@ -57,6 +59,8 @@
     <EmbeddedResource Include="Scripts\sp_OriginServiceFeatureTypes_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_PublishedLetterThreshold_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_FuelSurcharge_Merge_Proc.sql" />
+    <EmbeddedResource Include="Scripts\sp_RateChart_AccessorialRates_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_RateChart_AccessorialRates_StagingDataset_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_TemplateAccessorialRules_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_SameDayRate_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_InformationalAccessorialRate_Merge_Proc.sql" />
