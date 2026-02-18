@@ -143,6 +143,7 @@ stages:
                   --timeout 600s \
                   --force \
                   --set image.repository="$(IMAGE_REPOSITORY)" \
+                  --set serviceAccount.annotations."iam\.gke\.io/gcp-service-account"="$(ALLOYDB_APP_EMAIL)" \
                   --set-string env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME="$(GOOGLE_CLOUD_STORAGE_BUCKET_NAME)" \
                   --set-string env.LOAD_INTERVAL_MINUTES="$(LOAD_INTERVAL_MINUTES)" \
                   --set-string env.TABLE_NAME="$(TABLE_NAME)" \
