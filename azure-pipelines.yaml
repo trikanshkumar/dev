@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - kubernetes1
+      - kubernetes
 
 parameters:
   - name: environment
