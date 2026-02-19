@@ -53,8 +53,6 @@ namespace UPS.WWRR.Business.Services
                 {
                     // shutdown
                 }
-
-                await Task.Delay(TimeSpan.FromMinutes(_intervalMinutes), stoppingToken);
 			}
 		}
 

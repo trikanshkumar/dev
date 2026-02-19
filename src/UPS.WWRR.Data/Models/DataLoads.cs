@@ -21,6 +21,11 @@ namespace UPS.WWRR.Data.Models
         public long LoadVersionNumber { get; set; }
 
         [Required]
+        [StringLength(35)]
+        [Column("load_ver", TypeName = "varchar(35)")]
+        public string LoadVersion { get; set; } = string.Empty;
+
+        [Required]
         [StringLength(25)]
         [Column("load_sts_cd", TypeName = "varchar(25)")]
         public string LoadStatusCode { get; set; } = string.Empty;

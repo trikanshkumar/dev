@@ -103,10 +103,10 @@ namespace UPS.WWRR.UnitTests
         {
             using var ctx = CreateContext();
             var repo = CreateRepo(ctx);
-            ctx.DataLoads.Add(new DataLoad { LoadTableName = "taltccy", LoadVersionNumber = 42, LoadStatusCode = LoadStatus.ReadyForValidation.ToString(), FileLocation = "f1", DataSource = "src", CreatedOn = DateTime.UtcNow, LogFileLocation = "log", TotalBatchNumber = 0, BatchSize = 10 });
+            ctx.DataLoads.Add(new DataLoad { LoadTableName = "taltccy", LoadVersionNumber = 2, LoadVersion = "2026_02_18_2", LoadStatusCode = LoadStatus.ReadyForValidation.ToString(), FileLocation = "f1", DataSource = "src", CreatedOn = DateTime.UtcNow, LogFileLocation = "log", TotalBatchNumber = 0, BatchSize = 10 });
             await ctx.SaveChangesAsync();
-            Assert.True(await repo.ExistsAsync("taltccy", 42));
-            Assert.False(await repo.ExistsAsync("taltccy", 43));
+            Assert.True(await repo.ExistsAsync("taltccy", "2026_02_18_2"));
+            Assert.False(await repo.ExistsAsync("taltccy", "2026_02_18_3"));
         }
 
         [Fact]

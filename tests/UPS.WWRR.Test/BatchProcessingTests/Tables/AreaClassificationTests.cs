@@ -23,10 +23,10 @@ public class AreaClassificationTests : BatchProcessorTests
     {
         // Arrange - Both TARCLHD and TARCLDT are present in the receipt
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTARCLHD_12345.csv,SRC\nTARCLDT_12345.csv,SRC";
+        var content = "FileExtractName,Source\nTARCLHD_2026_02_18_2.csv,SRC\nTARCLDT_2026_02_18_2.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
-        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
             .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
 
@@ -50,7 +50,7 @@ public class AreaClassificationTests : BatchProcessorTests
         var content = "FileExtractName,Source\nTARCLHD_12345.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
-        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
         var sut = CreateSut();
 
@@ -70,7 +70,7 @@ public class AreaClassificationTests : BatchProcessorTests
         var content = "FileExtractName,Source\nTARCLDT_12345.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
-        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
         var sut = CreateSut();
 
@@ -87,10 +87,10 @@ public class AreaClassificationTests : BatchProcessorTests
     {
         // Arrange - TARCLHD with other tables but no TARCLDT
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTALTCCY_11111.csv,SRC\nTARCLHD_12345.csv,SRC\nTDECODE_22222.csv,SRC";
+        var content = "FileExtractName,Source\nTALTCCY_2026_02_18_1.csv,SRC\nTARCLHD_2026_02_18_2.csv,SRC\nTDECODE_2026_02_18_3.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
-        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
             .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
 
@@ -111,10 +111,10 @@ public class AreaClassificationTests : BatchProcessorTests
     {
         // Arrange - Both TARCLHD and TARCLDT with other tables
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTALTCCY_11111.csv,SRC\nTARCLHD_12345.csv,SRC\nTARCLDT_12345.csv,SRC\nTDECODE_22222.csv,SRC";
+        var content = "FileExtractName,Source\nTALTCCY_2026_02_18_1.csv,SRC\nTARCLHD_2026_02_18_2.csv,SRC\nTARCLDT_2026_02_18_3.csv,SRC\nTDECODE_2026_02_18_4.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
-        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
             .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
 
@@ -136,10 +136,10 @@ public class AreaClassificationTests : BatchProcessorTests
     {
         // Arrange - Mixed case table names
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\ntarclhd_12345.csv,SRC\nTARCLDT_12345.csv,SRC";
+        var content = "FileExtractName,Source\ntarclhd_2026_02_18_2.csv,SRC\nTARCLDT_2026_02_18_2.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
-        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
             .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
 
@@ -157,10 +157,10 @@ public class AreaClassificationTests : BatchProcessorTests
     {
         // Arrange - No Area Classification tables
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTALTCCY_11111.csv,SRC\nTDECODE_22222.csv,SRC";
+        var content = "FileExtractName,Source\nTALTCCY_2026_02_18_1.csv,SRC\nTDECODE_2026_02_18_2.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
-        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
             .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
 

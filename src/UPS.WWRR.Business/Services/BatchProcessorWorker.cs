@@ -215,20 +215,45 @@ namespace UPS.WWRR.Business.Services
                     if (string.IsNullOrWhiteSpace(fileExtractName)) continue;
 
                     var parts = fileExtractName.Split('_', StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length < 2)
+                    if (parts.Length < 5)
                     {
                         _logger.LogWarning("Cannot parse table/load id from {val}", fileExtractName);
                         continue;
                     }
 
                     var tableNamePart = parts[0];
-                    var loadIdDigits = new string(parts[^1].Where(char.IsDigit).ToArray());
-                    long.TryParse(loadIdDigits, out var loadId);
-                    if (loadId == 0) loadId = DateTime.UtcNow.Ticks;
+                    var yearPart = parts[1];
+                    var monthPart = parts[2];
+                    var dayPart = parts[3];
+                    var loadIdPart = parts[4];
 
-                    if (await _loadRepository.ExistsAsync(tableNamePart, loadId, ct))
+                    
+
+                    int year, month, day;
+                    long loadId;
+
+                    try
                     {
-                        _logger.LogInformation("DataLoad already exists for {tbl} version {ver}. Skipping insert.", tableNamePart, loadId);
+                        year = int.Parse(yearPart);
+                        month = int.Parse(monthPart);
+                        day = int.Parse(dayPart);
+
+                        // get just the digits to remove the ".csv" portion
+                        var loadIdDigits = new string(loadIdPart.Where(char.IsDigit).ToArray());
+
+                        loadId = long.Parse(loadIdDigits);
+                    }
+                    catch
+                    {
+                        _logger.LogWarning("Date/LoadId has invalid value(s) in file {fileExtractName}", fileExtractName);
+                        continue;
+                    }
+
+                    var loadVersion = $"{year}_{month}_{day}_{loadId}";
+
+                    if (await _loadRepository.ExistsAsync(tableNamePart, loadVersion, ct))
+                    {
+                        _logger.LogInformation("DataLoad already exists for {tbl} version {ver}. Skipping insert.", tableNamePart, loadVersion);
                         continue;
                     }
 
@@ -236,6 +261,7 @@ namespace UPS.WWRR.Business.Services
                     {
                         LoadTableName = tableNamePart,
                         LoadVersionNumber = loadId,
+                        LoadVersion = loadVersion,
                         LoadStatusCode = LoadStatus.ReadyForValidation.ToString(),
                         FileLocation = $"gs://{_gcpBucketName}/{_storageService.PrependBaseDirectory(fileExtractName)}",
                         CreatedOn = DateTime.UtcNow,

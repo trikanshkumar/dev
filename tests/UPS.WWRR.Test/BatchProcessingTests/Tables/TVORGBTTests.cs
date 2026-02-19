@@ -51,9 +51,9 @@ public class TVORGBTTests : BatchProcessorTests
     public async Task BuildLoadsAsync_TVORGBT_ValidSingleLoad_Inserts()
     {
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTVORGBT_36001.csv,SRC";
+        var content = "FileExtractName,Source\nTVORGBT_2026_02_18_1.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
-        _repo.Setup(r => r.ExistsAsync("TVORGBT", 36001, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _repo.Setup(r => r.ExistsAsync("TVORGBT", "2026_02_18_1", It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
             .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
         var sut = CreateSut();
@@ -69,7 +69,7 @@ public class TVORGBTTests : BatchProcessorTests
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
         var content = "FileExtractName,Source\nTVORGBT_36002.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
-        _repo.Setup(r => r.ExistsAsync("TVORGBT", 36002, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _repo.Setup(r => r.ExistsAsync("TVORGBT", "36002", It.IsAny<CancellationToken>())).ReturnsAsync(true);
         var sut = CreateSut();
         var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
         Assert.Empty(list);

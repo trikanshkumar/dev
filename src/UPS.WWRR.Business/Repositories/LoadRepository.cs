@@ -65,8 +65,8 @@ namespace UPS.WWRR.Business.Repositories
         public Task<bool> AnyProcessingAsync(CancellationToken ct = default)
         => _db.DataLoads.AnyAsync(l => l.LoadStatusCode == LoadStatus.Processing.ToString(), ct);
 
-        public Task<bool> ExistsAsync(string tableName, long loadVersionNumber, CancellationToken ct = default)
-        => _db.DataLoads.AnyAsync(l => l.LoadTableName == tableName && l.LoadVersionNumber == loadVersionNumber, ct);
+        public Task<bool> ExistsAsync(string tableName, string loadVersion, CancellationToken ct = default)
+        => _db.DataLoads.AnyAsync(l => l.LoadTableName == tableName && l.LoadVersion == loadVersion, ct);
 
         public Task<List<DataLoad>> GetLoadsByStatusAsync(LoadStatus status, CancellationToken ct = default)
         => _db.DataLoads.Where(l => l.LoadStatusCode == status.ToString()).ToListAsync(ct);

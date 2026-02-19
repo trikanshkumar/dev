@@ -19,7 +19,7 @@ namespace UPS.WWRR.Business.Repositories
 
         Task AddExceptionsAsync(IEnumerable<DataLoadException> exceptions, CancellationToken ct = default);
 
-        Task<bool> ExistsAsync(string tableName, long loadVersionNumber, CancellationToken ct = default);
+        Task<bool> ExistsAsync(string tableName, string loadVersion, CancellationToken ct = default);
 
         Task<List<DataLoad>> GetLoadsByStatusAsync(LoadStatus status, CancellationToken ct = default);
 
