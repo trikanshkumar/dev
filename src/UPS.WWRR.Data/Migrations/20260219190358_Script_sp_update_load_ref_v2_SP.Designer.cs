@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UPS.WWRR.Data.Models;
@@ -11,9 +12,11 @@ using UPS.WWRR.Data.Models;
 namespace UPS.WWRR.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260219190358_Script_sp_update_load_ref_v2_SP")]
+    partial class Script_sp_update_load_ref_v2_SP
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -967,8 +970,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ChartStatusNumber", "ServiceTypeCode", "RateChargeClassificationTypeCode");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tarcldt_load_ref_te");
-
                     b.ToTable("tarcldt", "a886aa_ao");
                 });
 
@@ -1011,10 +1012,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("load_ref_te");
 
                     b.HasKey("ChartStatusNumber", "ServiceTypeCode", "RateChargeClassificationTypeCode");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tarcldt_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tarcldt_stg_load_ref_te");
 
                     b.ToTable("tarcldt_new_stg", "a886aa_ao");
                 });
@@ -1148,12 +1145,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("org_pol_div_1_cd");
 
                     b.HasKey("OriginCountry", "ServiceType", "DestinationCountry", "ChartNumber", "ChartEffectiveDate", "OriginLowPostal", "OriginHighPostal", "OriginPolticialDivision2", "DestinationLowPostal", "DestinationHighPostal", "DestinationPoliticalDivision2", "AreaClassificationRule", "StatusCode", "ChartEndDate");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tarcldt_stg_is_completed_ir")
-                        .HasDatabaseName("idx_tarcldt_stg_is_completed_ir1");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tarcldt_stg_load_ref_te")
-                        .HasDatabaseName("idx_tarcldt_stg_load_ref_te1");
 
                     b.ToTable("tarcldt_stg", "a886aa_ao");
                 });
@@ -3487,8 +3478,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ZoneChartStatusNumber", "ServiceTypeCode");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdozndt_load_ref_te");
-
                     b.ToTable("tdozndt", "a886aa_ao");
                 });
 
@@ -3521,10 +3510,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("zn_ncv_typ_cd");
 
                     b.HasKey("ZoneChartStatusNumber", "ServiceTypeCode");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tdozndt_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdozndt_stg_load_ref_te");
 
                     b.ToTable("tdozndt_new_stg", "a886aa_ao");
                 });
@@ -3625,12 +3610,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountryCode", "ServiceTypeCode", "DestinationCountryCode", "ZoneChartNumber", "DomesticZoneHeaderStartDate", "OriginRangeLowPostalCode", "OriginRangeHighPostalCode", "DestinationRangeLowPostalCode", "DestinationRangeHighPostalCode", "BusinessEntityAccessStatusCode", "ZoneIncentiveTypeCode", "DomesticZoneDetailEndDate");
 
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tdozndt_stg_is_completed_ir")
-                        .HasDatabaseName("idx_tdozndt_stg_is_completed_ir1");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdozndt_stg_load_ref_te")
-                        .HasDatabaseName("idx_tdozndt_stg_load_ref_te1");
-
                     b.ToTable("tdozndt_stg", "a886aa_ao");
                 });
 
@@ -3661,8 +3640,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("svc_typ_cd");
 
                     b.HasKey("ZoneChartStatusNumber");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdoznhd_load_ref_te");
 
                     b.ToTable("tdoznhd", "a886aa_ao");
                 });
@@ -3700,10 +3677,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("svc_typ_cd");
 
                     b.HasKey("ZoneChartStatusNumber");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tdoznhd_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdoznhd_stg_load_ref_te");
 
                     b.ToTable("tdoznhd_new_stg", "a886aa_ao");
                 });
@@ -3782,12 +3755,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("zch_sht_dsc_te");
 
                     b.HasKey("OriginCountryCode", "OriginGpuNumber", "ServiceTypeCode", "DestinationCountryCode", "DestinationGpuNumber", "ZoneChartNumber", "DomesticZoneHeaderStartDate", "DomesticZoneHeaderEndDate", "BusinessEntityAccessStatusCode");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tdoznhd_stg_is_completed_ir")
-                        .HasDatabaseName("idx_tdoznhd_stg_is_completed_ir1");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdoznhd_stg_load_ref_te")
-                        .HasDatabaseName("idx_tdoznhd_stg_load_ref_te1");
 
                     b.ToTable("tdoznhd_stg", "a886aa_ao");
                 });
@@ -4025,8 +3992,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("RatingCountry", "MovementDirection", "CustomerClassificationType", "ServiceType", "MultipieceIndicator", "EffectiveDate", "EndDate", "StatusCode");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tratrul_load_ref_te");
-
                     b.ToTable("tratrul", "a886aa_ao");
                 });
 
@@ -4131,10 +4096,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("RatingCountry", "MovementDirection", "CustomerClassificationType", "ServiceType", "MultipieceIndicator", "EffectiveDate", "EndDate", "StatusCode");
 
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tratrul_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tratrul_stg_load_ref_te");
-
                     b.ToTable("tratrul_stg", "a886aa_ao");
                 });
 
@@ -4229,8 +4190,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountry", "ImportCountry", "Accessorial", "MovementDirection", "ServiceType", "ServiceFeatureType", "PackageCharacteristicType", "PackageAcquisitionMethod", "Currency", "BilingTermType", "EffectveDate", "StatusCode", "CustomerClassificationType");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsubchg_load_ref_te");
-
                     b.ToTable("tsubchg", "a886aa_ao");
                 });
 
@@ -4286,8 +4245,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("fu_sur_pbh_rt_a");
 
                     b.HasKey("IndexFuelCategoryCode", "RecordEffectiveStartDate", "ApprovalStatusCode");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tfscidx_load_ref_te");
 
                     b.ToTable("tfscidx", "a886aa_ao");
                 });
@@ -4350,10 +4307,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("fu_sur_pbh_rt_a");
 
                     b.HasKey("IndexFuelCategoryCode", "RecordEffectiveStartDate", "ApprovalStatusCode");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tfscidx_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tfscidx_stg_load_ref_te");
 
                     b.ToTable("tfscidx_stg", "a886aa_ao");
                 });
@@ -4454,10 +4407,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("asy_svc_ra");
 
                     b.HasKey("ExportCountry", "ImportCountry", "Accessorial", "MovementDirection", "ServiceType", "ServiceFeatureType", "PackageCharacteristicType", "PackageAcquisitionMethod", "Currency", "BilingTermType", "EffectveDate", "StatusCode", "CustomerClassificationType");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsubchg_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsubchg_stg_load_ref_te");
 
                     b.ToTable("tsubchg_stg", "a886aa_ao");
                 });
@@ -6000,8 +5949,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountry", "DestinationCountry", "ServiceType", "DeliveryZoneNumber", "Currency", "PackageCharacteristicType", "CustomerClassificationType", "ServiceFeatureType", "MovementDirection", "WeightMeasurementUnitType", "MinimumWeightRange", "StatusCode", "EffectiveDate");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsdrwsf_load_ref_te");
-
                     b.ToTable("tsdrwsf", "a886aa_ao");
                 });
 
@@ -6107,10 +6054,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountry", "DestinationCountry", "ServiceType", "DeliveryZoneNumber", "Currency", "PackageCharacteristicType", "CustomerClassificationType", "ServiceFeatureType", "MovementDirection", "WeightMeasurementUnitType", "MinimumWeightRange", "StatusCode", "EffectiveDate");
 
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsdrwsf_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsdrwsf_stg_load_ref_te");
-
                     b.ToTable("tsdrwsf_stg", "a886aa_ao");
                 });
 
@@ -6183,8 +6126,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("udt_ts");
 
                     b.HasKey("CountryCode", "ServiceTypeCode", "ServiceDefaultUnitTypeCode", "ServiceDefaultTypeCode", "MovementDirectionCode", "RecordEffectiveStartDate", "DeterminingChartTypeCode", "ApprovalStatusCode", "ControlValueRangeLowQuantity");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcdfl_load_ref_te");
 
                     b.ToTable("tsvcdfl", "a886aa_ao");
                 });
@@ -6265,10 +6206,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "ServiceTypeCode", "ServiceDefaultUnitTypeCode", "ServiceDefaultTypeCode", "MovementDirectionCode", "RecordEffectiveStartDate", "DeterminingChartTypeCode", "ApprovalStatusCode", "ControlValueRangeLowQuantity");
 
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsvcdfl_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcdfl_stg_load_ref_te");
-
                     b.ToTable("tsvcdfl_stg", "a886aa_ao");
                 });
 
@@ -6304,8 +6241,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("rec_eff_end_dt");
 
                     b.HasKey("ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcdgr_load_ref_te");
 
                     b.ToTable("tsvcdgr", "a886aa_ao");
                 });
@@ -6349,10 +6284,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsvcdgr_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcdgr_stg_load_ref_te");
-
                     b.ToTable("tsvcdgr_stg", "a886aa_ao");
                 });
 
@@ -6391,8 +6322,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("rec_eff_end_dt");
 
                     b.HasKey("AccessoryServiceTypeCode", "ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcacp_load_ref_te");
 
                     b.ToTable("tsvcacp", "a886aa_ao");
                 });
@@ -6438,10 +6367,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("rec_eff_end_dt");
 
                     b.HasKey("AccessoryServiceTypeCode", "ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsvcacp_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcacp_stg_load_ref_te");
 
                     b.ToTable("tsvcacp_stg", "a886aa_ao");
                 });
@@ -6538,8 +6463,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("vol_rng_min_qy");
 
                     b.HasKey("OriginGpuExportCountryCode", "DestinationGpuImportCountryCode", "PackageTypeCode", "BillingTermTypeCode", "ServiceFeatureTypeCode", "ServiceTypeCode", "MovementDirectionCode", "CustomerRateTypeCode", "WeightMeasurementUnitTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsiarav_load_ref_te");
 
                     b.ToTable("tsiarav", "a886aa_ao");
                 });
@@ -6642,10 +6565,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("vol_rng_min_qy");
 
                     b.HasKey("OriginGpuExportCountryCode", "DestinationGpuImportCountryCode", "PackageTypeCode", "BillingTermTypeCode", "ServiceFeatureTypeCode", "ServiceTypeCode", "MovementDirectionCode", "CustomerRateTypeCode", "WeightMeasurementUnitTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsiarav_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsiarav_stg_load_ref_te");
 
                     b.ToTable("tsiarav_stg", "a886aa_ao");
                 });
@@ -7051,8 +6970,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountryCode", "DestinationCountryCode", "AccessorialServiceTypeCode", "ServiceTypeCode", "MovementDirectionCode", "LaneClassTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate", "AccessorialAlternateNumericCode", "OriginGeopoliticalCountry", "DestinationGeopoliticalCountry");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tvasyln_load_ref_te");
-
                     b.ToTable("tvasyln", "a886aa_ao");
                 });
 
@@ -7134,10 +7051,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("svc_typ_alt_nmc_cd");
 
                     b.HasKey("OriginCountryCode", "DestinationCountryCode", "AccessorialServiceTypeCode", "ServiceTypeCode", "MovementDirectionCode", "LaneClassTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate", "AccessorialAlternateNumericCode", "OriginGeopoliticalCountry", "DestinationGeopoliticalCountry");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tvasyln_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tvasyln_stg_load_ref_te");
 
                     b.ToTable("tvasyln_stg", "a886aa_ao");
                 });
@@ -7282,8 +7195,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ImportCountryCode", "BillingTermTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tvdstbt_load_ref_te");
-
                     b.ToTable("tvdstbt", "a886aa_ao");
                 });
 
@@ -7324,10 +7235,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("rec_eff_end_dt");
 
                     b.HasKey("ImportCountryCode", "BillingTermTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tvdstbt_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tvdstbt_stg_load_ref_te");
 
                     b.ToTable("tvdstbt_stg", "a886aa_ao");
                 });

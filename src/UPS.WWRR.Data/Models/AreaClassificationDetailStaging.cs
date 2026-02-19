@@ -25,6 +25,8 @@ namespace UPS.WWRR.Data.Models
         nameof(StatusCode),
         nameof(ChartEndDate)
     )]
+    [Index(nameof(LoadReference), Name = "idx_tarcldt_stg_load_ref_te")]
+    [Index(nameof(IsCompletedIndicator), Name = "idx_tarcldt_stg_is_completed_ir")]
     public class AreaClassificationDetailStaging
     {
         [StringLength(2)]

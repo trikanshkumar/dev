@@ -16,6 +16,8 @@ namespace UPS.WWRR.Data.Models;
     nameof(EndDate),
     nameof(StatusCode)
 )]
+[Index(nameof(LoadReference), Name = "idx_tratrul_stg_load_ref_te")]
+[Index(nameof(IsCompletedIndicator), Name = "idx_tratrul_stg_is_completed_ir")]
 public class FreightRatingRulesStaging
 {
     [StringLength(2)]

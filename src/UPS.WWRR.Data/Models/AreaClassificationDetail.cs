@@ -1,10 +1,13 @@
 ﻿#nullable enable
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Xml.Linq;
 
 namespace UPS.WWRR.Data.Models
 {
     [Table("tarcldt")]
+    [Index(nameof(LoadReference), Name = "idx_tarcldt_load_ref_te")]
     public class AreaClassificationDetail
     {
         [Column("zch_sts_nr")]

@@ -10,6 +10,7 @@ namespace UPS.WWRR.Data.Models;
     nameof(ServiceTypeCode),
     nameof(ApprovalStatusCode),
     nameof(RecordEffectiveStartDate))]
+[Index(nameof(LoadReference), Name = "idx_tsvcdgr_load_ref_te")]
 public class ServiceDowngradeRules
 {
     [Required, StringLength(3)]

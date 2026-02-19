@@ -10,6 +10,8 @@ namespace UPS.WWRR.Data.Models
     /// </summary>
     [Table("tdozndt_new_stg")]
     [PrimaryKey(nameof(ZoneChartStatusNumber), nameof(ServiceTypeCode))]
+    [Index(nameof(LoadReference), Name = "idx_tdozndt_stg_load_ref_te")]
+    [Index(nameof(IsCompletedIndicator), Name = "idx_tdozndt_stg_is_completed_ir")]
     public class DomesticZoneDetailNewStaging
     {
         [Column("zch_sts_nr")]

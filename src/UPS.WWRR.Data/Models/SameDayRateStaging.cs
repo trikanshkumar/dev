@@ -22,6 +22,8 @@ namespace UPS.WWRR.Data.Models;
     nameof(StatusCode),
     nameof(EffectiveDate)
     )]
+[Index(nameof(LoadReference), Name = "idx_tsdrwsf_stg_load_ref_te")]
+[Index(nameof(IsCompletedIndicator), Name = "idx_tsdrwsf_stg_is_completed_ir")]
 public class SameDayRateStaging
 {
     [Required, StringLength(4)]

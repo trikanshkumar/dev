@@ -22,6 +22,7 @@ namespace UPS.WWRR.Data.Models
         nameof(OriginGeopoliticalCountry),
         nameof(DestinationGeopoliticalCountry)
     )]
+    [Index(nameof(LoadReference), Name = "idx_tvasyln_load_ref_te")]
     public class ValidAccessorialLane
     {
         [Required, StringLength(2)]

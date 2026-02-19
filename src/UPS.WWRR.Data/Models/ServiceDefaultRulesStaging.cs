@@ -16,6 +16,8 @@ namespace UPS.WWRR.Data.Models;
     nameof(DeterminingChartTypeCode),
     nameof(ApprovalStatusCode),
     nameof(ControlValueRangeLowQuantity))]
+[Index(nameof(LoadReference), Name = "idx_tsvcdfl_stg_load_ref_te")]
+[Index(nameof(IsCompletedIndicator), Name = "idx_tsvcdfl_stg_is_completed_ir")]
 public class ServiceDefaultRulesStaging
 {
     [Required, StringLength(2)]

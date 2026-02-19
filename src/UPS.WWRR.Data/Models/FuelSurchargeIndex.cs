@@ -14,6 +14,7 @@ namespace UPS.WWRR.Data.Models;
     nameof(RecordEffectiveStartDate),
     nameof(ApprovalStatusCode)
 )]
+[Index(nameof(LoadReference), Name = "idx_tfscidx_load_ref_te")]
 public class FuelSurchargeIndex
 {
     [Required, StringLength(2)]

@@ -20,6 +20,8 @@ namespace UPS.WWRR.Data.Models
         nameof(DomesticZoneHeaderEndDate),
         nameof(BusinessEntityAccessStatusCode)
     )]
+    [Index(nameof(LoadReference), Name = "idx_tdoznhd_stg_load_ref_te")]
+    [Index(nameof(IsCompletedIndicator), Name = "idx_tdoznhd_stg_is_completed_ir")]
     public class DomesticZoneHeaderStaging
     {
         [Required, StringLength(2)]

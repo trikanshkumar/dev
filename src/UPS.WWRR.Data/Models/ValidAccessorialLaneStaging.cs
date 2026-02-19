@@ -22,6 +22,8 @@ namespace UPS.WWRR.Data.Models
         nameof(OriginGeopoliticalCountry),
         nameof(DestinationGeopoliticalCountry)
     )]
+    [Index(nameof(LoadReference), Name = "idx_tvasyln_stg_load_ref_te")]
+    [Index(nameof(IsCompletedIndicator), Name = "idx_tvasyln_stg_is_completed_ir")]
     public class ValidAccessorialLaneStaging
     {
         [Required, StringLength(2)]

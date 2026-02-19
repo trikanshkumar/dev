@@ -1,6 +1,8 @@
 #nullable enable
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Xml.Linq;
 
 namespace UPS.WWRR.Data.Models
 {
@@ -8,6 +10,7 @@ namespace UPS.WWRR.Data.Models
     /// Represents the TDOZNHD (Domestic Zone Header New) table.
     /// </summary>
     [Table("tdoznhd")]
+    [Index(nameof(LoadReference), Name = "idx_tdoznhd_load_ref_te")]
     public class DomesticZoneHeader
     {
         [Key]

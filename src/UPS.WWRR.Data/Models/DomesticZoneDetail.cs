@@ -10,6 +10,7 @@ namespace UPS.WWRR.Data.Models
     /// </summary>
     [Table("tdozndt")]
     [PrimaryKey(nameof(ZoneChartStatusNumber), nameof(ServiceTypeCode))]
+    [Index(nameof(LoadReference), Name = "idx_tdozndt_load_ref_te")]
     public class DomesticZoneDetail
     {
         [Column("zch_sts_nr")]

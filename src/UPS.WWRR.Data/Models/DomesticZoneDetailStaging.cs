@@ -23,6 +23,8 @@ namespace UPS.WWRR.Data.Models
         nameof(ZoneIncentiveTypeCode),
         nameof(DomesticZoneDetailEndDate)
     )]
+    [Index(nameof(LoadReference), Name = "idx_tdozndt_stg_load_ref_te")]
+    [Index(nameof(IsCompletedIndicator), Name = "idx_tdozndt_stg_is_completed_ir")]
     public class DomesticZoneDetailStaging
     {
         [Required, StringLength(2)]

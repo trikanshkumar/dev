@@ -21,6 +21,7 @@ namespace UPS.WWRR.Data.Models;
     nameof(EndDate),
     nameof(StatusCode)
 )]
+[Index(nameof(LoadReference), Name = "idx_tratrul_load_ref_te")]
 public class FreightRatingRules
 {
     [StringLength(2)]

@@ -22,6 +22,7 @@ namespace UPS.WWRR.Data.Models;
     nameof(StatusCode),
     nameof(EffectiveDate)
     )]
+[Index(nameof(LoadReference), Name = "idx_tsdrwsf_load_ref_te")]
 public class SameDayRate
 {
     [Required, StringLength(4)]

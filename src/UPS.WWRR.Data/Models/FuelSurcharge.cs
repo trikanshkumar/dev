@@ -21,6 +21,7 @@ namespace UPS.WWRR.Data.Models;
     nameof(StatusCode),
     nameof(CustomerClassificationType)
 )]
+[Index(nameof(LoadReference), Name = "idx_tsubchg_load_ref_te")]
 public class FuelSurcharge
 {
     [Required, StringLength(4)]

@@ -19,6 +19,7 @@ namespace UPS.WWRR.Data.Models
         nameof(ApprovalStatusCode),
         nameof(RecordEffectiveStartDate)
     )]
+    [Index(nameof(LoadReference), Name = "idx_tsiarav_load_ref_te")]
     public class SimpleRateVolumeRange
     {
         [Required, StringLength(4)]

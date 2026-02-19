@@ -11,6 +11,8 @@ namespace UPS.WWRR.Data.Models;
     nameof(ServiceTypeCode),
     nameof(ApprovalStatusCode),
     nameof(RecordEffectiveStartDate))]
+[Index(nameof(LoadReference), Name = "idx_tsvcacp_stg_load_ref_te")]
+[Index(nameof(IsCompletedIndicator), Name = "idx_tsvcacp_stg_is_completed_ir")]
 public class ServiceDowngradeValidAccessorialRulesStaging
 {
     [Required, StringLength(3)]

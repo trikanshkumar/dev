@@ -15,6 +15,7 @@ namespace UPS.WWRR.Data.Models
         nameof(ApprovalStatusCode),
         nameof(RecordEffectiveStartDate)
     )]
+    [Index(nameof(LoadReference), Name = "idx_tvdstbt_load_ref_te")]
     public class ValidDestinationBillTerm
     {
         [Required, StringLength(4)]

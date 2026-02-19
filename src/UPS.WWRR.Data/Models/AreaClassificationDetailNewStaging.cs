@@ -14,6 +14,8 @@ namespace UPS.WWRR.Data.Models
         nameof(ServiceTypeCode),
         nameof(RateChargeClassificationTypeCode)
     )]
+    [Index(nameof(LoadReference), Name = "idx_tarcldt_stg_load_ref_te")]
+    [Index(nameof(IsCompletedIndicator), Name = "idx_tarcldt_stg_is_completed_ir")]
     public class AreaClassificationDetailNewStaging
     {
         [Column("zch_sts_nr")]

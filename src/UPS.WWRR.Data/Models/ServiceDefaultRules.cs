@@ -16,6 +16,7 @@ namespace UPS.WWRR.Data.Models;
     nameof(DeterminingChartTypeCode),
     nameof(ApprovalStatusCode),
     nameof(ControlValueRangeLowQuantity))]
+[Index(nameof(LoadReference), Name = "idx_tsvcdfl_load_ref_te")]
 public class ServiceDefaultRules
 {
     [Required, StringLength(2)]

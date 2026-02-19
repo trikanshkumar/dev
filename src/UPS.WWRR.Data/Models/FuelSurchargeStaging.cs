@@ -21,6 +21,8 @@ namespace UPS.WWRR.Data.Models;
     nameof(StatusCode),
     nameof(CustomerClassificationType)
 )]
+[Index(nameof(LoadReference), Name = "idx_tsubchg_stg_load_ref_te")]
+[Index(nameof(IsCompletedIndicator), Name = "idx_tsubchg_stg_is_completed_ir")]
 public class FuelSurchargeStaging
 {
     [Required, StringLength(4)]
