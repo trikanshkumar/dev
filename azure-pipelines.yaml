@@ -117,8 +117,9 @@ stages:
               targetType: inline
               script: |
                 IMAGE_URI=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/$(IMAGE_NAME)
-                docker build -t $IMAGE_URI:latest .
-                docker push $IMAGE_URI:latest
+                IMAGE_TAG=$(Build.BuildId)
+                docker build -t $IMAGE_URI:$IMAGE_TAG .
+                docker push $IMAGE_URI:$IMAGE_TAG
                 docker image prune -f
 
           # Deploy to GKE with App connection string
@@ -143,6 +144,7 @@ stages:
                   --timeout 600s \
                   --force \
                   --set image.repository="$(IMAGE_REPOSITORY)" \
+                  --set image.tag="$(Build.BuildId)" \
                   --set serviceAccount.annotations."iam\.gke\.io/gcp-service-account"="$(ALLOYDB_APP_EMAIL)" \
                   --set-string env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME="$(GOOGLE_CLOUD_STORAGE_BUCKET_NAME)" \
                   --set-string env.LOAD_INTERVAL_MINUTES="$(LOAD_INTERVAL_MINUTES)" \
