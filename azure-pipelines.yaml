@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - testing
+      - main
 
 parameters:
   - name: environment
