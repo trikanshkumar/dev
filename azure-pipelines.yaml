@@ -168,4 +168,8 @@ stages:
                 echo "Cleaning apt..."
                 sudo apt-get clean
                 sudo apt-get autoremove -y
+                pkill -f dotnet || true
+                sudo sync
+                sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
+                free -h
                 echo "Done."
