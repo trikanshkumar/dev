@@ -919,7 +919,7 @@ namespace UPS.WWRR.Business.Services
             var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             var list = new List<string[]>();
             foreach (var l in lines)
-                list.Add(l.Split(',', StringSplitOptions.None));
+                list.Add(l.Split(',', StringSplitOptions.None | StringSplitOptions.TrimEntries));
             return list;
         }
 
