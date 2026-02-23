@@ -151,5 +151,11 @@ namespace UPS.WWRR.Business.Common.Constants
 
         [Description("Rate Chart Header")]
         TCHART,
+
+        [Description("International Zone Header")]
+        TINZNHD,
+
+        [Description("International Zone Detail")]
+        TINZNDT,
     }
 }

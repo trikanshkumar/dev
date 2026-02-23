@@ -131,7 +131,7 @@ namespace UPS.WWRR.Business.Services
                         var fallbackLoaded = await FallbackCopyRowsAsync(chunk, singleRowCopySql!, conn, chunkIndex, result, attempted, tsRegex, cancellationToken);
                         loaded = fallbackLoaded;
                         if (fallbackLoaded < attempted)
-                            batchErrors.Add($"Chunk {chunkIndex}: {attempted - fallbackLoaded} rows failed in fallback mode.");
+                            batchErrors.Add($"Chunk {chunkIndex}: {ex.Message}");
                     }
                     batchSw.Stop();
                     result.TotalRowsAttempted += attempted;

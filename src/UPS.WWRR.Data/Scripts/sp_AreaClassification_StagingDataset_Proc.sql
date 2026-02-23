@@ -150,7 +150,8 @@ BEGIN
     JOIN zchartsts zcs
         ON zcs.zch_nr = t.zch_nr
         AND zcs.ara_csf_hdr_stt_dt = t.ara_csf_hdr_stt_dt
-        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_dtl_end_dt;
+        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_dtl_end_dt
+        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
 
     GET DIAGNOSTICS v_tarcldt_ins = ROW_COUNT;
 
@@ -173,7 +174,8 @@ BEGIN
     JOIN zchartsts zcs
         ON zcs.zch_nr = t.zch_nr
         AND zcs.ara_csf_hdr_stt_dt = t.ara_csf_hdr_stt_dt
-        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_hdr_end_dt;
+        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_hdr_end_dt
+        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
 
     GET DIAGNOSTICS v_tarclhd_ins = ROW_COUNT;
 
@@ -200,7 +202,8 @@ BEGIN
     JOIN zchartsts zcs
         ON zcs.zch_nr = t.zch_nr
         AND zcs.ara_csf_hdr_stt_dt = t.ara_csf_hdr_stt_dt
-        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_dtl_end_dt;
+        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_dtl_end_dt
+        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
 
     GET DIAGNOSTICS v_zchartdtngeo_ins = ROW_COUNT;
 
@@ -225,7 +228,8 @@ BEGIN
     JOIN zchartsts zcs
         ON zcs.zch_nr = t.zch_nr
         AND zcs.ara_csf_hdr_stt_dt = t.ara_csf_hdr_stt_dt
-        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_dtl_end_dt;
+        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_dtl_end_dt
+        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
 
     GET DIAGNOSTICS v_zchartdtngpu_ins = ROW_COUNT;
 
@@ -252,7 +256,8 @@ BEGIN
     JOIN zchartsts zcs
         ON zcs.zch_nr = t.zch_nr
         AND zcs.ara_csf_hdr_stt_dt = t.ara_csf_hdr_stt_dt
-        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_dtl_end_dt;
+        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_dtl_end_dt
+        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
 
     GET DIAGNOSTICS v_zchartorggeo_ins = ROW_COUNT;
 
@@ -277,7 +282,8 @@ BEGIN
     JOIN zchartsts zcs
         ON zcs.zch_nr = t.zch_nr
         AND zcs.ara_csf_hdr_stt_dt = t.ara_csf_hdr_stt_dt
-        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_dtl_end_dt;
+        AND zcs.ara_csf_hdr_end_dt = t.ara_csf_dtl_end_dt
+        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
 
     GET DIAGNOSTICS v_zchartorggpu_ins = ROW_COUNT;
 

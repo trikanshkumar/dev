@@ -165,11 +165,69 @@ namespace UPS.WWRR.Business.Repositories
 
         public async Task<int> UpdateLoadReferenceForMultipleTablesAsync(Dictionary<string, string> tableMapping, long dataLoadId, long dataLoadDetailId, CancellationToken ct = default)
         {
+            if (tableMapping.Count == 0)
+                return 0;
+
+            string loadRefValue = $"{dataLoadId}|{dataLoadDetailId}";
             int totalAffected = 0;
-            foreach (var kvp in tableMapping)
+
+            var connection = _db.Database.GetDbConnection();
+            if (connection.State != ConnectionState.Open)
+                await connection.OpenAsync(ct);
+
+            // Build a single batch SQL that updates all tables in one round trip
+            // This is significantly faster than calling stored procedure for each table
+            var sqlBuilder = new System.Text.StringBuilder();
+            
+            // Separate staging tables (have is_completed_ir column) from main tables
+            var stagingTables = tableMapping.Keys.Where(k => k.EndsWith("_stg", StringComparison.OrdinalIgnoreCase)).ToList();
+            var mainTables = tableMapping.Values.Where(v => !v.EndsWith("_stg", StringComparison.OrdinalIgnoreCase)).Distinct().ToList();
+
+            // For staging tables: update is_completed_ir = 1 and set load_ref_te
+            foreach (var stagingTable in stagingTables)
             {
-                totalAffected += await UpdateLoadReferenceAsync(kvp.Key, kvp.Value, dataLoadId, dataLoadDetailId, ct);
+                // Mark as completed and set load_ref in a single UPDATE using CASE to minimize writes
+                sqlBuilder.AppendLine($@"UPDATE {stagingTable} SET 
+                    is_completed_ir = 1, 
+                    load_ref_te = @loadRef 
+                WHERE is_completed_ir IS DISTINCT FROM 1 OR load_ref_te IS NULL OR load_ref_te = '';");
             }
+
+            // For main tables: only update load_ref_te where it's null or empty
+            foreach (var mainTable in mainTables)
+            {
+                sqlBuilder.AppendLine($@"UPDATE {mainTable} SET load_ref_te = @loadRef 
+                WHERE load_ref_te IS NULL OR load_ref_te = '';");
+            }
+
+            var sql = sqlBuilder.ToString();
+            if (string.IsNullOrWhiteSpace(sql))
+                return 0;
+
+            await using var cmd = connection.CreateCommand();
+            cmd.CommandText = sql;
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandTimeout = (int)TimeSpan.FromMinutes(60).TotalSeconds;
+
+            var param = cmd.CreateParameter();
+            param.ParameterName = "loadRef";
+            param.Value = loadRefValue;
+            cmd.Parameters.Add(param);
+
+            try
+            {
+                totalAffected = await cmd.ExecuteNonQueryAsync(ct);
+            }
+            catch (Exception)
+            {
+                // If batch fails, fall back to sequential execution for better error handling
+                totalAffected = 0;
+                foreach (var kvp in tableMapping)
+                {
+                    totalAffected += await UpdateLoadReferenceAsync(kvp.Key, kvp.Value, dataLoadId, dataLoadDetailId, ct);
+                }
+            }
+
             return totalAffected;
         }
     }

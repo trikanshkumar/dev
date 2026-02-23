@@ -23,6 +23,8 @@
     <None Remove="Scripts\sp_InternationalRatingCurrency_MergeProc.sql" />
     <None Remove="Scripts\sp_InformationalAccessorialThreshold_MergeProc.sql" />
     <None Remove="Scripts\sp_InsuranceCriteria_MergeProc.sql" />
+    <None Remove="Scripts\sp_InternationalZone_MergeProc.sql" />
+    <None Remove="Scripts\sp_InternationalZone_StagingDataset_Proc.sql" />
     <None Remove="Scripts\sp_LimitValuesBasedOnCriteria_MergeProc.sql" />
     <None Remove="Scripts\sp_MinimumCriteria_MergeProc.sql" />
     <None Remove="Scripts\sp_PostalException_MergeProc.sql" />
@@ -57,6 +59,8 @@
     <EmbeddedResource Include="Scripts\sp_DomesticZone_StagingDataset_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_FreightRates_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_FuelSurchargeIndex_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_InternationalZone_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_InternationalZone_StagingDataset_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_OriginServiceFeatureTypes_Merge_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_PublishedLetterThreshold_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_FuelSurcharge_Merge_Proc.sql" />

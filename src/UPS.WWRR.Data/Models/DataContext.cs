@@ -149,6 +149,22 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<RateChartLookupStaging> RateChartLookupStaging { get; set; }
         public virtual DbSet<ChartServicePackage> ChartServicePackage { get; set; }
         public virtual DbSet<ChartServicePackageStaging> ChartServicePackageStaging { get; set; }
+        public virtual DbSet<InternationalZoneDetailStaging> InternationalZoneDetailsStaging { get; set; }
+        public virtual DbSet<InternationalZoneHeaderStaging> InternationalZoneHeadersStaging { get; set; }
+        public virtual DbSet<InternationalZoneChartStatus> InternationalZoneChartStatuses { get; set; }
+        public virtual DbSet<InternationalZoneChartStatusStaging> InternationalZoneChartStatusesStaging { get; set; }
+        public virtual DbSet<InternationalZoneChartLookup> InternationalZoneChartLookups { get; set; }
+        public virtual DbSet<InternationalZoneChartLookupStaging> InternationalZoneChartLookupsStaging { get; set; }
+        public virtual DbSet<InternationalZoneChartHeader> InternationalZoneChartHeaders { get; set; }
+        public virtual DbSet<InternationalZoneChartHeaderStaging> InternationalZoneChartHeadersStaging { get; set; }
+        public virtual DbSet<InternationalZoneChartDetail> InternationalZoneChartDetails { get; set; }
+        public virtual DbSet<InternationalZoneChartDetailStaging> InternationalZoneChartDetailsStaging { get; set; }
+        public virtual DbSet<InternationalZoneChartOriginDestinationPostal> InternationalZoneChartOriginDestinationPostals { get; set; }
+        public virtual DbSet<InternationalZoneChartOriginDestinationPostalStaging> InternationalZoneChartOriginDestinationPostalsStaging { get; set; }
+        public virtual DbSet<InternationalZoneChartOriginPoliticalDivision> InternationalZoneChartOriginPoliticalDivisions { get; set; }
+        public virtual DbSet<InternationalZoneChartOriginPoliticalDivisionStaging> InternationalZoneChartOriginPoliticalDivisionsStaging { get; set; }
+        public virtual DbSet<InternationalZoneChartDestinationPoliticalDivision> InternationalZoneChartDestinationPoliticalDivisions { get; set; }
+        public virtual DbSet<InternationalZoneChartDestinationPoliticalDivisionStaging> InternationalZoneChartDestinationPoliticalDivisionsStaging { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -697,6 +713,71 @@ namespace UPS.WWRR.Data.Models
                     t.ChartEffectiveDate,
                     t.ChartEndDate
                 }).IsUnique();
+            });
+
+            modelBuilder.Entity<InternationalZoneDetailStaging>(e =>
+            {
+                e.ToTable("tinzndt_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<InternationalZoneHeaderStaging>(e =>
+            {
+                e.ToTable("tinznhd_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            // International Zone Chart Status - main table with unique constraint
+            modelBuilder.Entity<InternationalZoneChartStatus>(e =>
+            {
+                e.HasIndex(t => new
+                {
+                    t.ZoneChartNumber,
+                    t.InternationalZoneHeaderStartDate,
+                    t.InternationalZoneHeaderEndDate
+                }).IsUnique();
+            });
+
+            modelBuilder.Entity<InternationalZoneChartStatusStaging>(e =>
+            {
+                e.ToTable("izchartsts_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<InternationalZoneChartLookupStaging>(e =>
+            {
+                e.ToTable("izchartlkup_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<InternationalZoneChartHeaderStaging>(e =>
+            {
+                e.ToTable("izcharthd_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<InternationalZoneChartDetailStaging>(e =>
+            {
+                e.ToTable("izchartdtl_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<InternationalZoneChartOriginDestinationPostalStaging>(e =>
+            {
+                e.ToTable("izchartorgdtnpst_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<InternationalZoneChartOriginPoliticalDivisionStaging>(e =>
+            {
+                e.ToTable("izchartorgpoldiv_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<InternationalZoneChartDestinationPoliticalDivisionStaging>(e =>
+            {
+                e.ToTable("izchartdtnpoldiv_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 
             // Relationships

@@ -269,9 +269,7 @@ public class TARCLHDTests : BatchProcessorTests
         var load = new DataLoad { Id = 100, LoadTableName = "TARCLHD", FileLocation = "gs://bucket/TARCLHD_100.csv" };
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MergeResult(5, 3, 1, null, null, null, null, null));
-        _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
+            .ReturnsAsync(new MergeResult(10, 0, 0, null, null, null, null, null));
         _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(11);
 
@@ -280,7 +278,7 @@ public class TARCLHDTests : BatchProcessorTests
         // Act
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
 
-        // Assert - Verify staging dataset procedure and merge procedure were both called (2 times total)
+        // Assert - Verify stored procedures were called (staging normalization + merge = 2 times)
         _repo.Verify(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         _repo.Verify(r => r.UpdateStatusAsync(100, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -292,9 +290,7 @@ public class TARCLHDTests : BatchProcessorTests
         var load = new DataLoad { Id = 104, LoadTableName = "TARCLDT", FileLocation = "gs://bucket/TARCLDT_104.csv" };
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MergeResult(25, 10, 5, null, null, null, null, null));
-        _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
+            .ReturnsAsync(new MergeResult(50, 0, 0, null, null, null, null, null));
         _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(11);
 
@@ -303,7 +299,7 @@ public class TARCLHDTests : BatchProcessorTests
         // Act
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
 
-        // Assert - Verify staging dataset procedure and merge procedure were both called (2 times total)
+        // Assert - Verify stored procedures were called (staging normalization + merge = 2 times)
         _repo.Verify(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         _repo.Verify(r => r.UpdateStatusAsync(104, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -326,7 +322,8 @@ public class TARCLHDTests : BatchProcessorTests
         // Act
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
 
-        // Assert - Verify status is Failed
+        // Assert - Staging failed so merge should NOT be called (only staging procedure called once)
+        _repo.Verify(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         _repo.Verify(r => r.UpdateStatusAsync(101, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -336,11 +333,10 @@ public class TARCLHDTests : BatchProcessorTests
         // Arrange
         var load = new DataLoad { Id = 102, LoadTableName = "TARCLDT", FileLocation = "gs://bucket/TARCLDT_102.csv" };
         
-        // Setup to return error on merge (second call fails)
-        _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MergeResult(0, 0, 0, "42000", "ERROR", "sp_merge", "20", "Merge failed"));
-        _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
+        // First call (staging) succeeds, second call (merge) fails
+        _repo.SetupSequence(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MergeResult(10, 0, 0, null, null, null, null, null)) // Staging succeeds
+            .ReturnsAsync(new MergeResult(0, 0, 0, "42000", "ERROR", "sp_merge", "20", "Merge failed")); // Merge fails
         _repo.Setup(r => r.AddErrorsAsync(It.IsAny<IEnumerable<DataLoadError>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
@@ -349,7 +345,8 @@ public class TARCLHDTests : BatchProcessorTests
         // Act
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
 
-        // Assert
+        // Assert - Both staging and merge were called (2 times total)
+        _repo.Verify(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         _repo.Verify(r => r.UpdateStatusAsync(102, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -360,9 +357,7 @@ public class TARCLHDTests : BatchProcessorTests
         var load = new DataLoad { Id = 103, LoadTableName = "TARCLHD", FileLocation = "gs://bucket/TARCLHD_103.csv" };
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MergeResult(50, 30, 10, null, null, null, null, null));
-        _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
+            .ReturnsAsync(new MergeResult(100, 0, 0, null, null, null, null, null));
         _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), 103, It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(11);
 
@@ -397,7 +392,7 @@ public class TARCLHDTests : BatchProcessorTests
         // Act
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
 
-        // Assert - Regular table only calls merge once, not staging normalization
+        // Assert - Regular tables only call merge once (no staging normalization)
         _repo.Verify(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         _repo.Verify(r => r.UpdateLoadReferenceAsync(It.IsAny<string>(), It.IsAny<string>(), 200, It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -407,8 +402,9 @@ public class TARCLHDTests : BatchProcessorTests
     {
         var load = new DataLoad { Id = 530, LoadTableName = "TARCLHD", FileLocation = "gs://bucket/TARCLHD_530.csv" };
         
-        // Setup to return error on merge
-        _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        // First call (staging) succeeds, second call (merge) fails
+        _repo.SetupSequence(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MergeResult(10, 0, 0, null, null, null, null, null))
             .ReturnsAsync(new MergeResult(0, 0, 0, null, null, "sp", "", "error occurred"));
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
@@ -427,9 +423,7 @@ public class TARCLHDTests : BatchProcessorTests
         var load = new DataLoad { Id = 531, LoadTableName = "TARCLHD", FileLocation = "gs://bucket/TARCLHD_531.csv" };
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MergeResult(1, 2, 0, null, null, "sp", null, null));
-        _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
+            .ReturnsAsync(new MergeResult(10, 0, 0, null, null, null, null, null));
         _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), 531, It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(11);
         

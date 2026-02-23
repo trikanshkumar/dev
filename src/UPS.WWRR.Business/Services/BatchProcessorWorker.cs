@@ -25,6 +25,18 @@ namespace UPS.WWRR.Business.Services
         private readonly int _defaultChunkSize = 100_000;
         private readonly int _batchLoadChunkSize;
         private readonly HashSet<string> _movedObjects = new(StringComparer.OrdinalIgnoreCase);
+        
+        /// <summary>
+        /// Tracks which paired table groups have already executed their merge SP in the current processing cycle.
+        /// Key is the merge stored procedure name. For paired tables sharing the same SP, only the first table runs the merge.
+        /// </summary>
+        private readonly HashSet<string> _processedMergeSPs = new(StringComparer.OrdinalIgnoreCase);
+        
+        /// <summary>
+        /// Stores the merge result from the first table in a paired group.
+        /// Key is the merge stored procedure name. Used to copy record counts to the second table's detail.
+        /// </summary>
+        private readonly Dictionary<string, MergeResult> _pairedMergeResults = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Defines groups of tables that must be processed together.
@@ -34,7 +46,8 @@ namespace UPS.WWRR.Business.Services
         [
             new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TARCLHD), nameof(TableEnum.TARCLDT) },
             new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TDOZNHD), nameof(TableEnum.TDOZNDT) },
-            new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TASYRA), nameof(TableEnum.TCHART) }
+            new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TASYRA), nameof(TableEnum.TCHART) },
+            new(StringComparer.OrdinalIgnoreCase) { nameof(TableEnum.TINZNHD), nameof(TableEnum.TINZNDT) }
         ];
 
         public BatchProcessorWorker(ILogger<BatchProcessorWorker> logger,
@@ -67,8 +80,10 @@ namespace UPS.WWRR.Business.Services
             {
                 _logger.LogInformation("Starting processing cycle at {time}", DateTimeOffset.UtcNow);
 
-                // Clear moved objects tracker at the start of each cycle to allow re-processing of files with same names
+                // Clear trackers at the start of each cycle
                 _movedObjects.Clear();
+                _processedMergeSPs.Clear();
+                _pairedMergeResults.Clear();
 
                 // Discover and validate new loads (creates DataLoad entries)
                 var newLoads = await BuildLoadsAsync(stoppingToken);
@@ -294,6 +309,7 @@ namespace UPS.WWRR.Business.Services
             foreach (var load in loads)
             {
                 var descriptor = GetDescriptor(load.LoadTableName);
+                var gcsFileName = Path.GetFileName(load.FileLocation);
                 if (!descriptor.IsSupported) continue;
                 await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processing, null, ct);
 
@@ -303,7 +319,6 @@ namespace UPS.WWRR.Business.Services
                 if (!tempFiles.TryGetValue(key, out tempFile!))
                 {
                     tempFile = Path.GetTempFileName();
-                    var gcsFileName = Path.GetFileName(load.FileLocation);
                     await _storageService.DownloadFile(gcsFileName, tempFile, ct);
                 }
 
@@ -311,12 +326,18 @@ namespace UPS.WWRR.Business.Services
                 {
                     var (copySuccess, stagingDetail, rowsLoaded, copyErrors) = await CopyBatchAsync(load, tempFile, descriptor, ct);
                     if (!copySuccess)
+                    {
                         await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+                        // Move failed file to processed folder
+                        await MoveObjectToProcessedAsync(gcsFileName);
+                    }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "CopyBatch failed for table {tbl} load {id}", load.LoadTableName, load.Id);
                     await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+                    // Move failed file to processed folder
+                    await MoveObjectToProcessedAsync(gcsFileName);
                 }
                 finally
                 {
@@ -715,6 +736,24 @@ namespace UPS.WWRR.Business.Services
                 StoredProcConstant.RateChartAccessorialRatesNormalizeStaging,
                 GetRateChartAccessorialRateTableMapping()
             ),
+            // International Zone Header - uses special multi-step process with staging dataset normalization
+            nameof(TableEnum.TINZNHD) => new LoadTableDescriptor(
+                nameof(TableEnum.TINZNHD).ToLowerInvariant(),
+                (nameof(TableEnum.TINZNHD) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.InternationalZoneMerge,
+                async path => await _csvValidator.ValidateCsvAsync<InternationalZoneHeaderDto>(path),
+                StoredProcConstant.InternationalZoneNormalizeStaging,
+                GetInternationalZoneTableMapping()
+            ),
+            // International Zone Detail - uses special multi-step process with staging dataset normalization
+            nameof(TableEnum.TINZNDT) => new LoadTableDescriptor(
+                nameof(TableEnum.TINZNDT).ToLowerInvariant(),
+                (nameof(TableEnum.TINZNDT) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.InternationalZoneMerge,
+                async path => await _csvValidator.ValidateCsvAsync<InternationalZoneDetailDto>(path),
+                StoredProcConstant.InternationalZoneNormalizeStaging,
+                GetInternationalZoneTableMapping()
+            ),
             //Add other table descriptors here as needed
             _ => LoadTableDescriptor.Unsupported
             };
@@ -734,12 +773,18 @@ namespace UPS.WWRR.Business.Services
                 {
                     await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
                     _logger.LogWarning("Validation unsupported for table {tbl}", load.LoadTableName);
+                    
+                    // Move unsupported file to processed folder
+                    var unsupportedFileName = Path.GetFileName(load.FileLocation);
+                    await MoveObjectToProcessedAsync(unsupportedFileName);
                     continue;
                 }
+                
+                string? tempFile = null;
                 try
                 {
                     // Download once and keep for copy
-                    var tempFile = Path.GetTempFileName();
+                    tempFile = Path.GetTempFileName();
                     var gcsFileName = Path.GetFileName(load.FileLocation);
 
                     // Check if file exists before attempting to download
@@ -766,11 +811,26 @@ namespace UPS.WWRR.Business.Services
                             };
 
                             await _loadRepository.AddExceptionsAsync([exception], ct);
+                            
+                            // Move the file with actual name to processed folder
+                            await MoveObjectToProcessedAsync(actualName);
+                            
+                            // Clean up temp file
+                            if (tempFile != null)
+                            {
+                                try { File.Delete(tempFile); } catch { }
+                            }
                             continue;
                         }
                         _logger.LogError("File not found in GCS bucket. Bucket: {bucket}, Object: {object}, FileLocation: {fileLocation}",
                             _gcpBucketName, gcsFileName, load.FileLocation);
                         await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+                        
+                        // Clean up temp file (even though download didn't happen, the temp file was created)
+                        if (tempFile != null)
+                        {
+                            try { File.Delete(tempFile); } catch { }
+                        }
                         continue;
                     }
                     await _storageService.DownloadFile(gcsFileName, tempFile, ct);
@@ -781,7 +841,12 @@ namespace UPS.WWRR.Business.Services
                         _logger.LogError("Downloaded file size mismatch. Remote file: {remoteFile}, Local file: {localFile}. Skipping load.",
                             gcsFileName, tempFile);
                         await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+                        
+                        // Clean up temp file
                         try { File.Delete(tempFile); } catch { }
+                        
+                        // Move mismatched file to processed folder
+                        await MoveObjectToProcessedAsync(gcsFileName);
                         continue;
                     }
 
@@ -823,7 +888,17 @@ namespace UPS.WWRR.Business.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Validation error for table {tbl} load {id}", load.LoadTableName, load.Id);
-                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null);
+                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+                    
+                    // Clean up temp file if it was created
+                    if (tempFile != null)
+                    {
+                        try { File.Delete(tempFile); } catch { }
+                    }
+                    
+                    // Move the file to processed folder even on error
+                    var errorFileName = Path.GetFileName(load.FileLocation);
+                    await MoveObjectToProcessedAsync(errorFileName);
                 }
             }
         }
@@ -956,6 +1031,7 @@ namespace UPS.WWRR.Business.Services
         /// <summary>
         /// Handles the complete staging normalization load process including merge execution and result handling.
         /// Executes staging normalization merge and updates load status based on result.
+        /// For paired table groups (e.g., TINZNHD/TINZNDT), the merge SP only runs once for the first table.
         /// </summary>
         /// <param name="load">The data load being processed</param>
         /// <param name="descriptor">The table descriptor with normalization settings</param>
@@ -964,6 +1040,39 @@ namespace UPS.WWRR.Business.Services
         private async Task HandleStagingNormalizationLoadAsync(
             DataLoad load, LoadTableDescriptor descriptor, System.Diagnostics.Stopwatch sw, CancellationToken ct)
         {
+            // Check if merge SP was already executed for this paired group in this cycle
+            // For paired tables (e.g., TINZNHD/TINZNDT), they share the same merge SP, so no need to run again the same SP.
+            bool mergeAlreadyExecuted = _processedMergeSPs.Contains(descriptor.MergeStoredProcedure);
+            
+            if (mergeAlreadyExecuted)
+            {
+                _logger.LogInformation("Merge SP already Executed for table {tbl} load {id} in this pair load", load.LoadTableName, load.Id);
+                
+                // Get the merge result from the first table to copy record counts
+                var previousMergeResult = _pairedMergeResults.GetValueOrDefault(descriptor.MergeStoredProcedure);
+                
+                // Create a detail record with the same counts as the first table (for consistency)
+                sw.Stop();
+                var skipDetail = new DataLoadDetail
+                {
+                    DataLoadId = load.Id,
+                    DataLoadType = "ACL",
+                    ErrorIndicator = 0,
+                    TimeProcessValue = (int)sw.Elapsed.TotalSeconds,
+                    TimePeriodTypeCode = "SECONDS",
+                    RecordsInserted = previousMergeResult?.Inserted ?? 0,
+                    RecordsUpdated = previousMergeResult?.Updated ?? 0,
+                    RecordsDeleted = previousMergeResult?.Deleted ?? 0,
+                    BatchNumber = 1
+                };
+                await _loadRepository.AddDetailAsync(skipDetail, ct);
+                
+                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
+                _logger.LogInformation("Load Process Completed for second table {tbl} load {id} in this pair load. Records Count: Inserted={ins}, Updated={upd}, Deleted={del}", 
+                    load.LoadTableName, load.Id, skipDetail.RecordsInserted, skipDetail.RecordsUpdated, skipDetail.RecordsDeleted);
+                return;
+            }
+
             var (mergeResult, mergeDetail) = await PerformStagingNormalizationMergeAsync(load, descriptor, sw, ct);
             bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
 
@@ -986,6 +1095,10 @@ namespace UPS.WWRR.Business.Services
             }
             else
             {
+                // Mark this merge SP as processed and store the result for paired table
+                _processedMergeSPs.Add(descriptor.MergeStoredProcedure);
+                _pairedMergeResults[descriptor.MergeStoredProcedure] = mergeResult;
+                
                 if (descriptor.NormalizedTableMapping != null)
                 {
                     await _loadRepository.UpdateLoadReferenceForMultipleTablesAsync(
@@ -1115,6 +1228,23 @@ namespace UPS.WWRR.Business.Services
             { "chartorggeo_stg", "chartorggeo" },
             { "chartsts_stg", "chartsts" },
             { "chartsvcpkg_stg", "chartsvcpkg" }
+        };
+
+        /// <summary>
+        /// Gets the table mapping for International Zone tables (staging -> main tables)
+        /// Used for updating LOAD_REF_TE and IS_COMPLETED_IR across all related tables after merge
+        /// </summary>
+        private static Dictionary<string, string> GetInternationalZoneTableMapping() => new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "tinznhd_stg", "tinznhd_stg" },
+            { "tinzndt_stg", "tinzndt_stg" },
+            { "izchartsts_stg", "izchartsts" },
+            { "izchartlkup_stg", "izchartlkup" },
+            { "izcharthd_stg", "izcharthd" },
+            { "izchartdtl_stg", "izchartdtl" },
+            { "izchartorgdtnpst_stg", "izchartorgdtnpst" },
+            { "izchartorgpoldiv_stg", "izchartorgpoldiv" },
+            { "izchartdtnpoldiv_stg", "izchartdtnpoldiv" }
         };
 
         private async Task MoveObjectToProcessedAsync(string objectName)

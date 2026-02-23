@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UPS.WWRR.Data.Models;
@@ -11,9 +12,11 @@ using UPS.WWRR.Data.Models;
 namespace UPS.WWRR.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260217112927_Script_Add_InternationalZone_StagingDataset_SP")]
+    partial class Script_Add_InternationalZone_StagingDataset_SP
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -293,222 +296,6 @@ namespace UPS.WWRR.Data.Migrations
                     b.HasKey("Country", "AccessorialCode", "Currency", "AccessorialThresholdType", "EffectiveDate", "StatusCode");
 
                     b.ToTable("tasytrh_stg", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialRatesCriteria", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    b.Property<decimal>("Rate")
-                        .HasColumnType("decimal(17,4)")
-                        .HasColumnName("asy_svc_ra");
-
-                    b.Property<string>("DeterminationCriteria")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("dtr_cri_vlu_typ_cd");
-
-                    b.Property<decimal>("DeterminingCriteriaLowValue")
-                        .HasColumnType("decimal(13,2)")
-                        .HasColumnName("dtr_cri_lo_rng_te");
-
-                    b.Property<string>("CalculationMethod")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("ccl_mth_typ_cd");
-
-                    b.Property<decimal>("DeterminingCriteriaHighValue")
-                        .HasColumnType("decimal(13,2)")
-                        .HasColumnName("dtr_cri_hi_rng_te");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.HasKey("ChartId", "Rate", "DeterminationCriteria", "DeterminingCriteriaLowValue", "CalculationMethod");
-
-                    b.ToTable("accratecrit", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialRatesCriteriaStaging", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    b.Property<decimal>("Rate")
-                        .HasColumnType("decimal(17,4)")
-                        .HasColumnName("asy_svc_ra");
-
-                    b.Property<string>("DeterminationCriteria")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("dtr_cri_vlu_typ_cd");
-
-                    b.Property<decimal>("DeterminingCriteriaLowValue")
-                        .HasColumnType("decimal(13,2)")
-                        .HasColumnName("dtr_cri_lo_rng_te");
-
-                    b.Property<string>("CalculationMethod")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("ccl_mth_typ_cd");
-
-                    b.Property<decimal>("DeterminingCriteriaHighValue")
-                        .HasColumnType("decimal(13,2)")
-                        .HasColumnName("dtr_cri_hi_rng_te");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.HasKey("ChartId", "Rate", "DeterminationCriteria", "DeterminingCriteriaLowValue", "CalculationMethod");
-
-                    b.ToTable("accratecrit_stg", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialRatesNew", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    b.Property<decimal>("Rate")
-                        .HasColumnType("decimal(17,4)")
-                        .HasColumnName("asy_svc_ra");
-
-                    b.Property<string>("ZoneNumber")
-                        .HasMaxLength(6)
-                        .HasColumnType("char")
-                        .HasColumnName("del_zn_nr");
-
-                    b.Property<string>("ChargeClassification")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("ra_chg_csf_typ_cd");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.HasKey("ChartId", "Rate", "ZoneNumber", "ChargeClassification");
-
-                    b.ToTable("accrate", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialRatesNewStaging", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    b.Property<decimal>("Rate")
-                        .HasColumnType("decimal(17,4)")
-                        .HasColumnName("asy_svc_ra");
-
-                    b.Property<string>("ZoneNumber")
-                        .HasMaxLength(6)
-                        .HasColumnType("char")
-                        .HasColumnName("del_zn_nr");
-
-                    b.Property<string>("ChargeClassification")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("ra_chg_csf_typ_cd");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.HasKey("ChartId", "Rate", "ZoneNumber", "ChargeClassification");
-
-                    b.ToTable("accrate_stg", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialRatesStaging", b =>
-                {
-                    b.Property<string>("ChartNumber")
-                        .HasMaxLength(6)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_ra_cht_nr");
-
-                    b.Property<string>("CalculationMethod")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("ccl_mth_typ_cd");
-
-                    b.Property<string>("ZoneNumber")
-                        .HasMaxLength(6)
-                        .HasColumnType("char")
-                        .HasColumnName("del_zn_nr");
-
-                    b.Property<DateTime>("ChartEffectiveDate")
-                        .HasColumnType("Date")
-                        .HasColumnName("asy_svc_ra_eff_dt");
-
-                    b.Property<string>("DeterminationCriteria")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("dtr_cri_vlu_typ_cd");
-
-                    b.Property<decimal>("DeterminingCriteriaLowValue")
-                        .HasColumnType("decimal(13,2)")
-                        .HasColumnName("dtr_cri_lo_rng_te");
-
-                    b.Property<string>("ChargeClassification")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("ra_chg_csf_typ_cd");
-
-                    b.Property<string>("StatusCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_ra_cht_sts_cd");
-
-                    b.Property<DateTime>("ChartEndDate")
-                        .HasColumnType("Date")
-                        .HasColumnName("asy_svc_ra_end_dt");
-
-                    b.Property<decimal>("DeterminingCriteriaHighValue")
-                        .HasColumnType("decimal(13,2)")
-                        .HasColumnName("dtr_cri_hi_rng_te");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<decimal>("Rate")
-                        .HasColumnType("decimal(17,4)")
-                        .HasColumnName("asy_svc_ra");
-
-                    b.HasKey("ChartNumber", "CalculationMethod", "ZoneNumber", "ChartEffectiveDate", "DeterminationCriteria", "DeterminingCriteriaLowValue", "ChargeClassification", "StatusCode");
-
-                    b.ToTable("tasyra_stg", "a886aa_ao");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.AccessorialRatingRules", b =>
@@ -967,8 +754,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ChartStatusNumber", "ServiceTypeCode", "RateChargeClassificationTypeCode");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tarcldt_load_ref_te");
-
                     b.ToTable("tarcldt", "a886aa_ao");
                 });
 
@@ -1011,10 +796,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("load_ref_te");
 
                     b.HasKey("ChartStatusNumber", "ServiceTypeCode", "RateChargeClassificationTypeCode");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tarcldt_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tarcldt_stg_load_ref_te");
 
                     b.ToTable("tarcldt_new_stg", "a886aa_ao");
                 });
@@ -1148,12 +929,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("org_pol_div_1_cd");
 
                     b.HasKey("OriginCountry", "ServiceType", "DestinationCountry", "ChartNumber", "ChartEffectiveDate", "OriginLowPostal", "OriginHighPostal", "OriginPolticialDivision2", "DestinationLowPostal", "DestinationHighPostal", "DestinationPoliticalDivision2", "AreaClassificationRule", "StatusCode", "ChartEndDate");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tarcldt_stg_is_completed_ir")
-                        .HasDatabaseName("idx_tarcldt_stg_is_completed_ir1");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tarcldt_stg_load_ref_te")
-                        .HasDatabaseName("idx_tarcldt_stg_load_ref_te1");
 
                     b.ToTable("tarcldt_stg", "a886aa_ao");
                 });
@@ -1539,98 +1314,6 @@ namespace UPS.WWRR.Data.Migrations
                     b.ToTable("tbmavcs_stg", "a886aa_ao");
                 });
 
-            modelBuilder.Entity("UPS.WWRR.Data.Models.ChartAccessorialCode", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ChartId"));
-
-                    b.Property<string>("AccessorialCode")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("asy_svc_typ_cd");
-
-                    b.Property<string>("BillingTerms")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("bil_ter_typ_cd");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("ccy_cd");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<string>("MovementDirection")
-                        .IsRequired()
-                        .HasMaxLength(1)
-                        .HasColumnType("char")
-                        .HasColumnName("mvm_drc_cd");
-
-                    b.HasKey("ChartId");
-
-                    b.ToTable("chartacccd", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.ChartAccessorialCodeStaging", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ChartId"));
-
-                    b.Property<string>("AccessorialCode")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("asy_svc_typ_cd");
-
-                    b.Property<string>("BillingTerms")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("bil_ter_typ_cd");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("ccy_cd");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<string>("MovementDirection")
-                        .IsRequired()
-                        .HasMaxLength(1)
-                        .HasColumnType("char")
-                        .HasColumnName("mvm_drc_cd");
-
-                    b.HasKey("ChartId");
-
-                    b.ToTable("chartacccd_stg", "a886aa_ao");
-                });
-
             modelBuilder.Entity("UPS.WWRR.Data.Models.ChartDestinationGeo", b =>
                 {
                     b.Property<int>("ChartStatusNumber")
@@ -1777,118 +1460,6 @@ namespace UPS.WWRR.Data.Migrations
                     b.HasKey("ChartStatusNumber", "DestinationCountryCode", "DestinationPoliticalDivision2");
 
                     b.ToTable("zchartdtngpu_stg", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.ChartGeo", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    b.Property<string>("OriginGeopoliticalUnitCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpu_xpt_cny_cd");
-
-                    b.Property<string>("DestinationGeopoliticalUnitCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpu_ipt_cny_cd");
-
-                    b.Property<string>("ServiceType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("PackageType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_cha_typ_cd");
-
-                    b.Property<string>("CustomerCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("cus_cls_typ_cd");
-
-                    b.Property<string>("DestinationCountry")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("ipt_cny_cd");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<string>("OriginCountry")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("xpt_cny_cd");
-
-                    b.HasKey("ChartId", "OriginGeopoliticalUnitCountry", "DestinationGeopoliticalUnitCountry", "ServiceType", "PackageType", "CustomerCode");
-
-                    b.ToTable("chartorggeo", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.ChartGeoStaging", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    b.Property<string>("OriginGeopoliticalUnitCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpu_xpt_cny_cd");
-
-                    b.Property<string>("DestinationGeopoliticalUnitCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpu_ipt_cny_cd");
-
-                    b.Property<string>("ServiceType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("PackageType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_cha_typ_cd");
-
-                    b.Property<string>("CustomerCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("cus_cls_typ_cd");
-
-                    b.Property<string>("DestinationCountry")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("ipt_cny_cd");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<string>("OriginCountry")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("xpt_cny_cd");
-
-                    b.HasKey("ChartId", "OriginGeopoliticalUnitCountry", "DestinationGeopoliticalUnitCountry", "ServiceType", "PackageType", "CustomerCode");
-
-                    b.ToTable("chartorggeo_stg", "a886aa_ao");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ChartLookup", b =>
@@ -2105,114 +1676,6 @@ namespace UPS.WWRR.Data.Migrations
                     b.HasKey("ChartStatusNumber", "OriginCountryCode", "OriginPoliticalDivision2");
 
                     b.ToTable("zchartorggpu_stg", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.ChartServicePackage", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    b.Property<string>("ServiceType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("PackageType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_cha_typ_cd");
-
-                    b.Property<string>("ServiceFeatureType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_fea_typ_cd");
-
-                    b.Property<string>("PackageAcquisitionMethod")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_acq_mth_typ_cd");
-
-                    b.Property<string>("InterIntraStateCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("na_nrs_cd");
-
-                    b.Property<decimal>("AcquisitionSequenceNumber")
-                        .HasColumnType("decimal(6,0)")
-                        .HasColumnName("svc_ra_cht_seq_nr");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<string>("PackageAcquisitionClassification")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_acq_mth_csf_cd");
-
-                    b.HasKey("ChartId", "ServiceType", "PackageType", "ServiceFeatureType", "PackageAcquisitionMethod", "InterIntraStateCode");
-
-                    b.ToTable("chartsvcpkg", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.ChartServicePackageStaging", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    b.Property<string>("ServiceType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("PackageType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_cha_typ_cd");
-
-                    b.Property<string>("ServiceFeatureType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_fea_typ_cd");
-
-                    b.Property<string>("PackageAcquisitionMethod")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_acq_mth_typ_cd");
-
-                    b.Property<string>("InterIntraStateCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("na_nrs_cd");
-
-                    b.Property<decimal>("AcquisitionSequenceNumber")
-                        .HasColumnType("decimal(6,0)")
-                        .HasColumnName("svc_ra_cht_seq_nr");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<string>("PackageAcquisitionClassification")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_acq_mth_csf_cd");
-
-                    b.HasKey("ChartId", "ServiceType", "PackageType", "ServiceFeatureType", "PackageAcquisitionMethod", "InterIntraStateCode");
-
-                    b.ToTable("chartsvcpkg_stg", "a886aa_ao");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.ChartServiceType", b =>
@@ -2628,12 +2091,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)")
                         .HasColumnName("load_table_na");
-
-                    b.Property<string>("LoadVersion")
-                        .IsRequired()
-                        .HasMaxLength(35)
-                        .HasColumnType("varchar(35)")
-                        .HasColumnName("load_ver");
 
                     b.Property<long>("LoadVersionNumber")
                         .HasColumnType("bigint")
@@ -3487,8 +2944,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ZoneChartStatusNumber", "ServiceTypeCode");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdozndt_load_ref_te");
-
                     b.ToTable("tdozndt", "a886aa_ao");
                 });
 
@@ -3521,10 +2976,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("zn_ncv_typ_cd");
 
                     b.HasKey("ZoneChartStatusNumber", "ServiceTypeCode");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tdozndt_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdozndt_stg_load_ref_te");
 
                     b.ToTable("tdozndt_new_stg", "a886aa_ao");
                 });
@@ -3625,12 +3076,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountryCode", "ServiceTypeCode", "DestinationCountryCode", "ZoneChartNumber", "DomesticZoneHeaderStartDate", "OriginRangeLowPostalCode", "OriginRangeHighPostalCode", "DestinationRangeLowPostalCode", "DestinationRangeHighPostalCode", "BusinessEntityAccessStatusCode", "ZoneIncentiveTypeCode", "DomesticZoneDetailEndDate");
 
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tdozndt_stg_is_completed_ir")
-                        .HasDatabaseName("idx_tdozndt_stg_is_completed_ir1");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdozndt_stg_load_ref_te")
-                        .HasDatabaseName("idx_tdozndt_stg_load_ref_te1");
-
                     b.ToTable("tdozndt_stg", "a886aa_ao");
                 });
 
@@ -3661,8 +3106,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("svc_typ_cd");
 
                     b.HasKey("ZoneChartStatusNumber");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdoznhd_load_ref_te");
 
                     b.ToTable("tdoznhd", "a886aa_ao");
                 });
@@ -3700,10 +3143,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("svc_typ_cd");
 
                     b.HasKey("ZoneChartStatusNumber");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tdoznhd_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdoznhd_stg_load_ref_te");
 
                     b.ToTable("tdoznhd_new_stg", "a886aa_ao");
                 });
@@ -3782,12 +3221,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("zch_sht_dsc_te");
 
                     b.HasKey("OriginCountryCode", "OriginGpuNumber", "ServiceTypeCode", "DestinationCountryCode", "DestinationGpuNumber", "ZoneChartNumber", "DomesticZoneHeaderStartDate", "DomesticZoneHeaderEndDate", "BusinessEntityAccessStatusCode");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tdoznhd_stg_is_completed_ir")
-                        .HasDatabaseName("idx_tdoznhd_stg_is_completed_ir1");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tdoznhd_stg_load_ref_te")
-                        .HasDatabaseName("idx_tdoznhd_stg_load_ref_te1");
 
                     b.ToTable("tdoznhd_stg", "a886aa_ao");
                 });
@@ -4025,8 +3458,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("RatingCountry", "MovementDirection", "CustomerClassificationType", "ServiceType", "MultipieceIndicator", "EffectiveDate", "EndDate", "StatusCode");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tratrul_load_ref_te");
-
                     b.ToTable("tratrul", "a886aa_ao");
                 });
 
@@ -4131,10 +3562,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("RatingCountry", "MovementDirection", "CustomerClassificationType", "ServiceType", "MultipieceIndicator", "EffectiveDate", "EndDate", "StatusCode");
 
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tratrul_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tratrul_stg_load_ref_te");
-
                     b.ToTable("tratrul_stg", "a886aa_ao");
                 });
 
@@ -4229,8 +3656,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ExportCountry", "ImportCountry", "Accessorial", "MovementDirection", "ServiceType", "ServiceFeatureType", "PackageCharacteristicType", "PackageAcquisitionMethod", "Currency", "BilingTermType", "EffectveDate", "StatusCode", "CustomerClassificationType");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsubchg_load_ref_te");
-
                     b.ToTable("tsubchg", "a886aa_ao");
                 });
 
@@ -4286,8 +3711,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("fu_sur_pbh_rt_a");
 
                     b.HasKey("IndexFuelCategoryCode", "RecordEffectiveStartDate", "ApprovalStatusCode");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tfscidx_load_ref_te");
 
                     b.ToTable("tfscidx", "a886aa_ao");
                 });
@@ -4350,10 +3773,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("fu_sur_pbh_rt_a");
 
                     b.HasKey("IndexFuelCategoryCode", "RecordEffectiveStartDate", "ApprovalStatusCode");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tfscidx_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tfscidx_stg_load_ref_te");
 
                     b.ToTable("tfscidx_stg", "a886aa_ao");
                 });
@@ -4454,10 +3873,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("asy_svc_ra");
 
                     b.HasKey("ExportCountry", "ImportCountry", "Accessorial", "MovementDirection", "ServiceType", "ServiceFeatureType", "PackageCharacteristicType", "PackageAcquisitionMethod", "Currency", "BilingTermType", "EffectveDate", "StatusCode", "CustomerClassificationType");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsubchg_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsubchg_stg_load_ref_te");
 
                     b.ToTable("tsubchg_stg", "a886aa_ao");
                 });
@@ -6476,214 +5891,6 @@ namespace UPS.WWRR.Data.Migrations
                     b.ToTable("twgttrh_stg", "a886aa_ao");
                 });
 
-            modelBuilder.Entity("UPS.WWRR.Data.Models.RateChartHeaderStaging", b =>
-                {
-                    b.Property<string>("PackageType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_cha_typ_cd");
-
-                    b.Property<string>("StatusCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_ra_cht_sts_cd");
-
-                    b.Property<string>("ServiceType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("PackageAcquisitionMethod")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_acq_mth_typ_cd");
-
-                    b.Property<string>("ServiceFeatureType")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_fea_typ_cd");
-
-                    b.Property<string>("BillingTerms")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("bil_ter_typ_cd");
-
-                    b.Property<string>("AccessorialCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("asy_svc_typ_cd");
-
-                    b.Property<string>("CustomerCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("cus_cls_typ_cd");
-
-                    b.Property<string>("Currency")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("ccy_cd");
-
-                    b.Property<DateTime>("ChartEffectiveDate")
-                        .HasColumnType("Date")
-                        .HasColumnName("svc_ra_cht_eff_dt");
-
-                    b.Property<string>("InterIntraStateCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("na_nrs_cd");
-
-                    b.Property<string>("GeopoliticalUnitOriginCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpu_xpt_cny_cd");
-
-                    b.Property<string>("GeopoliticalUnitDestinationCountry")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpu_ipt_cny_cd");
-
-                    b.Property<string>("PackageAcquisitionClassification")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("pkg_acq_mth_csf_cd");
-
-                    b.Property<string>("MovementDirection")
-                        .HasMaxLength(1)
-                        .HasColumnType("char")
-                        .HasColumnName("mvm_drc_cd");
-
-                    b.Property<decimal>("AcquisitionSequenceNumber")
-                        .HasColumnType("decimal(6,0)")
-                        .HasColumnName("svc_ra_cht_seq_nr");
-
-                    b.Property<DateTime>("ChartEndDate")
-                        .HasColumnType("Date")
-                        .HasColumnName("svc_ra_cht_end_dt");
-
-                    b.Property<string>("ChartNumber")
-                        .IsRequired()
-                        .HasMaxLength(6)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_ra_cht_nr");
-
-                    b.Property<string>("DestinationCountry")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("ipt_cny_cd");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<string>("OriginCountry")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("xpt_cny_cd");
-
-                    b.HasKey("PackageType", "StatusCode", "ServiceType", "PackageAcquisitionMethod", "ServiceFeatureType", "BillingTerms", "AccessorialCode", "CustomerCode", "Currency", "ChartEffectiveDate", "InterIntraStateCode", "GeopoliticalUnitOriginCountry", "GeopoliticalUnitDestinationCountry", "PackageAcquisitionClassification", "MovementDirection");
-
-                    b.ToTable("tchart_stg", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.RateChartLookup", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ChartId"));
-
-                    b.Property<DateTime>("ChartEffectiveDate")
-                        .HasColumnType("date")
-                        .HasColumnName("svc_ra_cht_eff_dt");
-
-                    b.Property<DateTime>("ChartEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("svc_ra_cht_end_dt");
-
-                    b.Property<string>("ChartNumber")
-                        .IsRequired()
-                        .HasMaxLength(6)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_ra_cht_nr");
-
-                    b.Property<string>("ChartStatus")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_ra_cht_sts_cd");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.HasKey("ChartId");
-
-                    b.HasIndex("ChartNumber", "ChartEffectiveDate", "ChartEndDate")
-                        .IsUnique();
-
-                    b.ToTable("chartsts", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.RateChartLookupStaging", b =>
-                {
-                    b.Property<int>("ChartId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("zch_sts_nr");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ChartId"));
-
-                    b.Property<DateTime>("ChartEffectiveDate")
-                        .HasColumnType("date")
-                        .HasColumnName("svc_ra_cht_eff_dt");
-
-                    b.Property<DateTime>("ChartEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("svc_ra_cht_end_dt");
-
-                    b.Property<string>("ChartNumber")
-                        .IsRequired()
-                        .HasMaxLength(6)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_ra_cht_nr");
-
-                    b.Property<string>("ChartStatus")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_ra_cht_sts_cd");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.HasKey("ChartId");
-
-                    b.HasIndex("ChartNumber", "ChartEffectiveDate", "ChartEndDate")
-                        .IsUnique();
-
-                    b.ToTable("chartsts_stg", "a886aa_ao");
-                });
-
             modelBuilder.Entity("UPS.WWRR.Data.Models.SameDayRate", b =>
                 {
                     b.Property<string>("OriginCountry")
@@ -6779,8 +5986,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("svc_ra_cht_nr");
 
                     b.HasKey("OriginCountry", "DestinationCountry", "ServiceType", "DeliveryZoneNumber", "Currency", "PackageCharacteristicType", "CustomerClassificationType", "ServiceFeatureType", "MovementDirection", "WeightMeasurementUnitType", "MinimumWeightRange", "StatusCode", "EffectiveDate");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsdrwsf_load_ref_te");
 
                     b.ToTable("tsdrwsf", "a886aa_ao");
                 });
@@ -6887,10 +6092,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountry", "DestinationCountry", "ServiceType", "DeliveryZoneNumber", "Currency", "PackageCharacteristicType", "CustomerClassificationType", "ServiceFeatureType", "MovementDirection", "WeightMeasurementUnitType", "MinimumWeightRange", "StatusCode", "EffectiveDate");
 
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsdrwsf_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsdrwsf_stg_load_ref_te");
-
                     b.ToTable("tsdrwsf_stg", "a886aa_ao");
                 });
 
@@ -6963,8 +6164,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("udt_ts");
 
                     b.HasKey("CountryCode", "ServiceTypeCode", "ServiceDefaultUnitTypeCode", "ServiceDefaultTypeCode", "MovementDirectionCode", "RecordEffectiveStartDate", "DeterminingChartTypeCode", "ApprovalStatusCode", "ControlValueRangeLowQuantity");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcdfl_load_ref_te");
 
                     b.ToTable("tsvcdfl", "a886aa_ao");
                 });
@@ -7045,10 +6244,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("CountryCode", "ServiceTypeCode", "ServiceDefaultUnitTypeCode", "ServiceDefaultTypeCode", "MovementDirectionCode", "RecordEffectiveStartDate", "DeterminingChartTypeCode", "ApprovalStatusCode", "ControlValueRangeLowQuantity");
 
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsvcdfl_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcdfl_stg_load_ref_te");
-
                     b.ToTable("tsvcdfl_stg", "a886aa_ao");
                 });
 
@@ -7084,8 +6279,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("rec_eff_end_dt");
 
                     b.HasKey("ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcdgr_load_ref_te");
 
                     b.ToTable("tsvcdgr", "a886aa_ao");
                 });
@@ -7129,10 +6322,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsvcdgr_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcdgr_stg_load_ref_te");
-
                     b.ToTable("tsvcdgr_stg", "a886aa_ao");
                 });
 
@@ -7171,8 +6360,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("rec_eff_end_dt");
 
                     b.HasKey("AccessoryServiceTypeCode", "ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcacp_load_ref_te");
 
                     b.ToTable("tsvcacp", "a886aa_ao");
                 });
@@ -7218,10 +6405,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("rec_eff_end_dt");
 
                     b.HasKey("AccessoryServiceTypeCode", "ServiceTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsvcacp_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsvcacp_stg_load_ref_te");
 
                     b.ToTable("tsvcacp_stg", "a886aa_ao");
                 });
@@ -7318,8 +6501,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("vol_rng_min_qy");
 
                     b.HasKey("OriginGpuExportCountryCode", "DestinationGpuImportCountryCode", "PackageTypeCode", "BillingTermTypeCode", "ServiceFeatureTypeCode", "ServiceTypeCode", "MovementDirectionCode", "CustomerRateTypeCode", "WeightMeasurementUnitTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsiarav_load_ref_te");
 
                     b.ToTable("tsiarav", "a886aa_ao");
                 });
@@ -7422,10 +6603,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("vol_rng_min_qy");
 
                     b.HasKey("OriginGpuExportCountryCode", "DestinationGpuImportCountryCode", "PackageTypeCode", "BillingTermTypeCode", "ServiceFeatureTypeCode", "ServiceTypeCode", "MovementDirectionCode", "CustomerRateTypeCode", "WeightMeasurementUnitTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tsiarav_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tsiarav_stg_load_ref_te");
 
                     b.ToTable("tsiarav_stg", "a886aa_ao");
                 });
@@ -7831,8 +7008,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("OriginCountryCode", "DestinationCountryCode", "AccessorialServiceTypeCode", "ServiceTypeCode", "MovementDirectionCode", "LaneClassTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate", "AccessorialAlternateNumericCode", "OriginGeopoliticalCountry", "DestinationGeopoliticalCountry");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tvasyln_load_ref_te");
-
                     b.ToTable("tvasyln", "a886aa_ao");
                 });
 
@@ -7914,10 +7089,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("svc_typ_alt_nmc_cd");
 
                     b.HasKey("OriginCountryCode", "DestinationCountryCode", "AccessorialServiceTypeCode", "ServiceTypeCode", "MovementDirectionCode", "LaneClassTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate", "AccessorialAlternateNumericCode", "OriginGeopoliticalCountry", "DestinationGeopoliticalCountry");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tvasyln_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tvasyln_stg_load_ref_te");
 
                     b.ToTable("tvasyln_stg", "a886aa_ao");
                 });
@@ -8062,8 +7233,6 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.HasKey("ImportCountryCode", "BillingTermTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
 
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tvdstbt_load_ref_te");
-
                     b.ToTable("tvdstbt", "a886aa_ao");
                 });
 
@@ -8104,10 +7273,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("rec_eff_end_dt");
 
                     b.HasKey("ImportCountryCode", "BillingTermTypeCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tvdstbt_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tvdstbt_stg_load_ref_te");
 
                     b.ToTable("tvdstbt_stg", "a886aa_ao");
                 });

@@ -50,5 +50,7 @@
         public const string FuelSurchargeIndexMerge = "sp_fuelsurchargeindex_merge_proc";
         public const string RateChartAccessorialRatesNormalizeStaging = "sp_ratechart_accessorialrates_stagingdataset_proc";
         public const string RateChartAccessorialRatesMerge = "sp_ratechart_accessorialrates_merge_proc";
+        public const string InternationalZoneNormalizeStaging = "sp_internationalzone_stagingdataset_proc";
+        public const string InternationalZoneMerge = "sp_internationalzone_merge_proc";
     }
 }
