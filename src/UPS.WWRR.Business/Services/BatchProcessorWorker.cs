@@ -24,6 +24,7 @@ namespace UPS.WWRR.Business.Services
         private readonly string _tableNameFilter;
         private readonly int _defaultChunkSize = 100_000;
         private readonly int _batchLoadChunkSize;
+        private readonly bool _tvasylnUseBatchMerge;
         private readonly HashSet<string> _movedObjects = new(StringComparer.OrdinalIgnoreCase);
         
         /// <summary>
@@ -65,6 +66,7 @@ namespace UPS.WWRR.Business.Services
                         ?? throw new InvalidOperationException("GOOGLE_CLOUD_STORAGE_BUCKET_NAME environment variable is not set.");
             _tableNameFilter = Environment.GetEnvironmentVariable("TABLE_NAME") ?? "ALL";
             _batchLoadChunkSize = int.TryParse(Environment.GetEnvironmentVariable("BatchLoad_ChunkSize"), out var cs) ? cs : _defaultChunkSize;
+            _tvasylnUseBatchMerge = bool.TryParse(Environment.GetEnvironmentVariable("TVASYLN_USE_BATCH_MERGE"), out var useBatch) && useBatch;
         }
 
         /// <summary>
@@ -374,8 +376,35 @@ namespace UPS.WWRR.Business.Services
                     }
                     else
                     {
+                        // For batch merge, get staging count before merge for validation
+                        long stagingRowCount = 0;
+                        if (_tvasylnUseBatchMerge && load.LoadTableName.Equals("TVASYLN", StringComparison.OrdinalIgnoreCase))
+                        {
+                            stagingRowCount = await _loadRepository.GetStagingTableRowCountAsync(descriptor.StagingTableName, ct);
+                            _logger.LogInformation("TVASYLN batch merge: Staging table row count = {stagingCount}", stagingRowCount);
+                        }
+
                         var (mergeResult, mergeDetail) = await PerformMergeAsync(load, descriptor, sw, ct);
                         bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
+
+                        // Validate batch merge results
+                        if (_tvasylnUseBatchMerge && load.LoadTableName.Equals("TVASYLN", StringComparison.OrdinalIgnoreCase) && !hasError)
+                        {
+                            var totalProcessed = mergeResult.Inserted + mergeResult.Updated;
+                            if (totalProcessed != stagingRowCount)
+                            {
+                                _logger.LogWarning(
+                                    "TVASYLN batch merge record count MISMATCH: Staging={stagingCount}, Processed (Insert+Update)={processedCount}, Inserted={inserted}, Updated={updated}, Deleted={deleted}",
+                                    stagingRowCount, totalProcessed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
+                            }
+                            else
+                            {
+                                _logger.LogInformation(
+                                    "TVASYLN batch merge record count VERIFIED: Staging={stagingCount}, Processed={processedCount}, Inserted={inserted}, Updated={updated}, Deleted={deleted}",
+                                    stagingRowCount, totalProcessed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
+                            }
+                        }
+
                         if (hasError)
                         {
                             int errorCode = 0;
@@ -667,7 +696,7 @@ namespace UPS.WWRR.Business.Services
             nameof(TableEnum.TVASYLN) => new LoadTableDescriptor(
                     nameof(TableEnum.TVASYLN).ToLowerInvariant(),
                     (nameof(TableEnum.TVASYLN) + "_STG").ToLowerInvariant(),
-                    StoredProcConstant.ValidAccessorialLaneMerge,
+                    _tvasylnUseBatchMerge ? StoredProcConstant.ValidAccessorialLaneBatchMerge : StoredProcConstant.ValidAccessorialLaneMerge,
                     async path => await _csvValidator.ValidateCsvAsync<ValidAccessorialLaneDto>(path)
                 ),
                 nameof(TableEnum.TRASTD) => new LoadTableDescriptor(

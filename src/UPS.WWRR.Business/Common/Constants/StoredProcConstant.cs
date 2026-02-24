@@ -42,6 +42,7 @@
         public const string DecodeValuesMerge = "sp_decodevalues_merge_proc";
         public const string FuelSurchargeMerge = "sp_fuelsurcharge_merge_proc";
         public const string ValidAccessorialLaneMerge = "sp_validaccessoriallane_merge_proc";
+        public const string ValidAccessorialLaneBatchMerge = "sp_validaccessoriallane_batch_merge_proc";
         public const string FreightRatesMerge = "sp_freightrates_merge_proc";
         public const string AreaClassificationHeaderNormalizeStaging = "sp_areaclassification_stagingdataset_proc";
         public const string AreaClassificationHeaderMerge = "sp_areaclassification_merge_proc";

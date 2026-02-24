@@ -15,7 +15,8 @@
         "BatchLoad_HasHeader": "true",
         "LOAD_INTERVAL_MINUTES": "30",
         "GCS_DOWNLOAD_CHUNK_SIZE": "4194304",
-        "EnableIAMTokenAuth": "false"
+        "EnableIAMTokenAuth": "false",
+        "TVASYLN_USE_BATCH_MERGE": "false"
       }
     }
   }

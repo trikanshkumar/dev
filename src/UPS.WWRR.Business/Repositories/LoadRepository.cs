@@ -230,5 +230,20 @@ namespace UPS.WWRR.Business.Repositories
 
             return totalAffected;
         }
+
+        public async Task<long> GetStagingTableRowCountAsync(string stagingTableName, CancellationToken ct = default)
+        {
+            var conn = _db.Database.GetDbConnection();
+            if (conn.State != ConnectionState.Open)
+                await conn.OpenAsync(ct);
+
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"SELECT COUNT(*) FROM {stagingTableName}";
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandTimeout = (int)TimeSpan.FromMinutes(5).TotalSeconds;
+
+            var result = await cmd.ExecuteScalarAsync(ct);
+            return result != null ? Convert.ToInt64(result) : 0;
+        }
     }
 }

@@ -36,6 +36,14 @@ namespace UPS.WWRR.Business.Repositories
         /// <param name="ct">Cancellation token</param>
         /// <returns>Total number of affected records</returns>
         Task<int> UpdateLoadReferenceForMultipleTablesAsync(Dictionary<string, string> tableMapping, long dataLoadId, long dataLoadDetailId, CancellationToken ct = default);
+
+        /// <summary>
+        /// Gets the row count from a staging table.
+        /// </summary>
+        /// <param name="stagingTableName">The staging table name</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns>The number of rows in the staging table</returns>
+        Task<long> GetStagingTableRowCountAsync(string stagingTableName, CancellationToken ct = default);
     }
 
     public record MergeResult(int Inserted, int Updated, int Deleted,
