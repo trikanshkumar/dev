@@ -16,7 +16,8 @@
         "LOAD_INTERVAL_MINUTES": "30",
         "GCS_DOWNLOAD_CHUNK_SIZE": "4194304",
         "EnableIAMTokenAuth": "false",
-        "TVASYLN_USE_BATCH_MERGE": "false"
+        "TVASYLN_USE_BATCH_MERGE": "false",
+        "TRASTD_USE_BATCH_MERGE": "false"
       }
     }
   }

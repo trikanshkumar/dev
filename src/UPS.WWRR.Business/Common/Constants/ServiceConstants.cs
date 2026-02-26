@@ -4,6 +4,8 @@
     {
         public const string receiptLogFilePattern = "WWRR_MOD_RECEIPT_FILES_";
         public const string fileExtractName = "FileExtractName";
+        public const string tableNameColumn = "TableName";
+        public const string destinationColumn = "Destination";
         public const string source = "Source";
         public const string processedDataFilesFolder = "ProcessedDataFiles";
         public const string csvValidationError = "CSV_Validation_Failed";

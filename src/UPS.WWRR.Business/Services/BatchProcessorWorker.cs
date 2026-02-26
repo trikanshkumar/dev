@@ -7,6 +7,7 @@ using UPS.WWRR.Business.DTO.Models.Response;
 using UPS.WWRR.Business.Interfaces;
 using UPS.WWRR.Business.Repositories;
 using UPS.WWRR.Data.Models;
+using UPS.WWRR.Business.Common.Helper;
 using TableEnum = UPS.WWRR.Business.Common.Constants.TableName;
 
 namespace UPS.WWRR.Business.Services
@@ -25,6 +26,7 @@ namespace UPS.WWRR.Business.Services
         private readonly int _defaultChunkSize = 100_000;
         private readonly int _batchLoadChunkSize;
         private readonly bool _tvasylnUseBatchMerge;
+        private readonly bool _trastdUseBatchMerge;
         private readonly HashSet<string> _movedObjects = new(StringComparer.OrdinalIgnoreCase);
         
         /// <summary>
@@ -66,7 +68,8 @@ namespace UPS.WWRR.Business.Services
                         ?? throw new InvalidOperationException("GOOGLE_CLOUD_STORAGE_BUCKET_NAME environment variable is not set.");
             _tableNameFilter = Environment.GetEnvironmentVariable("TABLE_NAME") ?? "ALL";
             _batchLoadChunkSize = int.TryParse(Environment.GetEnvironmentVariable("BatchLoad_ChunkSize"), out var cs) ? cs : _defaultChunkSize;
-            _tvasylnUseBatchMerge = bool.TryParse(Environment.GetEnvironmentVariable("TVASYLN_USE_BATCH_MERGE"), out var useBatch) && useBatch;
+            _tvasylnUseBatchMerge = bool.TryParse(Environment.GetEnvironmentVariable("TVASYLN_USE_BATCH_MERGE"), out var tvasylnUseBatch) && tvasylnUseBatch;
+            _trastdUseBatchMerge = bool.TryParse(Environment.GetEnvironmentVariable("TRASTD_USE_BATCH_MERGE"), out var trastdUseBatch) && trastdUseBatch;
         }
 
         /// <summary>
@@ -121,10 +124,11 @@ namespace UPS.WWRR.Business.Services
             }
             catch (Exception ex)
             {
+                _logger.LogInformation("BatchProcessorWorker ended with errors at {Time}", DateTimeOffset.UtcNow);
                 _logger.LogError(ex, "Unhandled error in Processor");
             }
 
-
+            _logger.LogInformation("BatchProcessorWorker ended at {Time}", DateTimeOffset.UtcNow);
         }
 
         private List<DataLoad> FilterByTableName(List<DataLoad> loads) => _tableNameFilter.Equals("ALL", StringComparison.OrdinalIgnoreCase)
@@ -378,30 +382,33 @@ namespace UPS.WWRR.Business.Services
                     {
                         // For batch merge, get staging count before merge for validation
                         long stagingRowCount = 0;
-                        if (_tvasylnUseBatchMerge && load.LoadTableName.Equals("TVASYLN", StringComparison.OrdinalIgnoreCase))
+                        if ((_tvasylnUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TVASYLN), StringComparison.OrdinalIgnoreCase)) ||
+                            (_trastdUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TRASTD), StringComparison.OrdinalIgnoreCase)))
                         {
                             stagingRowCount = await _loadRepository.GetStagingTableRowCountAsync(descriptor.StagingTableName, ct);
-                            _logger.LogInformation("TVASYLN batch merge: Staging table row count = {stagingCount}", stagingRowCount);
+                            _logger.LogInformation("{loadTableName} batch merge: Staging table row count = {stagingCount}", load.LoadTableName.ToUpper(), stagingRowCount);
                         }
 
                         var (mergeResult, mergeDetail) = await PerformMergeAsync(load, descriptor, sw, ct);
                         bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
 
                         // Validate batch merge results
-                        if (_tvasylnUseBatchMerge && load.LoadTableName.Equals("TVASYLN", StringComparison.OrdinalIgnoreCase) && !hasError)
+                        if (!hasError &&
+                            ((_tvasylnUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TVASYLN), StringComparison.OrdinalIgnoreCase)) ||
+                            (_trastdUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TRASTD), StringComparison.OrdinalIgnoreCase))))
                         {
                             var totalProcessed = mergeResult.Inserted + mergeResult.Updated;
                             if (totalProcessed != stagingRowCount)
                             {
                                 _logger.LogWarning(
-                                    "TVASYLN batch merge record count MISMATCH: Staging={stagingCount}, Processed (Insert+Update)={processedCount}, Inserted={inserted}, Updated={updated}, Deleted={deleted}",
-                                    stagingRowCount, totalProcessed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
+                                    "{loadTableName} batch merge record count MISMATCH: Staging={stagingCount}, Processed (Insert+Update)={processedCount}, Inserted={inserted}, Updated={updated}, Deleted={deleted}",
+                                    load.LoadTableName.ToUpper(), stagingRowCount, totalProcessed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
                             }
                             else
                             {
                                 _logger.LogInformation(
-                                    "TVASYLN batch merge record count VERIFIED: Staging={stagingCount}, Processed={processedCount}, Inserted={inserted}, Updated={updated}, Deleted={deleted}",
-                                    stagingRowCount, totalProcessed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
+                                    "{loadTableName} batch merge record count VERIFIED: Staging={stagingCount}, Processed={processedCount}, Inserted={inserted}, Updated={updated}, Deleted={deleted}",
+                                    load.LoadTableName.ToUpper(), stagingRowCount, totalProcessed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
                             }
                         }
 
@@ -702,7 +709,7 @@ namespace UPS.WWRR.Business.Services
                 nameof(TableEnum.TRASTD) => new LoadTableDescriptor(
                    nameof(TableEnum.TRASTD).ToLowerInvariant(),
                    (nameof(TableEnum.TRASTD) + "_STG").ToLowerInvariant(),
-                   StoredProcConstant.FreightRatesMerge,
+                   _trastdUseBatchMerge ? StoredProcConstant.FreightRatesBatchMarge : StoredProcConstant.FreightRatesMerge,
                    async path => await _csvValidator.ValidateCsvChunkedAsync<FreightRatesDto>(path, _batchLoadChunkSize)
                ),
                 // Area Classification Header - uses special multi-step process with staging dataset normalization
@@ -1018,14 +1025,21 @@ namespace UPS.WWRR.Business.Services
         /// </summary>
         /// <param name="content"></param>
         /// <returns></returns>
-        private static List<string[]> ParseCsv(string content)
+        private List<string[]> ParseCsv(string content)
         {
-            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             var list = new List<string[]>();
-            foreach (var l in lines)
-                list.Add(l.Split(',', StringSplitOptions.None | StringSplitOptions.TrimEntries));
-            return list;
+            try
+            {
+                list = ParseCsvWithValidationHelper.ParseCsvWithValidation(content);
+                return list;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return list = new List<string[]>();
+            }
         }
+
 
         /// <summary>
         /// load table descriptor
