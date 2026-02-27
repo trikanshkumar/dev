@@ -85,8 +85,8 @@ namespace UPS.WWRR.Business.Common.Helper
                     throw new FormatException($"Row {csv.Context.Parser.Row}: {ServiceConstants.destinationColumn} is required.");
 
                 // 2) Simple shape checks (e.g., FileExtractName ends with .csv)
-                if (!row[1].EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
-                    throw new FormatException($"Row {csv.Context.Parser.Row}: 'FileExtractName' must end with .csv.");
+                if (!row[1].Trim().EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                    throw new FormatException($"Row {csv.Context.Parser.Row}: {row[1]} must end with .csv");
 
                 rows.Add(row);
             }
