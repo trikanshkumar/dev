@@ -72,7 +72,7 @@ namespace UPS.WWRR.Business.Common.Helper
                             $"Failed to parse field at row {csv.Context.Parser.Row}, column {i + 1}: {ex.Message}", ex);
                     }
 
-                    row[i] = value;
+                    row[i] = value.Trim();
                 }
 
                 // --- Row-level validation examples ---
