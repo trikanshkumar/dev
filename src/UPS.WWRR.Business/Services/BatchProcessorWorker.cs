@@ -754,6 +754,12 @@ namespace UPS.WWRR.Business.Services
                 StoredProcConstant.FuelSurchargeIndexMerge,
                 async path => await _csvValidator.ValidateCsvAsync<FuelSurchargeIndexDto>(path)
             ),
+            nameof(TableEnum.TFSCMAP) => new LoadTableDescriptor(
+                nameof(TableEnum.TFSCMAP).ToLowerInvariant(),
+                (nameof(TableEnum.TFSCMAP) + "_STG").ToLowerInvariant(),
+                StoredProcConstant.FuelSurchargeCategoryMapMerge,
+                async path => await _csvValidator.ValidateCsvAsync<FuelSurchargeCategoryMapDto>(path)
+            ),
             // Accessorial Rates - uses special multi-step process with staging dataset normalization
             nameof(TableEnum.TASYRA) => new LoadTableDescriptor(
                 nameof(TableEnum.TASYRA).ToLowerInvariant(),

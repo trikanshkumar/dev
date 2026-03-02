@@ -20,6 +20,7 @@
     <None Remove="Scripts\sp_DomesticZone_StagingDataset_Proc.sql" />
     <None Remove="Scripts\sp_FreightRates_BatchMergeProc.sql" />
     <None Remove="Scripts\sp_FreightRates_MergeProc.sql" />
+    <None Remove="Scripts\sp_FuelSurchargeCategoryMap_MergeProc.sql" />
     <None Remove="Scripts\sp_FuelSurchargeIndex_MergeProc.sql" />
     <None Remove="Scripts\sp_InternationalRatingCurrency_MergeProc.sql" />
     <None Remove="Scripts\sp_InformationalAccessorialThreshold_MergeProc.sql" />
@@ -61,6 +62,7 @@
     <EmbeddedResource Include="Scripts\sp_DomesticZone_StagingDataset_Proc.sql" />
     <EmbeddedResource Include="Scripts\sp_FreightRates_BatchMergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_FreightRates_MergeProc.sql" />
+    <EmbeddedResource Include="Scripts\sp_FuelSurchargeCategoryMap_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_FuelSurchargeIndex_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_InternationalZone_MergeProc.sql" />
     <EmbeddedResource Include="Scripts\sp_InternationalZone_StagingDataset_Proc.sql" />

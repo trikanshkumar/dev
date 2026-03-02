@@ -12,7 +12,7 @@ namespace UPS.WWRR.Business.DTO.Models.LoadTableDto
         [Required, StringLength(2)]
         public string CNY_CD { get; set; } = string.Empty;
 
-        [Required, StringLength(2)]
+        [Required(AllowEmptyStrings = true), StringLength(2)]
         public string MVM_DRC_TYP_CD { get; set; } = string.Empty;
 
         [Required(AllowEmptyStrings = true), StringLength(2)]

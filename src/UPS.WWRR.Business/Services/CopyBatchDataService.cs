@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using UPS.WWRR.Business.Common.Constants;
 using UPS.WWRR.Business.Common.Helper;
@@ -74,6 +75,8 @@ namespace UPS.WWRR.Business.Services
                 // Matches timestamps like yyyy-MM-dd-HH.mm.ss.ffffff (date with dashes, time with dots, 1–6 fractional digits)
                 // Capturing groups: 1=date (yyyy-MM-dd), 2=HH, 3=mm, 4=ss, 5=fractional seconds
                 var tsRegex = new Regex(ServiceConstants.DashDotTimestampRegexPattern, RegexOptions.Compiled);
+                // Matches Oracle-style timestamps like dd-MMM-yy hh.mm.ss.ffffff AM/PM
+                var oracleTsRegex = new Regex(ServiceConstants.OracleTimestampRegexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
                 await foreach (var chunk in _csvSplitter.SplitAsync(csvFilePath, _chunkSize, _hasHeader, cancellationToken))
                 {
@@ -120,6 +123,8 @@ namespace UPS.WWRR.Business.Services
 
                             // Normalize any timestamp formatted as yyyy-MM-dd-HH.mm.ss.ffffff within fields (quoted or not)
                             line = NormalizeTimestampFields(line, tsRegex);
+                            // Normalize Oracle-style timestamps (dd-MMM-yy hh.mm.ss.ffffff AM/PM) to PostgreSQL format
+                            line = NormalizeOracleTimestampFields(line, oracleTsRegex);
                             await writer.WriteLineAsync(line);
                         }
                         loaded = attempted;
@@ -128,7 +133,7 @@ namespace UPS.WWRR.Business.Services
                     {
                         _logger.LogError(ex, $"COPY failed for chunk {chunkIndex}. Attempting per-row fallback.");
                         // Batch failed: retry each row individually
-                        var fallbackLoaded = await FallbackCopyRowsAsync(chunk, singleRowCopySql!, conn, chunkIndex, result, attempted, tsRegex, cancellationToken);
+                        var fallbackLoaded = await FallbackCopyRowsAsync(chunk, singleRowCopySql!, conn, chunkIndex, result, attempted, tsRegex, oracleTsRegex, cancellationToken);
                         loaded = fallbackLoaded;
                         if (fallbackLoaded < attempted)
                             batchErrors.Add($"Chunk {chunkIndex}: {ex.Message}");
@@ -188,9 +193,10 @@ namespace UPS.WWRR.Business.Services
         /// <param name="result"></param>
         /// <param name="attempted"></param>
         /// <param name="tsRegex"></param>
+        /// <param name="oracleTsRegex"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<int> FallbackCopyRowsAsync(string chunk, string singleRowCopySql, NpgsqlConnection conn, int chunkIndex, CopyBatchResultDto result, int attempted, Regex tsRegex, CancellationToken cancellationToken)
+        private async Task<int> FallbackCopyRowsAsync(string chunk, string singleRowCopySql, NpgsqlConnection conn, int chunkIndex, CopyBatchResultDto result, int attempted, Regex tsRegex, Regex oracleTsRegex, CancellationToken cancellationToken)
         {
             try
             {
@@ -209,6 +215,8 @@ namespace UPS.WWRR.Business.Services
                     {
                         // Normalize any timestamp formatted as yyyy-MM-dd-HH.mm.ss.ffffff within fields (quoted or not)
                         row = NormalizeTimestampFields(row, tsRegex);
+                        // Normalize Oracle-style timestamps (dd-MMM-yy hh.mm.ss.ffffff AM/PM) to PostgreSQL format
+                        row = NormalizeOracleTimestampFields(row, oracleTsRegex);
 
                         await using var writer = await _connectionHelper.BeginTextImportAsync(conn, singleRowCopySql, cancellationToken);
                         await writer.WriteLineAsync(row);
@@ -257,6 +265,48 @@ namespace UPS.WWRR.Business.Services
                 if (!ReferenceEquals(inner, replaced) && !inner.Equals(replaced, StringComparison.Ordinal))
                 {
                     tokens[t] = quoted ? $"\"{replaced}\"" : replaced;
+                }
+            }
+            return string.Join(_delimiter, tokens);
+        }
+
+        // Normalizes Oracle-style timestamps (dd-MMM-yy hh.mm.ss.ffffff AM/PM) to PostgreSQL format (yyyy-MM-dd HH:mm:ss.ffffff)
+        private string NormalizeOracleTimestampFields(string line, Regex oracleTsRegex)
+        {
+            if (string.IsNullOrEmpty(line)) return line;
+            var tokens = line.Split(_delimiter);
+            for (int t = 0; t < tokens.Length; t++)
+            {
+                var tok = tokens[t];
+                var quoted = tok.Length >= 2 && tok[0] == '"' && tok[^1] == '"';
+                var inner = quoted ? tok.Substring(1, tok.Length - 2) : tok.Trim();
+                var match = oracleTsRegex.Match(inner);
+                if (match.Success)
+                {
+                    var day = int.Parse(match.Groups[1].Value);
+                    var monthStr = match.Groups[2].Value.ToUpperInvariant();
+                    var year = int.Parse(match.Groups[3].Value);
+                    var hour = int.Parse(match.Groups[4].Value);
+                    var minute = int.Parse(match.Groups[5].Value);
+                    var second = int.Parse(match.Groups[6].Value);
+                    var fraction = match.Groups[7].Value;
+                    var ampm = match.Groups[8].Value.ToUpperInvariant();
+
+                    // Convert 2-digit year to 4-digit (assume 2000s for years < 50, 1900s otherwise)
+                    var fullYear = year < 50 ? 2000 + year : 1900 + year;
+
+                    // Convert month abbreviation to month number
+                    var monthNum = DateTime.ParseExact(monthStr, "MMM", CultureInfo.InvariantCulture).Month;
+
+                    // Convert 12-hour to 24-hour format
+                    if (ampm == "PM" && hour != 12)
+                        hour += 12;
+                    else if (ampm == "AM" && hour == 12)
+                        hour = 0;
+
+                    // Format as PostgreSQL-compatible timestamp
+                    var normalized = $"{fullYear:D4}-{monthNum:D2}-{day:D2} {hour:D2}:{minute:D2}:{second:D2}.{fraction}";
+                    tokens[t] = quoted ? $"\"{normalized}\"" : normalized;
                 }
             }
             return string.Join(_delimiter, tokens);

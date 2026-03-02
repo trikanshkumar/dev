@@ -146,6 +146,9 @@ namespace UPS.WWRR.Business.Common.Constants
         [Description("Fuel Surcharge Index")]
         TFSCIDX,
 
+        [Description("Fuel Surcharge Category Map")]
+        TFSCMAP,
+
         [Description("Accessorial Rates")]
         TASYRA,
 

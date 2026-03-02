@@ -135,6 +135,8 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<DomesticZoneChartOriginGeoStaging> DomesticZoneChartOriginGeosStaging { get; set; }
         public virtual DbSet<FuelSurchargeIndex> FuelSurchargeIndex { get; set; }
         public virtual DbSet<FuelSurchargeIndexStaging> FuelSurchargeIndexStaging { get; set; }
+        public virtual DbSet<FuelSurchargeCategoryMap> FuelSurchargeCategoryMap { get; set; }
+        public virtual DbSet<FuelSurchargeCategoryMapStaging> FuelSurchargeCategoryMapStaging { get; set; }
         public virtual DbSet<AccessorialRatesCriteria> AccessorialRatesCriteria { get; set; }
         public virtual DbSet<AccessorialRatesCriteriaStaging> AccessorialRatesCriteriaStaging { get; set; }
         public virtual DbSet<AccessorialRatesNew> AccessorialRatesNew { get; set; }
@@ -647,6 +649,12 @@ namespace UPS.WWRR.Data.Models
             modelBuilder.Entity<FuelSurchargeIndexStaging>(e =>
             {
                 e.ToTable("tfscidx_stg");
+                e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<FuelSurchargeCategoryMapStaging>(e =>
+            {
+                e.ToTable("tfscmap_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
             });
 
