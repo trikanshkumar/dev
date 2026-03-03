@@ -65,6 +65,9 @@ public class CopyBatchDataServiceTest
 
         _loadRepoMock.Setup(r => r.AddDetailAsync(It.IsAny<UPS.WWRR.Data.Models.DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .Returns<UPS.WWRR.Data.Models.DataLoadDetail, CancellationToken>((d, _) => Task.FromResult(d));
+
+        _loadRepoMock.Setup(r => r.UpdateDetailAsync(It.IsAny<UPS.WWRR.Data.Models.DataLoadDetail>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
     }
 
     private CopyBatchDataService CreateSut() => new(_csvSplitterMock.Object, _loggerMock.Object, _config, _connHelperMock.Object, _loadRepoMock.Object);
@@ -96,6 +99,12 @@ public class CopyBatchDataServiceTest
             It.IsAny<NpgsqlConnection>(),
             It.IsAny<string>(),
             It.IsAny<CancellationToken>()), Times.Exactly(2));
+
+        // Verify a per-chunk DataLoadDetail was created for each chunk
+        _loadRepoMock.Verify(r => r.AddDetailAsync(It.IsAny<UPS.WWRR.Data.Models.DataLoadDetail>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+
+        // Verify each per-chunk DataLoadDetail was updated after processing
+        _loadRepoMock.Verify(r => r.UpdateDetailAsync(It.IsAny<UPS.WWRR.Data.Models.DataLoadDetail>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [Fact]

@@ -429,8 +429,8 @@ namespace UPS.WWRR.Business.Services
                         }
                         else
                         {
-                            var updatedRef = await _loadRepository.UpdateLoadReferenceAsync(descriptor.StagingTableName, descriptor.TableName, load.Id, mergeDetail.Id, ct);
-                            _logger.LogInformation("LOAD_REF_TE updated via stored procedure for staging {stg} and main {main} (value: {val})", descriptor.StagingTableName, descriptor.TableName, $"{load.Id}|{mergeDetail.Id}");
+                            await _loadRepository.MarkStagingCompletedAsync(descriptor.StagingTableName, ct);
+                            _logger.LogInformation("Staging table {stg} marked as completed for load {id}", descriptor.StagingTableName, load.Id);
                             await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
                             _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
                         }
@@ -1055,7 +1055,7 @@ namespace UPS.WWRR.Business.Services
         /// <param name="MergeStoredProcedure"></param>
         /// <param name="ValidateAsync"></param>
         /// <param name="StagingDatasetProcedure">Optional stored procedure to normalize raw staging data before merge (used for Area Classification and Domestic Zone tables)</param>
-        /// <param name="NormalizedTableMapping">Optional dictionary mapping normalized staging tables to their main tables for load reference update</param>
+        /// <param name="NormalizedTableMapping">Optional dictionary mapping normalized staging tables to their main tables for marking staging completion</param>
         private sealed record LoadTableDescriptor(
             string TableName,
             string StagingTableName,
@@ -1150,11 +1150,11 @@ namespace UPS.WWRR.Business.Services
                 
                 if (descriptor.NormalizedTableMapping != null)
                 {
-                    await _loadRepository.UpdateLoadReferenceForMultipleTablesAsync(
-                        descriptor.NormalizedTableMapping, load.Id, mergeDetail.Id, ct);
+                    await _loadRepository.MarkStagingCompletedForMultipleTablesAsync(
+                        descriptor.NormalizedTableMapping.Keys, ct);
                     _logger.LogInformation(
-                        "LOAD_REF_TE updated for {count} tables (DataLoad: {loadId}, Detail: {detailId})",
-                        descriptor.NormalizedTableMapping.Count, load.Id, mergeDetail.Id);
+                        "Staging tables marked as completed for {count} tables (DataLoad: {loadId})",
+                        descriptor.NormalizedTableMapping.Count, load.Id);
                 }
                 await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
                 _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
@@ -1230,7 +1230,7 @@ namespace UPS.WWRR.Business.Services
 
         /// <summary>
         /// Gets the table mapping for Area Classification tables (staging -> main tables)
-        /// Used for updating LOAD_REF_TE and IS_COMPLETED_IR across all related tables after merge
+        /// Used for marking IS_COMPLETED_IR on staging tables after merge
         /// </summary>
         private static Dictionary<string, string> GetAreaClassificationTableMapping() => new(StringComparer.OrdinalIgnoreCase)
         {
@@ -1249,7 +1249,7 @@ namespace UPS.WWRR.Business.Services
 
         /// <summary>
         /// Gets the table mapping for Domestic Zone tables (staging -> main tables)
-        /// Used for updating LOAD_REF_TE and IS_COMPLETED_IR across all related tables after merge
+        /// Used for marking IS_COMPLETED_IR on staging tables after merge
         /// </summary>
         private static Dictionary<string, string> GetDomesticZoneTableMapping() => new(StringComparer.OrdinalIgnoreCase)
         {
@@ -1265,7 +1265,7 @@ namespace UPS.WWRR.Business.Services
 
         /// <summary>
         /// Gets the table mapping for Rate Chart / Accessorial Rates tables (staging -> main tables)
-        /// Used for updating LOAD_REF_TE and IS_COMPLETED_IR across all related tables after merge
+        /// Used for marking IS_COMPLETED_IR on staging tables after merge
         /// </summary>
         private static Dictionary<string, string> GetRateChartAccessorialRateTableMapping() => new(StringComparer.OrdinalIgnoreCase)
         {
@@ -1281,7 +1281,7 @@ namespace UPS.WWRR.Business.Services
 
         /// <summary>
         /// Gets the table mapping for International Zone tables (staging -> main tables)
-        /// Used for updating LOAD_REF_TE and IS_COMPLETED_IR across all related tables after merge
+        /// Used for marking IS_COMPLETED_IR on staging tables after merge
         /// </summary>
         private static Dictionary<string, string> GetInternationalZoneTableMapping() => new(StringComparer.OrdinalIgnoreCase)
         {

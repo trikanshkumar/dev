@@ -390,8 +390,6 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5831, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5831.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(8, 1, 0, null, null, "sp", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync(It.IsAny<string>(), It.IsAny<string>(), 5831, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(5831, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -403,12 +401,10 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5832, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5832.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(100, 50, 25, null, null, "sp_validaccessoriallane_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvasyln_stg", "tvasyln", 5832, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(175);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(5832, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repo.Verify(r => r.UpdateLoadReferenceAsync("tvasyln_stg", "tvasyln", 5832, It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.MarkStagingCompletedAsync("tvasyln_stg", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -431,8 +427,6 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5834, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5834.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(250000, 40000, 10000, null, null, "sp_validaccessoriallane_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvasyln_stg", "tvasyln", 5834, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(300000);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(5834, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -444,8 +438,6 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5835, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5835.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(500, 0, 0, null, null, "sp_validaccessoriallane_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvasyln_stg", "tvasyln", 5835, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(500);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(5835, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -457,8 +449,6 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5836, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5836.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(0, 200, 0, null, null, "sp_validaccessoriallane_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvasyln_stg", "tvasyln", 5836, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(200);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(5836, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -470,8 +460,6 @@ public class TVASYLNTests : BatchProcessorTests
         var load = new DataLoad { Id = 5837, LoadTableName = "tvasyln", FileLocation = "gs://bucket/TVASYLN_5837.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(0, 0, 150, null, null, "sp_validaccessoriallane_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvasyln_stg", "tvasyln", 5837, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(150);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(5837, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -609,8 +597,6 @@ public class TVASYLNTests : BatchProcessorTests
         // Merge
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(80, 15, 5, null, null, "sp_validaccessoriallane_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvasyln_stg", "tvasyln", 5862, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(100);
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(5862, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
     }

@@ -69,7 +69,7 @@ public class TINSCRITests : BatchProcessorTests
         var load = new DataLoad { Id = 1231, LoadTableName = "tinscri", FileLocation = "gs://bucket/TINSCRI_1231.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(4, 1, 0, null, null, "sp", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync(It.IsAny<string>(), It.IsAny<string>(), 1231, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(5);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);

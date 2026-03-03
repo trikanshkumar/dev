@@ -270,7 +270,7 @@ public class TARCLHDTests : BatchProcessorTests
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(10, 0, 0, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(11);
 
         var sut = CreateSut();
@@ -291,7 +291,7 @@ public class TARCLHDTests : BatchProcessorTests
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(50, 0, 0, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(11);
 
         var sut = CreateSut();
@@ -358,7 +358,7 @@ public class TARCLHDTests : BatchProcessorTests
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(100, 0, 0, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), 103, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(11);
 
         var sut = CreateSut();
@@ -366,11 +366,9 @@ public class TARCLHDTests : BatchProcessorTests
         // Act
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
 
-        // Assert - Verify UpdateLoadReferenceForMultipleTablesAsync was called with the mapping
-        _repo.Verify(r => r.UpdateLoadReferenceForMultipleTablesAsync(
-            It.Is<Dictionary<string, string>>(d => d.ContainsKey("tarclhd_stg") && d.ContainsKey("tarcldt_stg")),
-            103,
-            It.IsAny<long>(),
+        // Assert - Verify MarkStagingCompletedForMultipleTablesAsync was called
+        _repo.Verify(r => r.MarkStagingCompletedForMultipleTablesAsync(
+            It.IsAny<IEnumerable<string>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -384,8 +382,6 @@ public class TARCLHDTests : BatchProcessorTests
             .ReturnsAsync(new MergeResult(5, 3, 1, null, null, null, null, null));
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
-        _repo.Setup(r => r.UpdateLoadReferenceAsync(It.IsAny<string>(), It.IsAny<string>(), 200, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1);
 
         var sut = CreateSut();
 
@@ -394,7 +390,7 @@ public class TARCLHDTests : BatchProcessorTests
 
         // Assert - Regular tables only call merge once (no staging normalization)
         _repo.Verify(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repo.Verify(r => r.UpdateLoadReferenceAsync(It.IsAny<string>(), It.IsAny<string>(), 200, It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -424,7 +420,7 @@ public class TARCLHDTests : BatchProcessorTests
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(10, 0, 0, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), 531, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(11);
         
         var sut = CreateSut();

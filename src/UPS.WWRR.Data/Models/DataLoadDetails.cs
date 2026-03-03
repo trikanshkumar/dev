@@ -51,6 +51,13 @@ namespace UPS.WWRR.Data.Models
         [Column("batch_nr")]
         public int BatchNumber { get; set; }
 
+        [Required]
+        [Column("create_udt_ts", TypeName = "timestamptz")]
+        public DateTime CreatedOn { get; set; }
+
+        [Column("update_udt_ts", TypeName = "timestamptz")]
+        public DateTime? UpdatedOn { get; set; }
+
         // Navigation collections
         public ICollection<DataLoadError> Errors { get; set; } = new List<DataLoadError>();
         public ICollection<DataLoadException> Exceptions { get; set; } = new List<DataLoadException>();

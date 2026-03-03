@@ -47,7 +47,7 @@ public class TFSCIDXTests : BatchProcessorTests
         var load = new DataLoad { Id = 4131, LoadTableName = "tfscidx", FileLocation = "gs://bucket/TFSCIDX_4131.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(3, 1, 0, null, null, "sp", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync(It.IsAny<string>(), It.IsAny<string>(), 4131, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(4);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);

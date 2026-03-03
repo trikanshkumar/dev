@@ -78,7 +78,7 @@ public class TVDSVCFTests : BatchProcessorTests
         var load = new DataLoad { Id = 3631, LoadTableName = "tvdsvcf", FileLocation = "gs://bucket/TVDSVCF_3631.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(8, 1, 0, null, null, "sp", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync(It.IsAny<string>(), It.IsAny<string>(), 3631, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);

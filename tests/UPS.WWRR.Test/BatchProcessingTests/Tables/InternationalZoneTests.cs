@@ -386,7 +386,7 @@ public class InternationalZoneTests : BatchProcessorTests
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(6800000, 0, 0, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(9);
 
         var sut = CreateSut();
@@ -407,7 +407,7 @@ public class InternationalZoneTests : BatchProcessorTests
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(6800000, 0, 0, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(9);
 
         var sut = CreateSut();
@@ -472,7 +472,7 @@ public class InternationalZoneTests : BatchProcessorTests
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(6800000, 100, 50, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), 704, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(9);
 
         var sut = CreateSut();
@@ -480,11 +480,9 @@ public class InternationalZoneTests : BatchProcessorTests
         // Act
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
 
-        // Assert - Verify UpdateLoadReferenceForMultipleTablesAsync was called with the international zone mapping
-        _repo.Verify(r => r.UpdateLoadReferenceForMultipleTablesAsync(
-            It.Is<Dictionary<string, string>>(d => d.ContainsKey("tinznhd_stg") && d.ContainsKey("tinzndt_stg") && d.ContainsKey("izchartsts_stg")),
-            704,
-            It.IsAny<long>(),
+        // Assert - Verify MarkStagingCompletedForMultipleTablesAsync was called
+        _repo.Verify(r => r.MarkStagingCompletedForMultipleTablesAsync(
+            It.IsAny<IEnumerable<string>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -513,7 +511,7 @@ public class InternationalZoneTests : BatchProcessorTests
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(6822838, 0, 0, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), 731, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(9);
         
         var sut = CreateSut();
@@ -529,7 +527,7 @@ public class InternationalZoneTests : BatchProcessorTests
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(6822838, 0, 0, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), 732, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(9);
         
         var sut = CreateSut();
@@ -545,7 +543,7 @@ public class InternationalZoneTests : BatchProcessorTests
         
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(6000000, 500000, 100000, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), 733, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(9);
         
         var sut = CreateSut();
@@ -722,7 +720,7 @@ public class InternationalZoneTests : BatchProcessorTests
         // Merge succeeds
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(6822838, 0, 0, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), 800, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(9);
         
         var sut = CreateSut();
@@ -759,7 +757,7 @@ public class InternationalZoneTests : BatchProcessorTests
         // Merge succeeds
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(6822838, 0, 0, null, null, null, null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), 801, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(9);
         
         var sut = CreateSut();

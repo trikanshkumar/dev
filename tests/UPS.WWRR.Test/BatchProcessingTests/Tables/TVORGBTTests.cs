@@ -225,8 +225,6 @@ public class TVORGBTTests : BatchProcessorTests
         var load = new DataLoad { Id = 3631, LoadTableName = "tvorgbt", FileLocation = "gs://bucket/TVORGBT_3631.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(8, 1, 0, null, null, "sp", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync(It.IsAny<string>(), It.IsAny<string>(), 3631, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(3631, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -238,12 +236,10 @@ public class TVORGBTTests : BatchProcessorTests
         var load = new DataLoad { Id = 3632, LoadTableName = "tvorgbt", FileLocation = "gs://bucket/TVORGBT_3632.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(5, 3, 2, null, null, "sp_validoriginbillterm_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvorgbt_stg", "tvorgbt", 3632, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(10);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(3632, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repo.Verify(r => r.UpdateLoadReferenceAsync("tvorgbt_stg", "tvorgbt", 3632, It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.MarkStagingCompletedAsync("tvorgbt_stg", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

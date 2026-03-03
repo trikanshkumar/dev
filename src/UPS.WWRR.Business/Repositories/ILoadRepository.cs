@@ -15,6 +15,8 @@ namespace UPS.WWRR.Business.Repositories
 
         Task<DataLoadDetail> AddDetailAsync(DataLoadDetail detail, CancellationToken ct = default);
 
+        Task UpdateDetailAsync(DataLoadDetail detail, CancellationToken ct = default);
+
         Task AddErrorsAsync(IEnumerable<DataLoadError> errors, CancellationToken ct = default);
 
         Task AddExceptionsAsync(IEnumerable<DataLoadException> exceptions, CancellationToken ct = default);
@@ -25,17 +27,21 @@ namespace UPS.WWRR.Business.Repositories
 
         Task<MergeResult> ExecuteMergeStoredProcedureAsync(string storedProcedureName, CancellationToken ct = default);
 
-        Task<int> UpdateLoadReferenceAsync(string stagingTableName, string mainTableName, long dataLoadId, long dataLoadDetailId, CancellationToken ct = default);
+        /// <summary>
+        /// Marks staging table rows as completed (is_completed_ir = 1) via the sp_update_load_ref stored procedure.
+        /// </summary>
+        /// <param name="stagingTableName">The staging table name</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns>Number of affected rows</returns>
+        Task<int> MarkStagingCompletedAsync(string stagingTableName, CancellationToken ct = default);
 
         /// <summary>
-        /// Updates load reference for multiple staging and main table pairs (used for Area Classification tables).
+        /// Marks staging table rows as completed (is_completed_ir = 1) for multiple staging tables.
         /// </summary>
-        /// <param name="tableMapping">Dictionary of staging table name to main table name pairs</param>
-        /// <param name="dataLoadId">The DataLoad ID</param>
-        /// <param name="dataLoadDetailId">The DataLoadDetail ID</param>
+        /// <param name="stagingTableNames">Collection of staging table names</param>
         /// <param name="ct">Cancellation token</param>
         /// <returns>Total number of affected records</returns>
-        Task<int> UpdateLoadReferenceForMultipleTablesAsync(Dictionary<string, string> tableMapping, long dataLoadId, long dataLoadDetailId, CancellationToken ct = default);
+        Task<int> MarkStagingCompletedForMultipleTablesAsync(IEnumerable<string> stagingTableNames, CancellationToken ct = default);
 
         /// <summary>
         /// Gets the row count from a staging table.

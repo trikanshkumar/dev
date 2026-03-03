@@ -129,7 +129,7 @@ public class TCHARTTests : BatchProcessorTests
             .ReturnsAsync(new MergeResult(20, 10, 5, null, null, null, null, null));
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(30);
 
         var sut = CreateSut();
@@ -196,7 +196,7 @@ public class TCHARTTests : BatchProcessorTests
             .ReturnsAsync(new MergeResult(100, 50, 20, null, null, null, null, null));
         _repo.Setup(r => r.AddDetailAsync(It.IsAny<DataLoadDetail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DataLoadDetail d, CancellationToken _) => { d.Id = 1; return d; });
-        _repo.Setup(r => r.UpdateLoadReferenceForMultipleTablesAsync(It.IsAny<Dictionary<string, string>>(), 4332, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedForMultipleTablesAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(150);
 
         var sut = CreateSut();
@@ -204,11 +204,9 @@ public class TCHARTTests : BatchProcessorTests
         // Act
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
 
-        // Assert - Verify UpdateLoadReferenceForMultipleTablesAsync was called with the mapping
-        _repo.Verify(r => r.UpdateLoadReferenceForMultipleTablesAsync(
-            It.Is<Dictionary<string, string>>(d => d.ContainsKey("tchart_stg") && d.ContainsKey("tasyra_stg")),
-            4332,
-            It.IsAny<long>(),
+        // Assert - Verify MarkStagingCompletedForMultipleTablesAsync was called
+        _repo.Verify(r => r.MarkStagingCompletedForMultipleTablesAsync(
+            It.IsAny<IEnumerable<string>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

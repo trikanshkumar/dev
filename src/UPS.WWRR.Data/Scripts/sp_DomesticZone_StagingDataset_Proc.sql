@@ -10,9 +10,9 @@ CREATE OR REPLACE PROCEDURE sp_domesticzone_stagingdataset_proc(
 LANGUAGE 'plpgsql'
 AS $BODY$
 DECLARE
-	v_domzchartsts_ins integer;
-	v_domzchartsts_upd integer;
-	v_domzchartsts_del integer;
+    v_domzchartsts_ins integer := 0;
+    v_domzchartsts_upd integer := 0;
+    v_domzchartsts_del integer := 0;
 	v_domzchartlkup_ins integer;
 	v_tdozndt_ins integer;
 	v_tdoznhd_ins integer;
@@ -33,15 +33,19 @@ INSERT INTO domzchartsts_stg(
     zch_nr ,
     dom_zn_hdr_stt_dt ,
     dom_zn_hdr_end_dt ,
-    bus_eny_acs_sts_cd 
+    bus_eny_acs_sts_cd ,
+    load_ref_te ,
+    is_completed_ir
 )
-select distinct
+SELECT DISTINCT ON (zch_nr, dom_zn_hdr_stt_dt, dom_zn_hdr_end_dt, bus_eny_acs_sts_cd)
 zch_nr,
 dom_zn_hdr_stt_dt ,
 dom_zn_hdr_end_dt ,
-bus_eny_acs_sts_cd 
+bus_eny_acs_sts_cd ,
+load_ref_te ,
+0
 from tdoznhd_stg
-order by zch_nr;
+ORDER BY zch_nr, dom_zn_hdr_stt_dt, dom_zn_hdr_end_dt, bus_eny_acs_sts_cd;
 
     -- Create temp table to track merge actions for DOMZCHARTSTS
     CREATE TEMP TABLE IF NOT EXISTS domzchartsts_merge_actions (
@@ -109,13 +113,18 @@ order by zch_nr;
 INSERT INTO domzchartlkup_stg(
     zch_nr ,
     zch_sht_dsc_te ,
-    zch_lg_dsc_te 
+    zch_lg_dsc_te ,
+    load_ref_te ,
+    is_completed_ir
 )
-select distinct
+SELECT DISTINCT ON (zch_nr, zch_sht_dsc_te, zch_lg_dsc_te)
 zch_nr,
 zch_sht_dsc_te,
-zch_lg_dsc_te
-from tdoznhd_stg;
+zch_lg_dsc_te,
+load_ref_te,
+0
+from tdoznhd_stg
+ORDER BY zch_nr, zch_sht_dsc_te, zch_lg_dsc_te;
 
  GET DIAGNOSTICS v_domzchartlkup_ins = ROW_COUNT;
 
@@ -129,20 +138,25 @@ INSERT INTO domzchartorggeo_stg(
     org_cny_cd ,
     org_gpu_nr ,
     org_rng_lo_psl_cd ,  
-    org_rng_hi_psl_cd 
+    org_rng_hi_psl_cd ,
+    load_ref_te ,
+    is_completed_ir
 )
-select distinct 
+SELECT DISTINCT ON (zcs.zch_sts_nr, t.org_cny_cd, t.org_gpu_nr, t.org_rng_lo_psl_cd, t.org_rng_hi_psl_cd)
 zcs.zch_sts_nr,
 t.org_cny_cd ,
 t.org_gpu_nr ,
 t.org_rng_lo_psl_cd ,  
-t.org_rng_hi_psl_cd 
+t.org_rng_hi_psl_cd ,
+t.load_ref_te ,
+0
 from tdozndt_stg t
 join domzchartsts zcs
 	on zcs.zch_nr = t.zch_nr
 	and zcs.dom_zn_hdr_stt_dt = t.dom_zn_hdr_stt_dt
 	and zcs.dom_zn_hdr_end_dt = t.dom_zn_dtl_end_dt 
-	and zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
+	and zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd
+ORDER BY zcs.zch_sts_nr, t.org_cny_cd, t.org_gpu_nr, t.org_rng_lo_psl_cd, t.org_rng_hi_psl_cd;
 
     GET DIAGNOSTICS v_domzchartorggeo_ins = ROW_COUNT;
 
@@ -156,21 +170,26 @@ INSERT INTO domzchartdtngeo_stg(
     dtn_gpu_nr ,
     dtn_rng_lo_psl_cd ,  
     dtn_rng_hi_psl_cd ,
-    del_zn_nr 
+    del_zn_nr ,
+    load_ref_te ,
+    is_completed_ir
 )
-select distinct 
+SELECT DISTINCT ON (zcs.zch_sts_nr, t.dtn_cny_cd, t.dtn_gpu_nr, t.dtn_rng_lo_psl_cd, t.dtn_rng_hi_psl_cd, t.del_zn_nr)
 zcs.zch_sts_nr,
-dtn_cny_cd ,
-dtn_gpu_nr ,
-dtn_rng_lo_psl_cd ,  
-dtn_rng_hi_psl_cd ,
-del_zn_nr
+t.dtn_cny_cd ,
+t.dtn_gpu_nr ,
+t.dtn_rng_lo_psl_cd ,  
+t.dtn_rng_hi_psl_cd ,
+t.del_zn_nr ,
+t.load_ref_te ,
+0
 from tdozndt_stg t
 join domzchartsts zcs
 	on zcs.zch_nr = t.zch_nr
 	and zcs.dom_zn_hdr_stt_dt = t.dom_zn_hdr_stt_dt
 	and zcs.dom_zn_hdr_end_dt = t.dom_zn_dtl_end_dt 
-	and zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
+	and zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd
+ORDER BY zcs.zch_sts_nr, t.dtn_cny_cd, t.dtn_gpu_nr, t.dtn_rng_lo_psl_cd, t.dtn_rng_hi_psl_cd, t.del_zn_nr;
 
     GET DIAGNOSTICS v_domzchartdtngeo_ins = ROW_COUNT;
 
@@ -182,18 +201,23 @@ join domzchartsts zcs
 INSERT INTO tdozndt_new_stg(
     zch_sts_nr, 
     svc_typ_cd ,
-    zn_ncv_typ_cd 
+    zn_ncv_typ_cd ,
+    load_ref_te ,
+    is_completed_ir
 )
-SELECT DISTINCT 
+SELECT DISTINCT ON (zcs.zch_sts_nr, t.svc_typ_cd, t.zn_ncv_typ_cd)
 	zcs.zch_sts_nr,
-    svc_typ_cd,
-    zn_ncv_typ_cd
+    t.svc_typ_cd,
+    t.zn_ncv_typ_cd,
+    t.load_ref_te,
+    0
 FROM tdozndt_stg t
 join domzchartsts zcs
 	on zcs.zch_nr = t.zch_nr
 	and zcs.dom_zn_hdr_stt_dt = t.dom_zn_hdr_stt_dt
 	and zcs.dom_zn_hdr_end_dt = t.dom_zn_dtl_end_dt 
-	and zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
+	and zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd
+ORDER BY zcs.zch_sts_nr, t.svc_typ_cd, t.zn_ncv_typ_cd;
 
     GET DIAGNOSTICS v_tdozndt_ins = ROW_COUNT;
 
@@ -204,18 +228,23 @@ join domzchartsts zcs
 INSERT INTO tdoznhd_new_stg(
     zch_sts_nr,
     svc_typ_cd , 
-    mvm_drc_cd 
+    mvm_drc_cd ,
+    load_ref_te ,
+    is_completed_ir
 )
-select distinct
+SELECT DISTINCT ON (zcs.zch_sts_nr, t.svc_typ_cd, t.mvm_drc_cd)
 zcs.zch_sts_nr,
 t.svc_typ_cd, 
-t.mvm_drc_cd
+t.mvm_drc_cd,
+t.load_ref_te,
+0
 from tdoznhd_stg t
 join domzchartsts zcs
 	on zcs.zch_nr = t.zch_nr
 	and zcs.dom_zn_hdr_stt_dt = t.dom_zn_hdr_stt_dt
 	and zcs.dom_zn_hdr_end_dt = t.dom_zn_hdr_end_dt 
-	and zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
+	and zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd
+ORDER BY zcs.zch_sts_nr, t.svc_typ_cd, t.mvm_drc_cd;
 
     GET DIAGNOSTICS v_tdoznhd_ins = ROW_COUNT;
 

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UPS.WWRR.Data.Models;
@@ -11,9 +12,11 @@ using UPS.WWRR.Data.Models;
 namespace UPS.WWRR.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260227042340_Script_Update_StagingDatasets_SP")]
+    partial class Script_Update_StagingDatasets_SP
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4240,148 +4243,6 @@ namespace UPS.WWRR.Data.Migrations
                     b.HasIndex(new[] { "LoadReference" }, "idx_tsubchg_load_ref_te");
 
                     b.ToTable("tsubchg", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.FuelSurchargeCategoryMap", b =>
-                {
-                    b.Property<string>("GeopoliticalExportCountryCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_xpt_cny_cd");
-
-                    b.Property<string>("GeopoliticalImportCountryCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_ipt_cny_cd");
-
-                    b.Property<string>("MovementDirectionCode")
-                        .HasMaxLength(1)
-                        .HasColumnType("char")
-                        .HasColumnName("mvm_drc_cd");
-
-                    b.Property<string>("ServiceTypeCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("CustomerClassificationTypeCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("cus_csf_typ_cd");
-
-                    b.Property<string>("CurrencyCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("ccy_cd");
-
-                    b.Property<string>("ApprovalStatusCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("apv_sts_cd");
-
-                    b.Property<DateTime>("RecordEffectiveStartDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_stt_dt");
-
-                    b.Property<string>("IndexFuelCategoryCode")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("pse_idx_fu_cgy_cd");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<DateTime>("RecordEffectiveEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_end_dt");
-
-                    b.Property<DateTime>("RecordInsertTimestamp")
-                        .HasColumnType("timestamp(6)")
-                        .HasColumnName("rec_ins_ts");
-
-                    b.HasKey("GeopoliticalExportCountryCode", "GeopoliticalImportCountryCode", "MovementDirectionCode", "ServiceTypeCode", "CustomerClassificationTypeCode", "CurrencyCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tfscmap_load_ref_te");
-
-                    b.ToTable("tfscmap", "a886aa_ao");
-                });
-
-            modelBuilder.Entity("UPS.WWRR.Data.Models.FuelSurchargeCategoryMapStaging", b =>
-                {
-                    b.Property<string>("GeopoliticalExportCountryCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_xpt_cny_cd");
-
-                    b.Property<string>("GeopoliticalImportCountryCode")
-                        .HasMaxLength(4)
-                        .HasColumnType("char")
-                        .HasColumnName("gpn_ipt_cny_cd");
-
-                    b.Property<string>("MovementDirectionCode")
-                        .HasMaxLength(1)
-                        .HasColumnType("char")
-                        .HasColumnName("mvm_drc_cd");
-
-                    b.Property<string>("ServiceTypeCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("svc_typ_cd");
-
-                    b.Property<string>("CustomerClassificationTypeCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("cus_csf_typ_cd");
-
-                    b.Property<string>("CurrencyCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("char")
-                        .HasColumnName("ccy_cd");
-
-                    b.Property<string>("ApprovalStatusCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("apv_sts_cd");
-
-                    b.Property<DateTime>("RecordEffectiveStartDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_stt_dt");
-
-                    b.Property<string>("IndexFuelCategoryCode")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("char")
-                        .HasColumnName("pse_idx_fu_cgy_cd");
-
-                    b.Property<short>("IsCompletedIndicator")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0)
-                        .HasColumnName("is_completed_ir");
-
-                    b.Property<string>("LoadReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("load_ref_te");
-
-                    b.Property<DateTime>("RecordEffectiveEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("rec_eff_end_dt");
-
-                    b.Property<DateTime>("RecordInsertTimestamp")
-                        .HasColumnType("timestamp(6)")
-                        .HasColumnName("rec_ins_ts");
-
-                    b.HasKey("GeopoliticalExportCountryCode", "GeopoliticalImportCountryCode", "MovementDirectionCode", "ServiceTypeCode", "CustomerClassificationTypeCode", "CurrencyCode", "ApprovalStatusCode", "RecordEffectiveStartDate");
-
-                    b.HasIndex(new[] { "IsCompletedIndicator" }, "idx_tfscmap_stg_is_completed_ir");
-
-                    b.HasIndex(new[] { "LoadReference" }, "idx_tfscmap_stg_load_ref_te");
-
-                    b.ToTable("tfscmap_stg", "a886aa_ao");
                 });
 
             modelBuilder.Entity("UPS.WWRR.Data.Models.FuelSurchargeIndex", b =>

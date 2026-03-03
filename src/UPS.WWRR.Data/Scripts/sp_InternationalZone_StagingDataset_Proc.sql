@@ -44,7 +44,7 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (zch_nr, inl_zn_hdr_stt_dt, inl_zn_hdr_end_dt, bus_eny_acs_sts_cd)
         zch_nr,
         inl_zn_hdr_stt_dt,
         inl_zn_hdr_end_dt,
@@ -52,18 +52,19 @@ BEGIN
         load_ref_te,
         0
     FROM tinznhd_stg
-    ORDER BY zch_nr;
+    ORDER BY zch_nr, inl_zn_hdr_stt_dt, inl_zn_hdr_end_dt, bus_eny_acs_sts_cd;
 
     -- 1b. MERGE izchartsts_stg into actual izchartsts table
     -- This ensures we get the correct zch_sts_nr values from the actual table
     WITH src_dedup AS (
-        SELECT DISTINCT
+        SELECT DISTINCT ON (zch_nr, inl_zn_hdr_stt_dt, inl_zn_hdr_end_dt, bus_eny_acs_sts_cd)
                zch_nr,
                inl_zn_hdr_stt_dt,
                inl_zn_hdr_end_dt,
                bus_eny_acs_sts_cd,
                load_ref_te
           FROM izchartsts_stg
+         ORDER BY zch_nr, inl_zn_hdr_stt_dt, inl_zn_hdr_end_dt, bus_eny_acs_sts_cd
     ),
     sts_merge AS (
         MERGE INTO izchartsts AS tgt
@@ -139,7 +140,7 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (zcs.zch_sts_nr, t.svc_typ_cd, t.mvm_drc_cd, t.pkg_cha_typ_cd)
         zcs.zch_sts_nr,
         t.svc_typ_cd,
         t.mvm_drc_cd,
@@ -151,7 +152,8 @@ BEGIN
         ON zcs.zch_nr = t.zch_nr
         AND zcs.inl_zn_hdr_stt_dt = t.inl_zn_hdr_stt_dt
         AND zcs.inl_zn_hdr_end_dt = t.inl_zn_hdr_end_dt
-        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
+        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd
+    ORDER BY zcs.zch_sts_nr, t.svc_typ_cd, t.mvm_drc_cd, t.pkg_cha_typ_cd;
 
     GET DIAGNOSTICS v_izcharthd_ins = ROW_COUNT;
 
@@ -164,7 +166,7 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (zcs.zch_sts_nr, t.svc_typ_cd, t.zn_ncv_typ_cd)
         zcs.zch_sts_nr,
         t.svc_typ_cd,
         t.zn_ncv_typ_cd,
@@ -175,7 +177,8 @@ BEGIN
         ON zcs.zch_nr = t.zch_nr
         AND zcs.inl_zn_hdr_stt_dt = t.inl_zn_hdr_stt_dt
         AND zcs.inl_zn_hdr_end_dt = t.inl_zn_dtl_end_dt
-        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
+        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd
+    ORDER BY zcs.zch_sts_nr, t.svc_typ_cd, t.zn_ncv_typ_cd;
 
     GET DIAGNOSTICS v_izchartdtl_ins = ROW_COUNT;
 
@@ -197,7 +200,7 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (zcs.zch_sts_nr, t.org_cny_cd, t.org_rng_lo_psl_cd, t.org_rng_hi_psl_cd, t.org_gpu_nr, t.org_pol_div_2_na, t.dtn_cny_cd, t.dtn_rng_lo_psl_cd, t.dtn_rng_hi_psl_cd, t.dtn_gpu_nr, t.dtn_pol_div_2_na, t.del_zn_nr)
         zcs.zch_sts_nr,
         t.org_cny_cd,
         t.org_rng_lo_psl_cd,
@@ -217,7 +220,8 @@ BEGIN
         ON zcs.zch_nr = t.zch_nr
         AND zcs.inl_zn_hdr_stt_dt = t.inl_zn_hdr_stt_dt
         AND zcs.inl_zn_hdr_end_dt = t.inl_zn_dtl_end_dt
-        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
+        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd
+    ORDER BY zcs.zch_sts_nr, t.org_cny_cd, t.org_rng_lo_psl_cd, t.org_rng_hi_psl_cd, t.org_gpu_nr, t.org_pol_div_2_na, t.dtn_cny_cd, t.dtn_rng_lo_psl_cd, t.dtn_rng_hi_psl_cd, t.dtn_gpu_nr, t.dtn_pol_div_2_na, t.del_zn_nr;
 
     GET DIAGNOSTICS v_izchartorgdtnpst_ins = ROW_COUNT;
 
@@ -230,7 +234,7 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (zcs.zch_sts_nr, t.org_cny_cd, t.org_pol_div_1_cd)
         zcs.zch_sts_nr,
         t.org_cny_cd,
         t.org_pol_div_1_cd,
@@ -241,7 +245,8 @@ BEGIN
         ON zcs.zch_nr = t.zch_nr
         AND zcs.inl_zn_hdr_stt_dt = t.inl_zn_hdr_stt_dt
         AND zcs.inl_zn_hdr_end_dt = t.inl_zn_dtl_end_dt
-        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
+        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd
+    ORDER BY zcs.zch_sts_nr, t.org_cny_cd, t.org_pol_div_1_cd;
 
     GET DIAGNOSTICS v_izchartorgpoldiv_ins = ROW_COUNT;
 
@@ -254,7 +259,7 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (zcs.zch_sts_nr, t.dtn_cny_cd, t.dtn_pol_div_1_cd)
         zcs.zch_sts_nr,
         t.dtn_cny_cd,
         t.dtn_pol_div_1_cd,
@@ -265,7 +270,8 @@ BEGIN
         ON zcs.zch_nr = t.zch_nr
         AND zcs.inl_zn_hdr_stt_dt = t.inl_zn_hdr_stt_dt
         AND zcs.inl_zn_hdr_end_dt = t.inl_zn_dtl_end_dt
-        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd;
+        AND zcs.bus_eny_acs_sts_cd = t.bus_eny_acs_sts_cd
+    ORDER BY zcs.zch_sts_nr, t.dtn_cny_cd, t.dtn_pol_div_1_cd;
 
     GET DIAGNOSTICS v_izchartdtnpoldiv_ins = ROW_COUNT;
 

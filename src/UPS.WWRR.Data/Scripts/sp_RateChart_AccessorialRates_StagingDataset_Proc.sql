@@ -45,34 +45,43 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (svc_ra_cht_nr, svc_ra_cht_eff_dt, svc_ra_cht_end_dt, svc_ra_cht_sts_cd)
         svc_ra_cht_nr,
         svc_ra_cht_eff_dt,
         svc_ra_cht_end_dt,
         svc_ra_cht_sts_cd,
         load_ref_te,
         0
-    FROM tchart_stg
-    UNION
-    SELECT DISTINCT 
-	    svc_ra_cht_nr,
-	    asy_svc_ra_eff_dt, 
-	    asy_svc_ra_end_dt, 
-	    svc_ra_cht_sts_cd,
-        load_ref_te,
-        0
-    FROM tasyra_stg;
+    FROM (
+        SELECT
+            svc_ra_cht_nr,
+            svc_ra_cht_eff_dt,
+            svc_ra_cht_end_dt,
+            svc_ra_cht_sts_cd,
+            load_ref_te
+        FROM tchart_stg
+        UNION
+        SELECT
+            svc_ra_cht_nr,
+            asy_svc_ra_eff_dt,
+            asy_svc_ra_end_dt,
+            svc_ra_cht_sts_cd,
+            load_ref_te
+        FROM tasyra_stg
+    ) sub
+    ORDER BY svc_ra_cht_nr, svc_ra_cht_eff_dt, svc_ra_cht_end_dt, svc_ra_cht_sts_cd;
 
     -- 1b. MERGE chartsts_stg into actual chartsts table
     -- This ensures we get the correct zch_sts_nr values from the actual table
     WITH src_dedup AS (
-        SELECT DISTINCT
+        SELECT DISTINCT ON (svc_ra_cht_nr, svc_ra_cht_eff_dt, svc_ra_cht_end_dt, svc_ra_cht_sts_cd)
                svc_ra_cht_nr,
                svc_ra_cht_eff_dt,
                svc_ra_cht_end_dt,
                svc_ra_cht_sts_cd,
                load_ref_te
           FROM chartsts_stg
+         ORDER BY svc_ra_cht_nr, svc_ra_cht_eff_dt, svc_ra_cht_end_dt, svc_ra_cht_sts_cd
     ),
     sts_merge AS (
         MERGE INTO chartsts AS tgt
@@ -126,7 +135,7 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (c.zch_sts_nr, t.asy_svc_ra, t.del_zn_nr, t.ra_chg_csf_typ_cd)
         c.zch_sts_nr,
         t.asy_svc_ra,
         t.del_zn_nr,
@@ -137,7 +146,8 @@ BEGIN
     JOIN chartsts c ON c.svc_ra_cht_nr = t.svc_ra_cht_nr 
         AND c.svc_ra_cht_eff_dt = t.asy_svc_ra_eff_dt
         AND c.svc_ra_cht_end_dt = t.asy_svc_ra_end_dt
-        AND c.svc_ra_cht_sts_cd = t.svc_ra_cht_sts_cd;
+        AND c.svc_ra_cht_sts_cd = t.svc_ra_cht_sts_cd
+    ORDER BY c.zch_sts_nr, t.asy_svc_ra, t.del_zn_nr, t.ra_chg_csf_typ_cd;
 
     GET DIAGNOSTICS v_accrate_ins = ROW_COUNT;
 
@@ -152,7 +162,7 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (c.zch_sts_nr, t.asy_svc_ra, t.dtr_cri_vlu_typ_cd, t.dtr_cri_lo_rng_te, t.dtr_cri_hi_rng_te, t.ccl_mth_typ_cd)
         c.zch_sts_nr,
         t.asy_svc_ra,
         t.dtr_cri_vlu_typ_cd,
@@ -165,7 +175,8 @@ BEGIN
     JOIN chartsts c ON c.svc_ra_cht_nr = t.svc_ra_cht_nr 
         AND c.svc_ra_cht_eff_dt = t.asy_svc_ra_eff_dt
         AND c.svc_ra_cht_end_dt = t.asy_svc_ra_end_dt
-        AND c.svc_ra_cht_sts_cd = t.svc_ra_cht_sts_cd;
+        AND c.svc_ra_cht_sts_cd = t.svc_ra_cht_sts_cd
+    ORDER BY c.zch_sts_nr, t.asy_svc_ra, t.dtr_cri_vlu_typ_cd, t.dtr_cri_lo_rng_te, t.dtr_cri_hi_rng_te, t.ccl_mth_typ_cd;
 
     GET DIAGNOSTICS v_accratecrit_ins = ROW_COUNT;
 
@@ -182,7 +193,7 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (c.zch_sts_nr, t.svc_typ_cd, t.pkg_cha_typ_cd, t.svc_fea_typ_cd, t.pkg_acq_mth_typ_cd, t.na_nrs_cd, t.svc_ra_cht_seq_nr, t.pkg_acq_mth_csf_cd)
         c.zch_sts_nr,
         t.svc_typ_cd,
         t.pkg_cha_typ_cd,
@@ -197,7 +208,8 @@ BEGIN
     JOIN chartsts c ON c.svc_ra_cht_nr = t.svc_ra_cht_nr 
         AND c.svc_ra_cht_eff_dt = t.svc_ra_cht_eff_dt
         AND c.svc_ra_cht_end_dt = t.svc_ra_cht_end_dt
-        AND c.svc_ra_cht_sts_cd = t.svc_ra_cht_sts_cd;
+        AND c.svc_ra_cht_sts_cd = t.svc_ra_cht_sts_cd
+    ORDER BY c.zch_sts_nr, t.svc_typ_cd, t.pkg_cha_typ_cd, t.svc_fea_typ_cd, t.pkg_acq_mth_typ_cd, t.na_nrs_cd, t.svc_ra_cht_seq_nr, t.pkg_acq_mth_csf_cd;
 
     GET DIAGNOSTICS v_chartsvcpkg_ins = ROW_COUNT;
 
@@ -214,7 +226,7 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (c.zch_sts_nr, t.xpt_cny_cd, t.gpu_xpt_cny_cd, t.ipt_cny_cd, t.gpu_ipt_cny_cd, t.svc_typ_cd, t.pkg_cha_typ_cd, t.cus_cls_typ_cd)
         c.zch_sts_nr,
         t.xpt_cny_cd,
         t.gpu_xpt_cny_cd,
@@ -229,7 +241,8 @@ BEGIN
     JOIN chartsts c ON c.svc_ra_cht_nr = t.svc_ra_cht_nr 
         AND c.svc_ra_cht_eff_dt = t.svc_ra_cht_eff_dt
         AND c.svc_ra_cht_end_dt = t.svc_ra_cht_end_dt
-        AND c.svc_ra_cht_sts_cd = t.svc_ra_cht_sts_cd;
+        AND c.svc_ra_cht_sts_cd = t.svc_ra_cht_sts_cd
+    ORDER BY c.zch_sts_nr, t.xpt_cny_cd, t.gpu_xpt_cny_cd, t.ipt_cny_cd, t.gpu_ipt_cny_cd, t.svc_typ_cd, t.pkg_cha_typ_cd, t.cus_cls_typ_cd;
 
     GET DIAGNOSTICS v_chartorggeo_ins = ROW_COUNT;
 
@@ -243,7 +256,7 @@ BEGIN
         load_ref_te,
         is_completed_ir
     )
-    SELECT DISTINCT
+    SELECT DISTINCT ON (c.zch_sts_nr, t.asy_svc_typ_cd, t.bil_ter_typ_cd, t.mvm_drc_cd, t.ccy_cd)
         c.zch_sts_nr,
         t.asy_svc_typ_cd,
         t.bil_ter_typ_cd,
@@ -255,7 +268,8 @@ BEGIN
     JOIN chartsts c ON c.svc_ra_cht_nr = t.svc_ra_cht_nr 
         AND c.svc_ra_cht_eff_dt = t.svc_ra_cht_eff_dt
         AND c.svc_ra_cht_end_dt = t.svc_ra_cht_end_dt
-        AND c.svc_ra_cht_sts_cd = t.svc_ra_cht_sts_cd;
+        AND c.svc_ra_cht_sts_cd = t.svc_ra_cht_sts_cd
+    ORDER BY c.zch_sts_nr, t.asy_svc_typ_cd, t.bil_ter_typ_cd, t.mvm_drc_cd, t.ccy_cd;
 
     GET DIAGNOSTICS v_chartacccd_ins = ROW_COUNT;
 

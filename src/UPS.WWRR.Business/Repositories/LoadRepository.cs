@@ -41,9 +41,17 @@ namespace UPS.WWRR.Business.Repositories
 
         public async Task<DataLoadDetail> AddDetailAsync(DataLoadDetail detail, CancellationToken ct = default)
         {
+            detail.CreatedOn = Utc(detail.CreatedOn == default ? DateTime.UtcNow : detail.CreatedOn);
             await _db.DataLoadDetails.AddAsync(detail, ct);
             await _db.SaveChangesAsync(ct);
             return detail;
+        }
+
+        public async Task UpdateDetailAsync(DataLoadDetail detail, CancellationToken ct = default)
+        {
+            detail.UpdatedOn = DateTime.UtcNow;
+            _db.DataLoadDetails.Update(detail);
+            await _db.SaveChangesAsync(ct);
         }
 
         public async Task AddErrorsAsync(IEnumerable<DataLoadError> errors, CancellationToken ct = default)
@@ -125,37 +133,24 @@ namespace UPS.WWRR.Business.Repositories
             static string? SafeGetString(DbDataReader r, int ord) => ord < r.FieldCount && !r.IsDBNull(ord) ? r.GetString(ord) : null;
         }
 
-        public async Task<int> UpdateLoadReferenceAsync(string stagingTableName, string mainTableName, long dataLoadId, long dataLoadDetailId, CancellationToken ct = default)
+        public async Task<int> MarkStagingCompletedAsync(string stagingTableName, CancellationToken ct = default)
         {
-            string value = $"{dataLoadId}|{dataLoadDetailId}";
             string proc = "sp_update_load_ref";
-            string callSql = $"CALL {proc}(p_staging_table := @p_staging_table, p_main_table := @p_main_table, p_load_ref_te := @p_load_ref_te, ErrorNumber := NULL, ErrorState := NULL, ErrorProcedure := NULL, ErrorLine := NULL, ErrorMessage := NULL)";
+            string callSql = $"CALL {proc}(p_staging_table := @p_staging_table, ErrorNumber := NULL, ErrorState := NULL, ErrorProcedure := NULL, ErrorLine := NULL, ErrorMessage := NULL)";
 
             DbCommand cmd = _db.Database.GetDbConnection().CreateCommand();
             cmd.CommandText = callSql;
             cmd.CommandType = CommandType.Text;
             cmd.CommandTimeout = (int)TimeSpan.FromMinutes(120).TotalSeconds;
 
-
             var p1 = cmd.CreateParameter();
             p1.ParameterName = "p_staging_table";
             p1.Value = stagingTableName;
             cmd.Parameters.Add(p1);
 
-            var p2 = cmd.CreateParameter();
-            p2.ParameterName = "p_main_table";
-            p2.Value = mainTableName;
-            cmd.Parameters.Add(p2);
-
-            var p3 = cmd.CreateParameter();
-            p3.ParameterName = "p_load_ref_te";
-            p3.Value = value;
-            cmd.Parameters.Add(p3);
-
             int affected = 0;
             await cmd.ExecuteStoredProcedureAsync(async reader =>
             {
-                // procedure returns only OUT error fields, no row count; we keep affected unknown
                 affected = 0;
                 return true;
             }, ct);
@@ -163,41 +158,23 @@ namespace UPS.WWRR.Business.Repositories
             return affected;
         }
 
-        public async Task<int> UpdateLoadReferenceForMultipleTablesAsync(Dictionary<string, string> tableMapping, long dataLoadId, long dataLoadDetailId, CancellationToken ct = default)
+        public async Task<int> MarkStagingCompletedForMultipleTablesAsync(IEnumerable<string> stagingTableNames, CancellationToken ct = default)
         {
-            if (tableMapping.Count == 0)
+            var tables = stagingTableNames.Where(t => t.EndsWith("_stg", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (tables.Count == 0)
                 return 0;
 
-            string loadRefValue = $"{dataLoadId}|{dataLoadDetailId}";
             int totalAffected = 0;
 
             var connection = _db.Database.GetDbConnection();
             if (connection.State != ConnectionState.Open)
                 await connection.OpenAsync(ct);
 
-            // Build a single batch SQL that updates all tables in one round trip
-            // This is significantly faster than calling stored procedure for each table
+            // Build a single batch SQL that updates all staging tables in one round trip
             var sqlBuilder = new System.Text.StringBuilder();
-            
-            // Separate staging tables (have is_completed_ir column) from main tables
-            var stagingTables = tableMapping.Keys.Where(k => k.EndsWith("_stg", StringComparison.OrdinalIgnoreCase)).ToList();
-            var mainTables = tableMapping.Values.Where(v => !v.EndsWith("_stg", StringComparison.OrdinalIgnoreCase)).Distinct().ToList();
-
-            // For staging tables: update is_completed_ir = 1 and set load_ref_te
-            foreach (var stagingTable in stagingTables)
+            foreach (var stagingTable in tables)
             {
-                // Mark as completed and set load_ref in a single UPDATE using CASE to minimize writes
-                sqlBuilder.AppendLine($@"UPDATE {stagingTable} SET 
-                    is_completed_ir = 1, 
-                    load_ref_te = @loadRef 
-                WHERE is_completed_ir IS DISTINCT FROM 1 OR load_ref_te IS NULL OR load_ref_te = '';");
-            }
-
-            // For main tables: only update load_ref_te where it's null or empty
-            foreach (var mainTable in mainTables)
-            {
-                sqlBuilder.AppendLine($@"UPDATE {mainTable} SET load_ref_te = @loadRef 
-                WHERE load_ref_te IS NULL OR load_ref_te = '';");
+                sqlBuilder.AppendLine($@"UPDATE {stagingTable} SET is_completed_ir = 1 WHERE is_completed_ir IS DISTINCT FROM 1;");
             }
 
             var sql = sqlBuilder.ToString();
@@ -209,11 +186,6 @@ namespace UPS.WWRR.Business.Repositories
             cmd.CommandType = CommandType.Text;
             cmd.CommandTimeout = (int)TimeSpan.FromMinutes(60).TotalSeconds;
 
-            var param = cmd.CreateParameter();
-            param.ParameterName = "loadRef";
-            param.Value = loadRefValue;
-            cmd.Parameters.Add(param);
-
             try
             {
                 totalAffected = await cmd.ExecuteNonQueryAsync(ct);
@@ -222,9 +194,9 @@ namespace UPS.WWRR.Business.Repositories
             {
                 // If batch fails, fall back to sequential execution for better error handling
                 totalAffected = 0;
-                foreach (var kvp in tableMapping)
+                foreach (var table in tables)
                 {
-                    totalAffected += await UpdateLoadReferenceAsync(kvp.Key, kvp.Value, dataLoadId, dataLoadDetailId, ct);
+                    totalAffected += await MarkStagingCompletedAsync(table, ct);
                 }
             }
 

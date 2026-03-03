@@ -359,8 +359,6 @@ public class TVSVCPKTests : BatchProcessorTests
         var load = new DataLoad { Id = 3831, LoadTableName = "tvsvcpk", FileLocation = "gs://bucket/TVSVCPK_3831.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(8, 1, 0, null, null, "sp", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync(It.IsAny<string>(), It.IsAny<string>(), 3831, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(3831, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -372,12 +370,10 @@ public class TVSVCPKTests : BatchProcessorTests
         var load = new DataLoad { Id = 3832, LoadTableName = "tvsvcpk", FileLocation = "gs://bucket/TVSVCPK_3832.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(100, 50, 25, null, null, "sp_validoriginservicepackage_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvsvcpk_stg", "tvsvcpk", 3832, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(175);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(3832, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repo.Verify(r => r.UpdateLoadReferenceAsync("tvsvcpk_stg", "tvsvcpk", 3832, It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.MarkStagingCompletedAsync("tvsvcpk_stg", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -400,8 +396,6 @@ public class TVSVCPKTests : BatchProcessorTests
         var load = new DataLoad { Id = 3834, LoadTableName = "tvsvcpk", FileLocation = "gs://bucket/TVSVCPK_3834.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(250000, 40000, 10000, null, null, "sp_validoriginservicepackage_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvsvcpk_stg", "tvsvcpk", 3834, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(300000);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(3834, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -413,8 +407,6 @@ public class TVSVCPKTests : BatchProcessorTests
         var load = new DataLoad { Id = 3835, LoadTableName = "tvsvcpk", FileLocation = "gs://bucket/TVSVCPK_3835.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(500, 0, 0, null, null, "sp_validoriginservicepackage_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvsvcpk_stg", "tvsvcpk", 3835, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(500);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(3835, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -426,8 +418,6 @@ public class TVSVCPKTests : BatchProcessorTests
         var load = new DataLoad { Id = 3836, LoadTableName = "tvsvcpk", FileLocation = "gs://bucket/TVSVCPK_3836.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(0, 200, 0, null, null, "sp_validoriginservicepackage_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvsvcpk_stg", "tvsvcpk", 3836, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(200);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(3836, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -439,8 +429,6 @@ public class TVSVCPKTests : BatchProcessorTests
         var load = new DataLoad { Id = 3837, LoadTableName = "tvsvcpk", FileLocation = "gs://bucket/TVSVCPK_3837.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(0, 0, 150, null, null, "sp_validoriginservicepackage_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvsvcpk_stg", "tvsvcpk", 3837, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(150);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(3837, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -577,8 +565,6 @@ public class TVSVCPKTests : BatchProcessorTests
         // Merge
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(400, 80, 20, null, null, "sp_validoriginservicepackage_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tvsvcpk_stg", "tvsvcpk", 3862, It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(500);
 
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(3862, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);

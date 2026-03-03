@@ -464,7 +464,7 @@ public class TFSCMAPTests : BatchProcessorTests
         var load = new DataLoad { Id = 6631, LoadTableName = "tfscmap", FileLocation = "gs://bucket/TFSCMAP_6631.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(8, 1, 0, null, null, "sp", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync(It.IsAny<string>(), It.IsAny<string>(), 6631, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(9);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
@@ -477,12 +477,12 @@ public class TFSCMAPTests : BatchProcessorTests
         var load = new DataLoad { Id = 6632, LoadTableName = "tfscmap", FileLocation = "gs://bucket/TFSCMAP_6632.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(100, 50, 25, null, null, "sp_fuelsurchargecategorymap_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tfscmap_stg", "tfscmap", 6632, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(175);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(6632, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repo.Verify(r => r.UpdateLoadReferenceAsync("tfscmap_stg", "tfscmap", 6632, It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -505,7 +505,7 @@ public class TFSCMAPTests : BatchProcessorTests
         var load = new DataLoad { Id = 6634, LoadTableName = "tfscmap", FileLocation = "gs://bucket/TFSCMAP_6634.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(250000, 40000, 10000, null, null, "sp_fuelsurchargecategorymap_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tfscmap_stg", "tfscmap", 6634, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(300000);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
@@ -518,7 +518,7 @@ public class TFSCMAPTests : BatchProcessorTests
         var load = new DataLoad { Id = 6635, LoadTableName = "tfscmap", FileLocation = "gs://bucket/TFSCMAP_6635.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(500, 0, 0, null, null, "sp_fuelsurchargecategorymap_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tfscmap_stg", "tfscmap", 6635, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(500);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
@@ -531,7 +531,7 @@ public class TFSCMAPTests : BatchProcessorTests
         var load = new DataLoad { Id = 6636, LoadTableName = "tfscmap", FileLocation = "gs://bucket/TFSCMAP_6636.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(0, 200, 0, null, null, "sp_fuelsurchargecategorymap_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tfscmap_stg", "tfscmap", 6636, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
@@ -544,7 +544,7 @@ public class TFSCMAPTests : BatchProcessorTests
         var load = new DataLoad { Id = 6637, LoadTableName = "tfscmap", FileLocation = "gs://bucket/TFSCMAP_6637.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(0, 0, 150, null, null, "sp_fuelsurchargecategorymap_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tfscmap_stg", "tfscmap", 6637, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(150);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
@@ -683,7 +683,7 @@ public class TFSCMAPTests : BatchProcessorTests
         // Merge
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(80, 15, 5, null, null, "sp_fuelsurchargecategorymap_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tfscmap_stg", "tfscmap", 6662, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(100);
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.UpdateStatusAsync(6662, LoadStatus.Processed, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -713,7 +713,7 @@ public class TFSCMAPTests : BatchProcessorTests
         var load = new DataLoad { Id = 6671, LoadTableName = "tfscmap", FileLocation = "gs://bucket/TFSCMAP_6671.csv" };
         _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MergeResult(0, 10, 0, null, null, "sp_fuelsurchargecategorymap_merge_proc", null, null));
-        _repo.Setup(r => r.UpdateLoadReferenceAsync("tfscmap_stg", "tfscmap", 6671, It.IsAny<long>(), It.IsAny<CancellationToken>()))
+        _repo.Setup(r => r.MarkStagingCompletedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(10);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
