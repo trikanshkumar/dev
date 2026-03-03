@@ -24,7 +24,7 @@ public class InternationalZoneTests : BatchProcessorTests
     {
         // Arrange - Both TINZNHD and TINZNDT are present in the receipt
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTINZNHD_2025_01_15_12345.csv,SRC\nTINZNDT_2025_01_15_12345.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTINZNHD,TINZNHD_2025_01_15_12345.csv,SRC\nTINZNDT,TINZNDT_2025_01_15_12345.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
@@ -48,7 +48,7 @@ public class InternationalZoneTests : BatchProcessorTests
     {
         // Arrange - Only TINZNHD is present, TINZNDT is missing
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTINZNHD_2025_01_15_12345.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTINZNHD,TINZNHD_2025_01_15_12345.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
@@ -68,7 +68,7 @@ public class InternationalZoneTests : BatchProcessorTests
     {
         // Arrange - Only TINZNDT is present, TINZNHD is missing
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTINZNDT_2025_01_15_12345.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTINZNDT,TINZNDT_2025_01_15_12345.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
@@ -88,7 +88,7 @@ public class InternationalZoneTests : BatchProcessorTests
     {
         // Arrange - TINZNHD with other tables but no TINZNDT
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTALTCCY_2025_01_15_11111.csv,SRC\nTINZNHD_2025_01_15_12345.csv,SRC\nTDECODE_2025_01_15_22222.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTALTCCY,TALTCCY_2025_01_15_11111.csv,SRC\nTINZNHD,TINZNHD_2025_01_15_12345.csv,SRC\nTDECODE,TDECODE_2025_01_15_22222.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
@@ -112,7 +112,7 @@ public class InternationalZoneTests : BatchProcessorTests
     {
         // Arrange - Both TINZNHD and TINZNDT with other tables
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTALTCCY_2025_01_15_11111.csv,SRC\nTINZNHD_2025_01_15_12345.csv,SRC\nTINZNDT_2025_01_15_12345.csv,SRC\nTDECODE_2025_01_15_22222.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTALTCCY,TALTCCY_2025_01_15_11111.csv,SRC\nTINZNHD,TINZNHD_2025_01_15_12345.csv,SRC\nTINZNDT,TINZNDT_2025_01_15_12345.csv,SRC\nTDECODE,TDECODE_2025_01_15_22222.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
@@ -137,7 +137,7 @@ public class InternationalZoneTests : BatchProcessorTests
     {
         // Arrange - Mixed case table names
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\ntinznhd_2025_01_15_12345.csv,SRC\nTINZNDT_2025_01_15_12345.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\ntinznhd,tinznhd_2025_01_15_12345.csv,SRC\nTINZNDT,TINZNDT_2025_01_15_12345.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
@@ -158,7 +158,7 @@ public class InternationalZoneTests : BatchProcessorTests
     {
         // Arrange - No International Zone tables
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTALTCCY_2025_01_15_11111.csv,SRC\nTDECODE_2025_01_15_22222.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTALTCCY,TALTCCY_2025_01_15_11111.csv,SRC\nTDECODE,TDECODE_2025_01_15_22222.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);

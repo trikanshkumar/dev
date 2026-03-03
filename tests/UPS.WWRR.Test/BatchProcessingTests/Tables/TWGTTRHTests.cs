@@ -46,7 +46,7 @@ public class TWGTTRHTests : BatchProcessorTests
     public async Task BuildLoadsAsync_ValidSingleLoad_Inserts()
     {
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTWGTTRH_2026_02_18_1.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTWGTTRH,TWGTTRH_2026_02_18_1.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TWGTTRH", "2026_02_18_1", It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))

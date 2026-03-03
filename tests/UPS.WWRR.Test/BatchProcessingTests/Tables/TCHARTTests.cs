@@ -23,7 +23,7 @@ public class TCHARTTests : BatchProcessorTests
     {
         // Arrange - Both TCHART and TASYRA are present in the receipt
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTCHART_2026_02_18_2.csv,SRC\nTASYRA_2026_02_18_2.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTCHART,TCHART_2026_02_18_2.csv,SRC\nTASYRA,TASYRA_2026_02_18_2.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
@@ -46,7 +46,7 @@ public class TCHARTTests : BatchProcessorTests
     {
         // Arrange - Only TCHART is present, TASYRA is missing
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTCHART_12345.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTCHART,TCHART_12345.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
@@ -66,7 +66,7 @@ public class TCHARTTests : BatchProcessorTests
     {
         // Arrange - Only TASYRA is present, TCHART is missing
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTASYRA_12345.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTASYRA,TASYRA_12345.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);

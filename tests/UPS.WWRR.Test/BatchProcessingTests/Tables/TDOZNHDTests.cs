@@ -23,7 +23,7 @@ public class TDOZNHDTests : BatchProcessorTests
     {
         // Arrange - Both TDOZNHD and TDOZNDT are present in the receipt
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTDOZNHD_2026_02_18_2.csv,SRC\nTDOZNDT_2026_02_18_2.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTDOZNHD,TDOZNHD_2026_02_18_2.csv,SRC\nTDOZNDT,TDOZNDT_2026_02_18_2.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
@@ -46,7 +46,7 @@ public class TDOZNHDTests : BatchProcessorTests
     {
         // Arrange - Only TDOZNHD is present, TDOZNDT is missing
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTDOZNHD_12345.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTDOZNHD,TDOZNHD_12345.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
@@ -66,7 +66,7 @@ public class TDOZNHDTests : BatchProcessorTests
     {
         // Arrange - Only TDOZNDT is present, TDOZNHD is missing
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTDOZNDT_12345.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTDOZNDT,TDOZNDT_12345.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);

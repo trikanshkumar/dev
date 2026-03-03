@@ -51,7 +51,7 @@ public class TVSVCPKTests : BatchProcessorTests
     public async Task BuildLoadsAsync_TVSVCPK_ValidSingleLoad_Inserts()
     {
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTVSVCPK_2026_02_18_1.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTVSVCPK,TVSVCPK_2026_02_18_1.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TVSVCPK", "2026_02_18_1", It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
@@ -67,7 +67,7 @@ public class TVSVCPKTests : BatchProcessorTests
     public async Task BuildLoadsAsync_TVSVCPK_AlreadyExists_SkipsInsert()
     {
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTVSVCPK_38002.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTVSVCPK,TVSVCPK_38002.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TVSVCPK", "38002", It.IsAny<CancellationToken>())).ReturnsAsync(true);
         var sut = CreateSut();
@@ -80,7 +80,7 @@ public class TVSVCPKTests : BatchProcessorTests
     public async Task BuildLoadsAsync_TVSVCPK_MultipleLoads_InsertsAll()
     {
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTVSVCPK_2026_02_18_1.csv,SRC\nTVSVCPK_2026_02_18_2.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTVSVCPK,TVSVCPK_2026_02_18_1.csv,SRC\nTVSVCPK,TVSVCPK_2026_02_18_2.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TVSVCPK", It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
@@ -487,7 +487,7 @@ public class TVSVCPKTests : BatchProcessorTests
     {
         // Build
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTVSVCPK_2026_02_18_1.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTVSVCPK,TVSVCPK_2026_02_18_1.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TVSVCPK", "2026_02_18_1", It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))

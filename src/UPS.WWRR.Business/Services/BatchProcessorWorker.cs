@@ -216,12 +216,15 @@ namespace UPS.WWRR.Business.Services
             if (rows.Count <= 1)
             {
                 _logger.LogInformation("Receipt file {file} contains no data rows", dynamicReceiptName);
+                await MoveObjectToProcessedAsync(dynamicReceiptName);
                 return newLoads;
             }
 
             // Inline former BuildLoadsFromReceiptAsync logic
             var header = rows[0];
             int fileExtractNameIndex = Array.FindIndex(header, h => h.Equals(ServiceConstants.fileExtractName, StringComparison.OrdinalIgnoreCase));
+            // Track all data file names referenced in the receipt for cleanup
+            var allReceiptFileNames = new List<string>();
             if (fileExtractNameIndex < 0)
             {
                 _logger.LogError("Required columns (FileExtractName, Source) not found in receipt file. Columns: {cols}", string.Join("|", header));
@@ -234,6 +237,8 @@ namespace UPS.WWRR.Business.Services
                     if (r.Length <= fileExtractNameIndex) continue;
                     var fileExtractName = r[fileExtractNameIndex];
                     if (string.IsNullOrWhiteSpace(fileExtractName)) continue;
+
+                    allReceiptFileNames.Add(fileExtractName);
 
                     var parts = fileExtractName.Split('_', StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length < 5)
@@ -303,6 +308,20 @@ namespace UPS.WWRR.Business.Services
                 if (newLoads.Count > 0)
                     await _loadRepository.AddLoadsAsync(newLoads, ct);
             }
+
+            // If all loads from this receipt were already processed (no new loads created),
+            // move the receipt and its data files to the processed folder so the service
+            // can discover the next receipt file in subsequent cycles.
+            if (newLoads.Count == 0)
+            {
+                _logger.LogInformation("All loads from receipt {receipt} already exist. Moving receipt and data files to processed folder.", dynamicReceiptName);
+                foreach (var fileName in allReceiptFileNames)
+                {
+                    await MoveObjectToProcessedAsync(fileName);
+                }
+                await MoveObjectToProcessedAsync(dynamicReceiptName);
+            }
+
             return newLoads;
         }
 

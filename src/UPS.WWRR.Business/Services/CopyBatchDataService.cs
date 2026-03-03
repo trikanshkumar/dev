@@ -69,7 +69,6 @@ namespace UPS.WWRR.Business.Services
 
                 var chunkIndex = 0;
                 var totalSw = Stopwatch.StartNew();
-                var allBatchErrors = new List<string>();
 
                 string? copySql = null;
                 string? singleRowCopySql = null;
@@ -155,9 +154,12 @@ namespace UPS.WWRR.Business.Services
                     {
                         _logger.LogError(ex, $"COPY failed for chunk {chunkIndex}. Attempting per-row fallback.");
                         // Batch failed: retry each row individually
-                        var fallbackLoaded = await FallbackCopyRowsAsync(chunk, singleRowCopySql!, conn, chunkIndex, result, attempted, tsRegex, oracleTsRegex, loadRefValue, cancellationToken);
+                        var (fallbackLoaded, rowErrors) = await FallbackCopyRowsAsync(chunk, singleRowCopySql!, conn, chunkIndex, attempted, tsRegex, oracleTsRegex, loadRefValue, cancellationToken);
                         loaded = fallbackLoaded;
-                        if (fallbackLoaded < attempted)
+                        // Propagate per-row errors to result and batch tracking
+                        result.Errors.AddRange(rowErrors);
+                        batchErrors.AddRange(rowErrors);
+                        if (fallbackLoaded < attempted && rowErrors.Count == 0)
                             batchErrors.Add($"Chunk {chunkIndex}: {ex.Message}");
                     }
                     batchSw.Stop();
@@ -166,15 +168,14 @@ namespace UPS.WWRR.Business.Services
 
                     if (batchErrors.Count > 0)
                     {
-                        allBatchErrors.AddRange(batchErrors);
-                        // Record exceptions (row-level issues summary)
-                        var exceptions = batchErrors.Select(msg => new DataLoadException
+                        // Record each error as a DataLoadException
+                        var exceptions = batchErrors.Select((msg, idx) => new DataLoadException
                         {
                             DataLoadDetailId = chunkDetail.Id,
                             TableName = configuration.TableName,
                             TableKey = $"BATCH:{chunkIndex}",
-                            ErrorFieldName = "ROW", // generic
-                            ErrorFieldValue = msg,
+                            ErrorFieldName = "ROW",
+                            ErrorFieldValue = msg.Length > 100 ? msg[..100] : msg,
                             CreatedOn = DateTime.UtcNow
                         });
                         await _loadRepository.AddExceptionsAsync(exceptions, cancellationToken);
@@ -201,27 +202,28 @@ namespace UPS.WWRR.Business.Services
 
         /// <summary>
         /// Retry COPY for each row individually in case of a batch failure.
+        /// Returns the number of successfully loaded rows and a list of per-row error messages.
         /// </summary>
         /// <param name="chunk"></param>
         /// <param name="singleRowCopySql"></param>
         /// <param name="conn"></param>
         /// <param name="chunkIndex"></param>
-        /// <param name="result"></param>
         /// <param name="attempted"></param>
         /// <param name="tsRegex"></param>
         /// <param name="oracleTsRegex"></param>
         /// <param name="loadRefValue"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task<int> FallbackCopyRowsAsync(string chunk, string singleRowCopySql, NpgsqlConnection conn, int chunkIndex, CopyBatchResultDto result, int attempted, Regex tsRegex, Regex oracleTsRegex, string loadRefValue, CancellationToken cancellationToken)
+        /// <returns>A tuple of (loaded row count, list of per-row error messages)</returns>
+        private async Task<(int Loaded, List<string> RowErrors)> FallbackCopyRowsAsync(string chunk, string singleRowCopySql, NpgsqlConnection conn, int chunkIndex, int attempted, Regex tsRegex, Regex oracleTsRegex, string loadRefValue, CancellationToken cancellationToken)
         {
+            var rowErrors = new List<string>();
             try
             {
                 var normalized = chunk.Replace("\r\n", "\n").Replace("\r", "\n");
                 var lines = normalized.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                if (lines.Length == 0) return 0;
+                if (lines.Length == 0) return (0, rowErrors);
                 int headerOffset = _hasHeader ? 1 : 0;
-                if (_hasHeader && lines.Length <= 1) return 0; // only header present
+                if (_hasHeader && lines.Length <= 1) return (0, rowErrors); // only header present
                 int loaded = 0;
                 for (int i = headerOffset; i < lines.Length; i++)
                 {
@@ -243,16 +245,16 @@ namespace UPS.WWRR.Business.Services
                     }
                     catch (Exception rowEx)
                     {
-                        result.Errors.Add($"Row COPY failed (chunk {chunkIndex} row {i - headerOffset + 1}): {rowEx.Message}");
+                        rowErrors.Add($"Row COPY failed (chunk {chunkIndex} row {i - headerOffset + 1}): {rowEx.Message}");
                     }
                 }
-                return loaded;
+                return (loaded, rowErrors);
             }
             catch (Exception fbEx)
             {
                 _logger.LogError(fbEx, $"Per-row COPY fallback failed for chunk {chunkIndex}");
-                result.Errors.Add($"Fallback COPY failed for chunk {chunkIndex}: {fbEx.Message}");
-                return 0;
+                rowErrors.Add($"Fallback COPY failed for chunk {chunkIndex}: {fbEx.Message}");
+                return (0, rowErrors);
             }
         }
 

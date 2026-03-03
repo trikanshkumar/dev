@@ -51,7 +51,7 @@ public class TFSCMAPTests : BatchProcessorTests
     public async Task BuildLoadsAsync_TFSCMAP_ValidSingleLoad_Inserts()
     {
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTFSCMAP_2026_02_26_1.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTFSCMAP,TFSCMAP_2026_02_26_1.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TFSCMAP", "2026_02_26_1", It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
@@ -67,7 +67,7 @@ public class TFSCMAPTests : BatchProcessorTests
     public async Task BuildLoadsAsync_TFSCMAP_AlreadyExists_SkipsInsert()
     {
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTFSCMAP_58002.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTFSCMAP,TFSCMAP_58002.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TFSCMAP", "2026_02_26_1", It.IsAny<CancellationToken>())).ReturnsAsync(true);
         var sut = CreateSut();
@@ -80,7 +80,7 @@ public class TFSCMAPTests : BatchProcessorTests
     public async Task BuildLoadsAsync_TFSCMAP_MultipleLoads_InsertsAll()
     {
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTFSCMAP_2026_02_26_3.csv,SRC\nTFSCMAP_2026_02_26_4.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTFSCMAP,TFSCMAP_2026_02_26_3.csv,SRC\nTFSCMAP,TFSCMAP_2026_02_26_4.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TFSCMAP", It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
@@ -604,7 +604,7 @@ public class TFSCMAPTests : BatchProcessorTests
     {
         // Build
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
-        var content = "FileExtractName,Source\nTFSCMAP_2026_02_26_1.csv,SRC";
+        var content = "TableName,FileExtractName,Destination\nTFSCMAP,TFSCMAP_2026_02_26_1.csv,SRC";
         _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
         _repo.Setup(r => r.ExistsAsync("TFSCMAP", "2026_02_26_1", It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
