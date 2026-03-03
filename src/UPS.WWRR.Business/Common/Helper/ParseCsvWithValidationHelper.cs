@@ -41,13 +41,13 @@ namespace UPS.WWRR.Business.Common.Helper
             var header = csv.HeaderRecord ?? Array.Empty<string>();
 
             // Example: enforce exact header names (customize as needed)
-            var expected = new[] { ServiceConstants.tableNameColumn, ServiceConstants.fileExtractName, ServiceConstants.destinationColumn };
-            if (header.Length != expected.Length ||
-                !header.SequenceEqual(expected, StringComparer.OrdinalIgnoreCase))
+            var expectedWithoutDestination = new[] { ServiceConstants.tableNameColumn, ServiceConstants.fileExtractName };
+            var expectedWithDestination = new[] { ServiceConstants.tableNameColumn, ServiceConstants.fileExtractName, ServiceConstants.destinationColumn };
+            if (!header.SequenceEqual(expectedWithoutDestination, StringComparer.OrdinalIgnoreCase) && !header.SequenceEqual(expectedWithDestination, StringComparer.OrdinalIgnoreCase))
             {
                 throw new FormatException(
                     $"Unexpected header. Found: [{string.Join(", ", header)}]. " +
-                    $"Expected: [{string.Join(", ", expected)}].");
+                    $"Expected: [{string.Join(", ", expectedWithoutDestination)}] OR [{string.Join(", ", expectedWithDestination)}.");
             }
 
             // --- Read data rows ---
@@ -81,8 +81,6 @@ namespace UPS.WWRR.Business.Common.Helper
                     throw new FormatException($"Row {csv.Context.Parser.Row}: {ServiceConstants.tableNameColumn} is required.");
                 if (string.IsNullOrWhiteSpace(row[1]))
                     throw new FormatException($"Row {csv.Context.Parser.Row}: {ServiceConstants.receiptLogFilePattern} is required.");
-                if (string.IsNullOrWhiteSpace(row[2]))
-                    throw new FormatException($"Row {csv.Context.Parser.Row}: {ServiceConstants.destinationColumn} is required.");
 
                 // 2) Simple shape checks (e.g., FileExtractName ends with .csv)
                 if (!row[1].Trim().EndsWith(".csv", StringComparison.OrdinalIgnoreCase))

@@ -39,6 +39,14 @@ namespace UPS.WWRR.Business.Repositories
             await _db.SaveChangesAsync(ct);
         }
 
+        public async Task UpdateTotalBatchNumber(long loadId, int totalBatchNumber, CancellationToken ct = default)
+        {
+            var load = await _db.DataLoads.FirstOrDefaultAsync(l => l.Id == loadId, ct);
+            if (load == null) return;
+            load.TotalBatchNumber = totalBatchNumber;
+            await _db.SaveChangesAsync(ct);
+        }
+
         public async Task<DataLoadDetail> AddDetailAsync(DataLoadDetail detail, CancellationToken ct = default)
         {
             detail.CreatedOn = Utc(detail.CreatedOn == default ? DateTime.UtcNow : detail.CreatedOn);

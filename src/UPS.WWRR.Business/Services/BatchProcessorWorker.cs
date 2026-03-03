@@ -222,20 +222,29 @@ namespace UPS.WWRR.Business.Services
 
             // Inline former BuildLoadsFromReceiptAsync logic
             var header = rows[0];
-            int fileExtractNameIndex = Array.FindIndex(header, h => h.Equals(ServiceConstants.fileExtractName, StringComparison.OrdinalIgnoreCase));
             // Track all data file names referenced in the receipt for cleanup
             var allReceiptFileNames = new List<string>();
+            int fileExtractNameIndex = Array.FindIndex(header, h => h.Equals(ServiceConstants.fileExtractName, StringComparison.OrdinalIgnoreCase));
+
+            int destinationNameIndex = Array.FindIndex(header, h => h.Equals(ServiceConstants.destinationColumn, StringComparison.OrdinalIgnoreCase));
+
             if (fileExtractNameIndex < 0)
             {
-                _logger.LogError("Required columns (FileExtractName, Source) not found in receipt file. Columns: {cols}", string.Join("|", header));
+                _logger.LogError("Required columns (FileExtractName) not found in receipt file. Columns: {cols}", string.Join("|", header));
             }
             else
             {
+
                 var batchSizeEnv = int.TryParse(Environment.GetEnvironmentVariable("BATCH_SIZE"), out var bs) ? bs : _defaultChunkSize;
                 foreach (var r in rows.Skip(1))
                 {
                     if (r.Length <= fileExtractNameIndex) continue;
                     var fileExtractName = r[fileExtractNameIndex];
+
+                    var destination = destinationNameIndex < 0 || r.Length <= destinationNameIndex || string.IsNullOrWhiteSpace(r[destinationNameIndex])
+                        ? ServiceConstants.defaultDestinationValue 
+                        : r[destinationNameIndex].Trim();
+
                     if (string.IsNullOrWhiteSpace(fileExtractName)) continue;
 
                     allReceiptFileNames.Add(fileExtractName);
@@ -293,7 +302,8 @@ namespace UPS.WWRR.Business.Services
                         CreatedOn = DateTime.UtcNow,
                         LogFileLocation = $"gs://{_gcpBucketName}/{_storageService.PrependBaseDirectory(dynamicReceiptName)}",
                         TotalBatchNumber = 0,
-                        BatchSize = batchSizeEnv
+                        BatchSize = batchSizeEnv,
+                        DataSource = destination[..25]
                     });
                 }
             }
@@ -352,7 +362,7 @@ namespace UPS.WWRR.Business.Services
                     var (copySuccess, stagingDetail, rowsLoaded, copyErrors) = await CopyBatchAsync(load, tempFile, descriptor, ct);
                     if (!copySuccess)
                     {
-                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
                         // Move failed file to processed folder
                         await MoveObjectToProcessedAsync(gcsFileName);
                     }
@@ -360,7 +370,7 @@ namespace UPS.WWRR.Business.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "CopyBatch failed for table {tbl} load {id}", load.LoadTableName, load.Id);
-                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
                     // Move failed file to processed folder
                     await MoveObjectToProcessedAsync(gcsFileName);
                 }
@@ -444,7 +454,7 @@ namespace UPS.WWRR.Business.Services
                                 CreatedOn = DateTime.UtcNow
                             };
                             await _loadRepository.AddErrorsAsync(new[] { error }, ct);
-                            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+                            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
                         }
                         else
                         {
@@ -458,7 +468,7 @@ namespace UPS.WWRR.Business.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Merge failed for table {tbl} load {id}", load.LoadTableName, load.Id);
-                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
                 }
                 finally
                 {
@@ -832,7 +842,7 @@ namespace UPS.WWRR.Business.Services
                 var descriptor = GetDescriptor(load.LoadTableName);
                 if (!descriptor.IsSupported)
                 {
-                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
                     _logger.LogWarning("Validation unsupported for table {tbl}", load.LoadTableName);
                     
                     // Move unsupported file to processed folder
@@ -858,7 +868,7 @@ namespace UPS.WWRR.Business.Services
                             // Still skip processing and log this as an error, but with a special FilenameCaseMismatch status
                             var errorMessage = $"Filename has incorrect casing in receipt file. Searched for {gcsFileName} but found {actualName}. Bucket: {_gcpBucketName}, FileLocation: {load.FileLocation}";
                             _logger.LogError(errorMessage);
-                            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+                            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
 
                             DataLoadDetail detail = await CreateDataLoadDetailForError(load, ct);
                             var exception = new DataLoadException
@@ -885,7 +895,7 @@ namespace UPS.WWRR.Business.Services
                         }
                         _logger.LogError("File not found in GCS bucket. Bucket: {bucket}, Object: {object}, FileLocation: {fileLocation}",
                             _gcpBucketName, gcsFileName, load.FileLocation);
-                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
                         
                         // Clean up temp file (even though download didn't happen, the temp file was created)
                         if (tempFile != null)
@@ -901,7 +911,7 @@ namespace UPS.WWRR.Business.Services
                     {
                         _logger.LogError("Downloaded file size mismatch. Remote file: {remoteFile}, Local file: {localFile}. Skipping load.",
                             gcsFileName, tempFile);
-                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
                         
                         // Clean up temp file
                         try { File.Delete(tempFile); } catch { }
@@ -943,13 +953,13 @@ namespace UPS.WWRR.Business.Services
                         try { File.Delete(tempFile); } catch { }
                     }
 
-                    await _loadRepository.UpdateStatusAsync(load.Id, valid ? LoadStatus.ReadyToProcess : LoadStatus.FailedValidation, null, ct);
+                    await _loadRepository.UpdateStatusAsync(load.Id, valid ? LoadStatus.ReadyToProcess : LoadStatus.FailedValidation, valid ? null : DateTime.UtcNow, ct);
                     _logger.LogInformation("Validation {result} for table {tbl} load {id}", valid ? "passed" : "failed", load.LoadTableName, load.Id);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Validation error for table {tbl} load {id}", load.LoadTableName, load.Id);
-                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, null, ct);
+                    await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
                     
                     // Clean up temp file if it was created
                     if (tempFile != null)
@@ -1159,7 +1169,7 @@ namespace UPS.WWRR.Business.Services
                     CreatedOn = DateTime.UtcNow
                 };
                 await _loadRepository.AddErrorsAsync(new[] { error }, ct);
-                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, null, ct);
+                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
             }
             else
             {

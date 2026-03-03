@@ -187,6 +187,7 @@ namespace UPS.WWRR.Business.Services
                     chunkDetail.RecordsInserted = loaded;
                     await _loadRepository.UpdateDetailAsync(chunkDetail, cancellationToken);
                 }
+                await _loadRepository.UpdateTotalBatchNumber(configuration.DataLoadId, chunkIndex, cancellationToken);
                 totalSw.Stop();
 
                 _logger.LogInformation($"Load complete for {configuration.TableName}. Loaded {result.RowsLoaded}/{result.TotalRowsAttempted} rows in {chunkIndex} chunk(s). Errors={result.Errors.Count}. Elapsed={totalSw.Elapsed.TotalSeconds:F2}s");

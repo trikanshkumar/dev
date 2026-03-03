@@ -13,6 +13,8 @@ namespace UPS.WWRR.Business.Repositories
 
         Task UpdateStatusAsync(long loadId, LoadStatus status, DateTime? processedOn = null, CancellationToken ct = default);
 
+        Task UpdateTotalBatchNumber(long loadId, int totalBatchNumber, CancellationToken ct = default);
+
         Task<DataLoadDetail> AddDetailAsync(DataLoadDetail detail, CancellationToken ct = default);
 
         Task UpdateDetailAsync(DataLoadDetail detail, CancellationToken ct = default);
