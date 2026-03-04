@@ -78,6 +78,8 @@ namespace UPS.WWRR.Business.Services
                 var tsRegex = new Regex(ServiceConstants.DashDotTimestampRegexPattern, RegexOptions.Compiled);
                 // Matches Oracle-style timestamps like dd-MMM-yy hh.mm.ss.ffffff AM/PM
                 var oracleTsRegex = new Regex(ServiceConstants.OracleTimestampRegexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                // Determine if this table requires Oracle timestamp conversion
+                var useOracleTimestamp = ServiceConstants.OracleTimestampTables.Contains(configuration.TableName);
 
                 await foreach (var chunk in _csvSplitter.SplitAsync(csvFilePath, _chunkSize, _hasHeader, cancellationToken))
                 {
@@ -141,10 +143,17 @@ namespace UPS.WWRR.Business.Services
                                 continue;
                             }
 
-                            // Normalize any timestamp formatted as yyyy-MM-dd-HH.mm.ss.ffffff within fields (quoted or not)
-                            line = NormalizeTimestampFields(line, tsRegex);
-                            // Normalize Oracle-style timestamps (dd-MMM-yy hh.mm.ss.ffffff AM/PM) to PostgreSQL format
-                            line = NormalizeOracleTimestampFields(line, oracleTsRegex);
+                            // Normalize timestamps based on table type
+                            if (useOracleTimestamp)
+                            {
+                                // Normalize Oracle-style timestamps (dd-MMM-yy hh.mm.ss.ffffff AM/PM) to PostgreSQL format
+                                line = NormalizeOracleTimestampFields(line, oracleTsRegex);
+                            }
+                            else
+                            {
+                                // Normalize any timestamp formatted as yyyy-MM-dd-HH.mm.ss.ffffff within fields (quoted or not)
+                                line = NormalizeTimestampFields(line, tsRegex);
+                            }
                             // Append load_ref_te value to each data row
                             await writer.WriteLineAsync(line + _delimiter + loadRefValue);
                         }
@@ -154,7 +163,7 @@ namespace UPS.WWRR.Business.Services
                     {
                         _logger.LogError(ex, $"COPY failed for chunk {chunkIndex}. Attempting per-row fallback.");
                         // Batch failed: retry each row individually
-                        var (fallbackLoaded, rowErrors) = await FallbackCopyRowsAsync(chunk, singleRowCopySql!, conn, chunkIndex, attempted, tsRegex, oracleTsRegex, loadRefValue, cancellationToken);
+                        var (fallbackLoaded, rowErrors) = await FallbackCopyRowsAsync(chunk, singleRowCopySql!, conn, chunkIndex, attempted, tsRegex, oracleTsRegex, loadRefValue, useOracleTimestamp, cancellationToken);
                         loaded = fallbackLoaded;
                         // Propagate per-row errors to result and batch tracking
                         result.Errors.AddRange(rowErrors);
@@ -213,9 +222,10 @@ namespace UPS.WWRR.Business.Services
         /// <param name="tsRegex"></param>
         /// <param name="oracleTsRegex"></param>
         /// <param name="loadRefValue"></param>
+        /// <param name="useOracleTimestamp"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>A tuple of (loaded row count, list of per-row error messages)</returns>
-        private async Task<(int Loaded, List<string> RowErrors)> FallbackCopyRowsAsync(string chunk, string singleRowCopySql, NpgsqlConnection conn, int chunkIndex, int attempted, Regex tsRegex, Regex oracleTsRegex, string loadRefValue, CancellationToken cancellationToken)
+        private async Task<(int Loaded, List<string> RowErrors)> FallbackCopyRowsAsync(string chunk, string singleRowCopySql, NpgsqlConnection conn, int chunkIndex, int attempted, Regex tsRegex, Regex oracleTsRegex, string loadRefValue, bool useOracleTimestamp, CancellationToken cancellationToken)
         {
             var rowErrors = new List<string>();
             try
@@ -233,10 +243,17 @@ namespace UPS.WWRR.Business.Services
                     if (string.IsNullOrWhiteSpace(row)) continue;
                     try
                     {
-                        // Normalize any timestamp formatted as yyyy-MM-dd-HH.mm.ss.ffffff within fields (quoted or not)
-                        row = NormalizeTimestampFields(row, tsRegex);
-                        // Normalize Oracle-style timestamps (dd-MMM-yy hh.mm.ss.ffffff AM/PM) to PostgreSQL format
-                        row = NormalizeOracleTimestampFields(row, oracleTsRegex);
+                        // Normalize timestamps based on table type
+                        if (useOracleTimestamp)
+                        {
+                            // Normalize Oracle-style timestamps (dd-MMM-yy hh.mm.ss.ffffff AM/PM) to PostgreSQL format
+                            row = NormalizeOracleTimestampFields(row, oracleTsRegex);
+                        }
+                        else
+                        {
+                            // Normalize any timestamp formatted as yyyy-MM-dd-HH.mm.ss.ffffff within fields (quoted or not)
+                            row = NormalizeTimestampFields(row, tsRegex);
+                        }
                         // Append load_ref_te value
                         row = row + _delimiter + loadRefValue;
 
