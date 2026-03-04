@@ -1,13 +1,13 @@
 trigger:
   branches:
     include:
-      - main
+      - feature/dev
 
 parameters:
   - name: environment
     displayName: Select environment
     type: string
-    default: uat
+    default: dev
     values:
       - dev
       - uat
@@ -19,7 +19,7 @@ variables:
     value: $(Agent.TempDirectory)/gcp-key.json
   - name: agentName
     ${{ if eq(parameters.environment, 'dev') }}:
-      value: 'wwrr-uat-agent'
+      value: 'wwrr-dev-agent'
     ${{ if eq(parameters.environment, 'uat') }}:
       value: 'wwrr-uat-linux'
     ${{ if eq(parameters.environment, 'prod') }}:
