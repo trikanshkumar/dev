@@ -86,7 +86,7 @@ stages:
                   --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
                   --project=$(GCP_PROJECT_ID))
               # IAM token
-              IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=$ALLOYDB_ADMIN_EMAIL)
+              IAM_TOKEN=$(gcloud auth print-access-token)
               export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
               dotnet ef migrations bundle \
                 --project src/UPS.WWRR.Data \
@@ -106,7 +106,7 @@ stages:
                   --project=$(GCP_PROJECT_ID))
 
                 # IAM token
-                IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=$ALLOYDB_ADMIN_EMAIL)
+                IAM_TOKEN=$(gcloud auth print-access-token)
                 export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
                 ./efbundle --connection "$ALLOYDB_CONNECTION"
 
