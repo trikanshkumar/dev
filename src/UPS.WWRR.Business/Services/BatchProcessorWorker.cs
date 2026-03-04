@@ -305,7 +305,7 @@ namespace UPS.WWRR.Business.Services
                         LogFileLocation = $"gs://{_gcpBucketName}/{_storageService.PrependBaseDirectory(dynamicReceiptName)}",
                         TotalBatchNumber = 0,
                         BatchSize = batchSizeEnv,
-                        DataSource = destination[..25]
+                        DataSource = destination[..Math.Min(destination.Length, 25)]
                     });
                 }
             }
