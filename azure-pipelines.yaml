@@ -19,7 +19,7 @@ variables:
     value: $(Agent.TempDirectory)/gcp-key.json
   - name: agentName
     ${{ if eq(parameters.environment, 'dev') }}:
-      value: 'wwrr-dev-agent'
+      value: 'wwrr-uat-linux'
     ${{ if eq(parameters.environment, 'uat') }}:
       value: 'wwrr-uat-linux'
     ${{ if eq(parameters.environment, 'prod') }}:
