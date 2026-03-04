@@ -41,6 +41,7 @@
         public const string ValidOriginServicePackageMerge = "sp_validoriginservicepackage_merge_proc";
         public const string DecodeValuesMerge = "sp_decodevalues_merge_proc";
         public const string FuelSurchargeMerge = "sp_fuelsurcharge_merge_proc";
+        public const string FuelSurchargeBatchMerge = "sp_fuelsurcharge_batch_merge_proc";
         public const string ValidAccessorialLaneMerge = "sp_validaccessoriallane_merge_proc";
         public const string ValidAccessorialLaneBatchMerge = "sp_validaccessoriallane_batch_merge_proc";
         public const string FreightRatesMerge = "sp_freightrates_merge_proc";

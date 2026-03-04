@@ -27,6 +27,7 @@ namespace UPS.WWRR.Business.Services
         private readonly int _batchLoadChunkSize;
         private readonly bool _tvasylnUseBatchMerge;
         private readonly bool _trastdUseBatchMerge;
+        private readonly bool _tsubchgUseBatchMerge;
         private readonly HashSet<string> _movedObjects = new(StringComparer.OrdinalIgnoreCase);
         
         /// <summary>
@@ -70,6 +71,7 @@ namespace UPS.WWRR.Business.Services
             _batchLoadChunkSize = int.TryParse(Environment.GetEnvironmentVariable("BatchLoad_ChunkSize"), out var cs) ? cs : _defaultChunkSize;
             _tvasylnUseBatchMerge = bool.TryParse(Environment.GetEnvironmentVariable("TVASYLN_USE_BATCH_MERGE"), out var tvasylnUseBatch) && tvasylnUseBatch;
             _trastdUseBatchMerge = bool.TryParse(Environment.GetEnvironmentVariable("TRASTD_USE_BATCH_MERGE"), out var trastdUseBatch) && trastdUseBatch;
+            _tsubchgUseBatchMerge = bool.TryParse(Environment.GetEnvironmentVariable("TSUBCHG_USE_BATCH_MERGE"), out var tsubchgUseBatch) && tsubchgUseBatch;
         }
 
         /// <summary>
@@ -412,7 +414,8 @@ namespace UPS.WWRR.Business.Services
                         // For batch merge, get staging count before merge for validation
                         long stagingRowCount = 0;
                         if ((_tvasylnUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TVASYLN), StringComparison.OrdinalIgnoreCase)) ||
-                            (_trastdUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TRASTD), StringComparison.OrdinalIgnoreCase)))
+                            (_trastdUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TRASTD), StringComparison.OrdinalIgnoreCase)) ||
+                            (_tsubchgUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TSUBCHG), StringComparison.OrdinalIgnoreCase)))
                         {
                             stagingRowCount = await _loadRepository.GetStagingTableRowCountAsync(descriptor.StagingTableName, ct);
                             _logger.LogInformation("{loadTableName} batch merge: Staging table row count = {stagingCount}", load.LoadTableName.ToUpper(), stagingRowCount);
@@ -424,7 +427,8 @@ namespace UPS.WWRR.Business.Services
                         // Validate batch merge results
                         if (!hasError &&
                             ((_tvasylnUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TVASYLN), StringComparison.OrdinalIgnoreCase)) ||
-                            (_trastdUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TRASTD), StringComparison.OrdinalIgnoreCase))))
+                            (_trastdUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TRASTD), StringComparison.OrdinalIgnoreCase)) ||
+                            (_tsubchgUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TSUBCHG), StringComparison.OrdinalIgnoreCase))))
                         {
                             var totalProcessed = mergeResult.Inserted + mergeResult.Updated;
                             if (totalProcessed != stagingRowCount)
@@ -726,7 +730,7 @@ namespace UPS.WWRR.Business.Services
             nameof(TableEnum.TSUBCHG) => new LoadTableDescriptor(
                 nameof(TableEnum.TSUBCHG).ToLowerInvariant(),
                 (nameof(TableEnum.TSUBCHG) + "_STG").ToLowerInvariant(),
-                StoredProcConstant.FuelSurchargeMerge,
+                _tsubchgUseBatchMerge ? StoredProcConstant.FuelSurchargeBatchMerge : StoredProcConstant.FuelSurchargeMerge,
                 async path => await _csvValidator.ValidateCsvAsync<FuelSurchargeDto>(path)
             ),
             nameof(TableEnum.TVASYLN) => new LoadTableDescriptor(

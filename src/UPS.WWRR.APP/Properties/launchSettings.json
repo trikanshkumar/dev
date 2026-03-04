@@ -17,7 +17,8 @@
         "GCS_DOWNLOAD_CHUNK_SIZE": "4194304",
         "EnableIAMTokenAuth": "false",
         "TVASYLN_USE_BATCH_MERGE": "false",
-        "TRASTD_USE_BATCH_MERGE": "false"
+        "TRASTD_USE_BATCH_MERGE": "false",
+        "TSUBCHG_USE_BATCH_MERGE": "false"
       }
     }
   }
