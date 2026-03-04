@@ -108,6 +108,30 @@ stages:
                 # IAM token
                 IAM_TOKEN=$(gcloud auth print-access-token)
                 export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
+
+                echo "Starting AlloyDB Auth Proxy..."
+
+                curl -L https://storage.googleapis.com/alloydb-auth-proxy/v1.13.11/alloydb-auth-proxy.linux.amd64 \
+                  -o alloydb-auth-proxy
+
+                chmod +x alloydb-auth-proxy
+
+                ./alloydb-auth-proxy \
+                projects/$(GCP_PROJECT_ID)/locations/$(GCP_REGION)/clusters/wwrr-${{ parameters.environment }}-alloydb/instances/primary \
+                --auto-iam-authn \
+                --psc \
+                --address=127.0.0.1 \
+                --port=5432 &
+
+                echo "Waiting for proxy..."
+
+                until pg_isready -h 127.0.0.1 -p 5432; do
+                  echo "Waiting for AlloyDB proxy..."
+                  sleep 2
+                done
+
+                echo "Running EF migrations..."
+
                 ./efbundle --connection "$ALLOYDB_CONNECTION"
 
           # Build & Push Docker Image
