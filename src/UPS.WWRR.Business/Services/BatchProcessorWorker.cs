@@ -2,12 +2,12 @@
 using Microsoft.Extensions.Logging;
 using UPS.WWRR.Business.Common.Constants;
 using UPS.WWRR.Business.Common.Enum;
+using UPS.WWRR.Business.Common.Helper;
 using UPS.WWRR.Business.DTO.Models.LoadTableDto;
 using UPS.WWRR.Business.DTO.Models.Response;
 using UPS.WWRR.Business.Interfaces;
 using UPS.WWRR.Business.Repositories;
 using UPS.WWRR.Data.Models;
-using UPS.WWRR.Business.Common.Helper;
 using TableEnum = UPS.WWRR.Business.Common.Constants.TableName;
 
 namespace UPS.WWRR.Business.Services
@@ -137,50 +137,63 @@ namespace UPS.WWRR.Business.Services
         ? loads
         : loads.Where(l => string.Equals(l.LoadTableName, _tableNameFilter, StringComparison.OrdinalIgnoreCase)).ToList();
 
-            /// <summary>
-            /// Validates that all tables in paired groups are present together.
-            /// If a group has some but not all tables present, those tables are removed and a warning is logged.
-            /// </summary>
-            /// <param name="loads">The list of loads to validate</param>
-            /// <returns>Filtered list with incomplete paired groups removed</returns>
-            private List<DataLoad> ValidateAndFilterPairedTableGroups(List<DataLoad> loads)
+        /// <summary>
+        /// Validates that all tables in paired groups are present together.
+        /// If a group has some but not all tables present, those tables are removed and a warning is logged.
+        /// </summary>
+        /// <param name="loads">The list of loads to validate</param>
+        /// <returns>Filtered list with incomplete paired groups removed</returns>
+        private async Task<List<DataLoad>> ValidateAndFilterPairedTableGroups(List<DataLoad> loads)
+        {
+            if (loads.Count == 0) return loads;
+
+            var tableNamesInLoads = new HashSet<string>(
+                loads.Select(l => l.LoadTableName),
+                StringComparer.OrdinalIgnoreCase);
+
+            var tablesToRemove = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var group in _pairedTableGroups)
             {
-                if (loads.Count == 0) return loads;
+                var presentTables = group.Where(t => tableNamesInLoads.Contains(t)).ToList();
+                var missingTables = group.Where(t => !tableNamesInLoads.Contains(t)).ToList();
 
-                var tableNamesInLoads = new HashSet<string>(
-                    loads.Select(l => l.LoadTableName),
-                    StringComparer.OrdinalIgnoreCase);
-
-                var tablesToRemove = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                foreach (var group in _pairedTableGroups)
+                // If some but not all tables in the group are present, remove the present ones
+                if (presentTables.Count > 0 && missingTables.Count > 0)
                 {
-                    var presentTables = group.Where(t => tableNamesInLoads.Contains(t)).ToList();
-                    var missingTables = group.Where(t => !tableNamesInLoads.Contains(t)).ToList();
+                    _logger.LogWarning(
+                        "Paired table group validation failed. Present: [{presentTables}], Missing: [{missingTables}]. " +
+                        "All tables in the group must be present together. Skipping present tables.",
+                        string.Join(", ", presentTables),
+                        string.Join(", ", missingTables));
 
-                    // If some but not all tables in the group are present, remove the present ones
-                    if (presentTables.Count > 0 && missingTables.Count > 0)
+                    foreach (var table in presentTables)
                     {
-                        _logger.LogWarning(
-                            "Paired table group validation failed. Present: [{presentTables}], Missing: [{missingTables}]. " +
-                            "All tables in the group must be present together. Skipping present tables.",
-                            string.Join(", ", presentTables),
-                            string.Join(", ", missingTables));
-
-                        foreach (var table in presentTables)
-                        {
-                            tablesToRemove.Add(table);
-                        }
+                        tablesToRemove.Add(table);
                     }
                 }
-
-                if (tablesToRemove.Count > 0)
-                {
-                    return loads.Where(l => !tablesToRemove.Contains(l.LoadTableName)).ToList();
-                }
-
-                return loads;
             }
+
+            if (tablesToRemove.Count > 0)
+            {
+                // record as failed data load and move the file to processed
+                var loadsToRemove = loads.Where(l => tablesToRemove.Contains(l.LoadTableName)).ToList();
+                foreach (var load in loadsToRemove)
+                {
+                    load.LoadStatusCode = LoadStatus.MissingRequiredPair.ToString();
+                    load.ProcessedOn = DateTime.UtcNow;
+                    // The file may not exist, we didn't check for that yet, but the MoveObjectToProcessedAsync method handles and logs that exception gracefully
+                    var fileName = Path.GetFileName(load.FileLocation);
+                    await MoveObjectToProcessedAsync(fileName);
+                }
+                await _loadRepository.AddLoadsAsync(loadsToRemove);
+
+                // filter out and don't continue processing the failed loads
+                return loads.Except(loadsToRemove).ToList();
+            }
+
+            return loads;
+        }
 
         /// <summary>
         /// Discover the receipt CSV directly from GCS bucket
@@ -315,7 +328,7 @@ namespace UPS.WWRR.Business.Services
                 newLoads = FilterByTableName(newLoads);
                 
                 // Validate paired table groups - all tables in a group must be present together
-                newLoads = ValidateAndFilterPairedTableGroups(newLoads);
+                newLoads = await ValidateAndFilterPairedTableGroups(newLoads);
                 
                 if (newLoads.Count > 0)
                     await _loadRepository.AddLoadsAsync(newLoads, ct);

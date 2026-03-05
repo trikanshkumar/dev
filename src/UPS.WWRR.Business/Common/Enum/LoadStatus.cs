@@ -10,6 +10,7 @@ namespace UPS.WWRR.Business.Common.Enum
         ReadyToProcess = 2,
         Processing = 3,
         Failed = 4,
-        Processed = 5
+        Processed = 5,
+        MissingRequiredPair = 6,
     }
 }
