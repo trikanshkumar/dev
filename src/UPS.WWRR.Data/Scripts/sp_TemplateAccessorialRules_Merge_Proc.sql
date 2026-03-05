@@ -28,7 +28,7 @@ BEGIN
     );
 
     WITH src_dedup AS (
-        SELECT DISTINCT
+        SELECT
                gpn_xpt_cny_cd,
                gpn_ipt_cny_cd,
                cny_ra_sei_rl_cd,
@@ -57,10 +57,10 @@ BEGIN
             tgt.dtr_cri_eff_dt     = src.dtr_cri_eff_dt
         )
         WHEN MATCHED AND (
-            tgt.dtr_cri_end_dt     IS DISTINCT FROM src.dtr_cri_end_dt AND
-            tgt.chg_ccl_rul_cd     IS DISTINCT FROM src.chg_ccl_rul_cd AND
-            tgt.spm_chg_rfd_elg_ir IS DISTINCT FROM src.spm_chg_rfd_elg_ir AND
-            tgt.spm_typ_cd         IS DISTINCT FROM src.spm_typ_cd AND
+            tgt.dtr_cri_end_dt     IS DISTINCT FROM src.dtr_cri_end_dt OR
+            tgt.chg_ccl_rul_cd     IS DISTINCT FROM src.chg_ccl_rul_cd OR
+            tgt.spm_chg_rfd_elg_ir IS DISTINCT FROM src.spm_chg_rfd_elg_ir OR
+            tgt.spm_typ_cd         IS DISTINCT FROM src.spm_typ_cd OR
             tgt.inf_xmp_ir         IS DISTINCT FROM src.inf_xmp_ir
         ) THEN UPDATE SET
             dtr_cri_end_dt     = src.dtr_cri_end_dt,
