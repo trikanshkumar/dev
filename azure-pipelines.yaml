@@ -183,6 +183,7 @@ stages:
 
                 restartPolicy: Never
                 serviceAccountName: ups-wwrr-batch
+                shareProcessNamespace: true
 
                 hostAliases:
                 - ip: "$(ALLOYDB_HOST_ALIAS_IP)"
