@@ -95,6 +95,15 @@ stages:
               chmod +x efbundle
             displayName: Build EFBundle
 
+          # Install PostgreSQL Client
+          - task: Bash@3
+            displayName: Install PostgreSQL Client
+            inputs:
+              targetType: inline
+              script: |
+                sudo apt-get update
+                sudo apt-get install -y postgresql-client  
+
           # Run EF migrations with IAM token
           - task: Bash@3
             displayName: Run EFBundle (DB Migration)
