@@ -82,10 +82,9 @@ public class CopyBatchDataServiceTest
         var result = await sut.CopyAsync(_filePath, _table, CancellationToken.None);
 
         // Assert
-        // 2 chunks × 3 lines each (including header) = 6 attempted (excluding headers = 4, but CountLinesStreaming counts differently)
-        // Each chunk: "Id,Name\n1,A\n2,B\n" has 4 lines (3 newlines + 1), minus 1 header = 3 attempted per chunk
-        // Actually: CountLinesStreaming("Id,Name\n1,A\n2,B\n") = 4 (1 base + 3 newlines), minus 1 = 3 per chunk, × 2 = 6
-        Assert.Equal(6, result.TotalRowsAttempted);
+        // 2 chunks × 3 lines each (header + 2 data rows), trailing newline excluded
+        // Each chunk: "Id,Name\n1,A\n2,B\n" has 3 lines (trailing newline is not an extra line), minus 1 header = 2 per chunk, × 2 = 4
+        Assert.Equal(4, result.TotalRowsAttempted);
         _csvSplitterMock.Verify(s => s.SplitAsync(_filePath, 2, true, It.IsAny<CancellationToken>()), Times.Once);
 
         // Verify TRUNCATE was called once

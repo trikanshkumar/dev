@@ -287,6 +287,8 @@ namespace UPS.WWRR.Business.Services
             var count = 1;
             for (int i = 0; i < chunk.Length; i++)
                 if (chunk[i] == '\n') count++;
+            // If the chunk ends with a newline, the trailing newline does not indicate an additional line
+            if (chunk[^1] == '\n') count--;
             return count;
         }
 
