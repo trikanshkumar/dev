@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - feature/dev
+      - feature/dev2
 
 parameters:
   - name: environment
@@ -162,8 +162,7 @@ stages:
                 fi
                 echo "Deploying to GKE using dynamic AlloyDB connection"    
                 helm upgrade --install ups-wwrr-batch ./manifests/ups-wwrr-batch \
-                  --namespace default \
-                  --create-namespace \
+                  --namespace wwrr-${{ parameters.environment }} \
                   --wait \
                   --timeout 600s \
                   --force \
