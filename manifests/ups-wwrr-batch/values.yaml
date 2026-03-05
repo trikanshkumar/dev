@@ -6,7 +6,7 @@ image:
   pullPolicy: Always
 
 serviceAccount:
-  create: true
+  create: false
   annotations: {}
   name: ups-wwrr-batch
 
