@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - feature/dev2
+      - feature/dev
 
 parameters:
   - name: environment
