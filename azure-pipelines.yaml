@@ -118,13 +118,13 @@ stages:
                 IAM_TOKEN=$(gcloud auth print-access-token)
                 export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
 
-                echo "Configuring AlloyDB PSC DNS..."
-                PSC_IP="10.233.22.162"
-                PSC_HOST="90bfc332-39e1-45f1-bf50-c4ce154ccc15.4f5a857a-3129-46be-a930-f7ec6240807c.us-east4.alloydb-psc.goog"
+                # echo "Configuring AlloyDB PSC DNS..."
+                # PSC_IP="10.233.22.162"
+                # PSC_HOST="90bfc332-39e1-45f1-bf50-c4ce154ccc15.4f5a857a-3129-46be-a930-f7ec6240807c.us-east4.alloydb-psc.goog"
 
-                echo "$PSC_IP $PSC_HOST" | sudo tee -a /etc/hosts
+                # echo "$PSC_IP $PSC_HOST" | sudo tee -a /etc/hosts
 
-                echo "Starting AlloyDB Auth Proxy..."
+                # echo "Starting AlloyDB Auth Proxy..."
 
                 curl -L https://storage.googleapis.com/alloydb-auth-proxy/v1.13.11/alloydb-auth-proxy.linux.amd64 \
                   -o alloydb-auth-proxy
@@ -136,6 +136,7 @@ stages:
                 --auto-iam-authn \
                 --psc \
                 --address=127.0.0.1 \
+                --psc-target-ip=10.233.22.162 \
                 --port=5432 &
 
                 echo "Waiting for proxy..."
