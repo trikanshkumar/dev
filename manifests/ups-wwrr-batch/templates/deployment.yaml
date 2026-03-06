@@ -45,6 +45,8 @@ spec:
               value: {{ .Values.env.BatchLoad_Delimiter | quote }}
             - name: BatchLoad_HasHeader
               value: {{ .Values.env.BatchLoad_HasHeader | quote }}
+            - name: EnableIAMTokenAuth
+              value: {{ .Values.env.EnableIAMTokenAuth | quote }}
 
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
