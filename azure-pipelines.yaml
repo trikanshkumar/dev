@@ -140,20 +140,8 @@ stages:
             --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
             --project=$(GCP_PROJECT_ID))
           BASE_CONNECTION=$(echo "$BASE_CONNECTION" | sed 's/SslMode=Require/SslMode=Disable/g')
-          BASE_CONNECTION="${BASE_CONNECTION};Trust Server Certificate=true"
 
-          echo "##vso[task.setvariable variable=ALLOYDB_CONNECTION;issecret=true]$BASE_CONNECTION"
-
-          # BASE_CONNECTION=$(gcloud secrets versions access latest \
-          #   --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
-          #   --project=$(GCP_PROJECT_ID))
-
-          # IAM_TOKEN=$(gcloud auth print-access-token \
-          #   --impersonate-service-account=$(ALLOYDB_ADMIN_EMAIL))
-          # BASE_CONNECTION=$(echo "$BASE_CONNECTION" | sed 's/SslMode=Require/SslMode=Disable/g')  
-          # FINAL_CONN="${BASE_CONNECTION};Password=${IAM_TOKEN}"
-
-          # echo "##vso[task.setvariable variable=ALLOYDB_CONNECTION;issecret=true]$FINAL_CONN"      
+          echo "##vso[task.setvariable variable=ALLOYDB_CONNECTION;issecret=true]$BASE_CONNECTION"   
 
     - task: Bash@3
       displayName: Run EFBundle (DB Migration) Job
@@ -213,7 +201,9 @@ stages:
                     - name: BatchLoad_Delimiter
                       value: "$(BatchLoad_Delimiter)"
                     - name: BatchLoad_HasHeader
-                      value: "$(BatchLoad_HasHeader)"   
+                      value: "$(BatchLoad_HasHeader)"
+                    - name: EnableIAMTokenAuth
+                      value: "$(EnableIAMTokenAuth)"  
         
 
                   command:
@@ -293,7 +283,7 @@ stages:
           --set-string env.BATCH_SIZE="$(BATCH_SIZE)" \
           --set-string env.ASPNETCORE_ENVIRONMENT="$(ASPNETCORE_ENVIRONMENT)" \
           --set-string env.ALLOYDB_CONNECTION="$(ALLOYDB_CONNECTION)" \
-          --set-string env.EnableIAMTokenAuth="false" \
+          --set-string env.EnableIAMTokenAuth="$(EnableIAMTokenAuth)" \
           --set-string env.BatchLoad_ChunkSize="$(BatchLoad_ChunkSize)" \
           --set-string env.BatchLoad_Delimiter="$(BatchLoad_Delimiter)" \
           --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)" \
