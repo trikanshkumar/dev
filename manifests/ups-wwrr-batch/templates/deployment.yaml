@@ -14,6 +14,10 @@ spec:
     spec:
       serviceAccountName: {{ include "ups-wwrr-batch.serviceAccountName" . }}
       terminationGracePeriodSeconds: 60
+        hostAliases:
+        - ip: "{{ .Values.ALLOYDB_HOST_ALIAS_IP }}"
+          hostnames:
+          - "{{ .Values.ALLOYDB_HOST_ALIAS_NAME }}"
 
       containers:
 
