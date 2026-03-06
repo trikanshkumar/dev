@@ -20,6 +20,7 @@ env:
   BatchLoad_ChunkSize: ""
   BatchLoad_Delimiter: ""
   BatchLoad_HasHeader: ""
+  EnableIAMTokenAuth: ""
 
 ALLOYDB_INSTANCE: ""
 ALLOYDB_HOST_ALIAS_IP: ""
