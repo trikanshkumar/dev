@@ -294,7 +294,8 @@ stages:
           --set-string env.ALLOYDB_CONNECTION="$(ALLOYDB_CONNECTION)" \
           --set-string env.BatchLoad_ChunkSize="$(BatchLoad_ChunkSize)" \
           --set-string env.BatchLoad_Delimiter="$(BatchLoad_Delimiter)" \
-          --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)"        
+          --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)"   
+          --set-string ALLOYDB_INSTANCE="projects/$(GCP_PROJECT_ID)/locations/$(GCP_REGION)/clusters/wwrr-${{ parameters.environment }}-alloydb/instances/primary"     
 
     - task: Bash@3
       displayName: Cleanup
