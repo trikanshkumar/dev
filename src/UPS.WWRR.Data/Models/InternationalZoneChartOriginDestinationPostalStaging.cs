@@ -36,15 +36,15 @@ namespace UPS.WWRR.Data.Models
         public string OriginGpuNumber { get; set; } = string.Empty;
 
         [Required, StringLength(9)]
-        [Column("org_rng_lo_psl_cd", TypeName = "varchar(9)")]
+        [Column("org_rng_lo_psl_cd", TypeName = "char(9)")]
         public string OriginRangeLowPostalCode { get; set; } = string.Empty;
 
         [Required, StringLength(9)]
-        [Column("org_rng_hi_psl_cd", TypeName = "varchar(9)")]
+        [Column("org_rng_hi_psl_cd", TypeName = "char(9)")]
         public string OriginRangeHighPostalCode { get; set; } = string.Empty;
 
         [Required, StringLength(50)]
-        [Column("org_pol_div_2_na", TypeName = "varchar(50)")]
+        [Column("org_pol_div_2_na", TypeName = "char(50)")]
         public string OriginPoliticalDivision2Name { get; set; } = string.Empty;
 
         [Required, StringLength(2)]
@@ -56,11 +56,11 @@ namespace UPS.WWRR.Data.Models
         public string DestinationGpuNumber { get; set; } = string.Empty;
 
         [Required, StringLength(9)]
-        [Column("dtn_rng_lo_psl_cd", TypeName = "varchar(9)")]
+        [Column("dtn_rng_lo_psl_cd", TypeName = "char(9)")]
         public string DestinationRangeLowPostalCode { get; set; } = string.Empty;
 
         [Required, StringLength(9)]
-        [Column("dtn_rng_hi_psl_cd", TypeName = "varchar(9)")]
+        [Column("dtn_rng_hi_psl_cd", TypeName = "char(9)")]
         public string DestinationRangeHighPostalCode { get; set; } = string.Empty;
 
         [Required, StringLength(50)]
@@ -68,7 +68,7 @@ namespace UPS.WWRR.Data.Models
         public string DestinationPoliticalDivision2Name { get; set; } = string.Empty;
 
         [Required, StringLength(6)]
-        [Column("del_zn_nr", TypeName = "varchar(6)")]
+        [Column("del_zn_nr", TypeName = "char(6)")]
         public string DeliveryZoneNumber { get; set; } = string.Empty;
 
         [Required]

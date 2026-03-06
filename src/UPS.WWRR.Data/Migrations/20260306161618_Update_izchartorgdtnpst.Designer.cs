@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UPS.WWRR.Data.Models;
@@ -11,9 +12,11 @@ using UPS.WWRR.Data.Models;
 namespace UPS.WWRR.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260306161618_Update_izchartorgdtnpst")]
+    partial class Update_izchartorgdtnpst
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3489,7 +3492,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.Property<string>("ZoneIncentiveTypeCode")
                         .IsRequired()
-                        .HasMaxLength(2)
+                        .HasMaxLength(3)
                         .HasColumnType("char")
                         .HasColumnName("zn_ncv_typ_cd");
 
@@ -3524,7 +3527,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.Property<string>("ZoneIncentiveTypeCode")
                         .IsRequired()
-                        .HasMaxLength(2)
+                        .HasMaxLength(3)
                         .HasColumnType("char")
                         .HasColumnName("zn_ncv_typ_cd");
 
@@ -5347,7 +5350,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.Property<string>("ZoneIncentiveTypeCode")
                         .IsRequired()
-                        .HasMaxLength(2)
+                        .HasMaxLength(3)
                         .HasColumnType("char")
                         .HasColumnName("zn_ncv_typ_cd");
 
@@ -5381,7 +5384,7 @@ namespace UPS.WWRR.Data.Migrations
 
                     b.Property<string>("ZoneIncentiveTypeCode")
                         .IsRequired()
-                        .HasMaxLength(2)
+                        .HasMaxLength(3)
                         .HasColumnType("char")
                         .HasColumnName("zn_ncv_typ_cd");
 

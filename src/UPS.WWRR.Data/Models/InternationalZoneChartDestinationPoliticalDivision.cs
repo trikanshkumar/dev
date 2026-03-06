@@ -24,7 +24,7 @@ namespace UPS.WWRR.Data.Models
         public string DestinationCountryCode { get; set; } = string.Empty;
 
         [Required, StringLength(5)]
-        [Column("dtn_pol_div_1_cd", TypeName = "varchar(5)")]
+        [Column("dtn_pol_div_1_cd", TypeName = "char(5)")]
         public string DestinationPoliticalDivision1Code { get; set; } = string.Empty;
 
         [StringLength(100)]

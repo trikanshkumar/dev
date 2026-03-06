@@ -14,12 +14,12 @@ namespace UPS.WWRR.Data.Models
         [Column("zch_nr", TypeName = "integer")]
         public int ZoneChartNumber { get; set; }
 
-        [Required, StringLength(50)]
-        [Column("zch_sht_dsc_te", TypeName = "varchar(50)")]
+        [Required, StringLength(35)]
+        [Column("zch_sht_dsc_te", TypeName = "char(35)")]
         public string ZoneChartShortDescriptionText { get; set; } = string.Empty;
 
-        [Required, StringLength(150)]
-        [Column("zch_lg_dsc_te", TypeName = "varchar(150)")]
+        [Required, StringLength(100)]
+        [Column("zch_lg_dsc_te", TypeName = "char(100)")]
         public string ZoneChartLongDescriptionText { get; set; } = string.Empty;
 
         [StringLength(100)]
