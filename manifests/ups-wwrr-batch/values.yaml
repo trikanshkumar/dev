@@ -20,6 +20,8 @@ env:
   BatchLoad_ChunkSize: ""
   BatchLoad_Delimiter: ""
   BatchLoad_HasHeader: ""
+  
+ALLOYDB_INSTANCE: ""
 
 resources:
   requests:
