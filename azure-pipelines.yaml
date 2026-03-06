@@ -139,7 +139,8 @@ stages:
           BASE_CONNECTION=$(gcloud secrets versions access latest \
             --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
             --project=$(GCP_PROJECT_ID))
-          BASE_CONNECTION=$(echo "$BASE_CONNECTION" | sed 's/SslMode=Require/SslMode=Disable/g')  
+          BASE_CONNECTION=$(echo "$BASE_CONNECTION" | sed 's/SslMode=Require/SslMode=Disable/g')
+          BASE_CONNECTION="${BASE_CONNECTION};Trust Server Certificate=true"
 
           echo "##vso[task.setvariable variable=ALLOYDB_CONNECTION;issecret=true]$BASE_CONNECTION"
 
