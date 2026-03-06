@@ -27,7 +27,8 @@ BEGIN
                dco_cd_dsc_te,
                cd_tbl_stt_dt,
                cd_tbl_end_dt,
-               apv_sts_cd
+               apv_sts_cd,
+               load_ref_te
           FROM tczmsys_stg
     ),
     cc_merge AS (
@@ -41,10 +42,12 @@ BEGIN
             tgt.apv_sts_cd     = src.apv_sts_cd
         )
         WHEN MATCHED AND (
-            tgt.dco_cd_dsc_te IS DISTINCT FROM src.dco_cd_dsc_te
+            tgt.dco_cd_dsc_te IS DISTINCT FROM src.dco_cd_dsc_te OR
+            tgt.load_ref_te   IS DISTINCT FROM src.load_ref_te
         )
             THEN UPDATE SET
-                dco_cd_dsc_te = src.dco_cd_dsc_te
+                dco_cd_dsc_te = src.dco_cd_dsc_te,
+                load_ref_te   = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 cd_tbl_typ_cd,
@@ -52,14 +55,16 @@ BEGIN
                 dco_cd_dsc_te,
                 cd_tbl_stt_dt,
                 cd_tbl_end_dt,
-                apv_sts_cd
+                apv_sts_cd,
+                load_ref_te
             ) VALUES (
                 src.cd_tbl_typ_cd,
                 src.cd_tbl_cd,
                 src.dco_cd_dsc_te,
                 src.cd_tbl_stt_dt,
                 src.cd_tbl_end_dt,
-                src.apv_sts_cd
+                src.apv_sts_cd,
+                src.load_ref_te
             )
         WHEN NOT MATCHED BY SOURCE THEN
             DELETE

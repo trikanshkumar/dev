@@ -28,7 +28,8 @@ BEGIN
                bil_ter_typ_cd,
                cny_bil_ter_stt_dt,
                cny_bil_ter_end_dt,
-               apv_sts_cd
+               apv_sts_cd,
+               load_ref_te
           FROM tcyblty_stg
     ),
     cc_merge AS (
@@ -42,8 +43,11 @@ BEGIN
             tgt.cny_bil_ter_end_dt   = src.cny_bil_ter_end_dt AND
             tgt.apv_sts_cd           = src.apv_sts_cd
         )
-        WHEN MATCHED THEN
-            DO NOTHING
+        WHEN MATCHED AND (
+            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+        ) THEN
+            UPDATE SET
+                load_ref_te = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 cny_cd,
@@ -51,14 +55,16 @@ BEGIN
                 bil_ter_typ_cd,
                 cny_bil_ter_stt_dt,
                 cny_bil_ter_end_dt,
-                apv_sts_cd
+                apv_sts_cd,
+                load_ref_te
             ) VALUES (
                 src.cny_cd,
                 src.mvm_drc_cd,
                 src.bil_ter_typ_cd,
                 src.cny_bil_ter_stt_dt,
                 src.cny_bil_ter_end_dt,
-                src.apv_sts_cd
+                src.apv_sts_cd,
+                src.load_ref_te
             )
         WHEN NOT MATCHED BY SOURCE THEN
             DELETE

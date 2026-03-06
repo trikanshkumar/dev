@@ -1,5 +1,5 @@
 CREATE OR REPLACE PROCEDURE sp_bmacapamount_merge_proc(
-    OUT insertcount integer,
+OUT insertcount integer,
     OUT updatecount integer,
     OUT deletecount integer,
     OUT errornumber text,
@@ -44,11 +44,13 @@ BEGIN
         WHEN MATCHED AND (
             tgt.max_ncv_pr      IS DISTINCT FROM src.max_ncv_pr OR
             tgt.ups_ofr_pgm_cd  IS DISTINCT FROM src.ups_ofr_pgm_cd OR
-            tgt.rec_eff_end_dt  IS DISTINCT FROM src.rec_eff_end_dt
+            tgt.rec_eff_end_dt  IS DISTINCT FROM src.rec_eff_end_dt OR
+            tgt.load_ref_te     IS DISTINCT FROM src.load_ref_te
         ) THEN UPDATE SET
             max_ncv_pr      = src.max_ncv_pr,
             ups_ofr_pgm_cd  = src.ups_ofr_pgm_cd,
-            rec_eff_end_dt  = src.rec_eff_end_dt
+            rec_eff_end_dt  = src.rec_eff_end_dt,
+            load_ref_te     = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 gpn_cd,
@@ -57,7 +59,8 @@ BEGIN
                 svc_ra_cht_sts_cd,
                 max_ncv_pr,
                 ups_ofr_pgm_cd,
-                rec_eff_end_dt
+                rec_eff_end_dt,
+                load_ref_te
             ) VALUES (
                 src.gpn_cd,
                 src.svc_typ_cd,
@@ -65,7 +68,8 @@ BEGIN
                 src.svc_ra_cht_sts_cd,
                 src.max_ncv_pr,
                 src.ups_ofr_pgm_cd,
-                src.rec_eff_end_dt
+                src.rec_eff_end_dt,
+                src.load_ref_te
             )
         WHEN NOT MATCHED BY SOURCE THEN
             DELETE
