@@ -1,5 +1,5 @@
 trigger:
-  - testing
+  - testing1
 
 parameters:
   - name: environment
