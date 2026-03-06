@@ -46,8 +46,9 @@ spec:
 
         - name: alloydb-auth-proxy
           image: gcr.io/alloydb-connectors/alloydb-auth-proxy:1.13.11
+
           args:
-            - "projects/{{ .Values.alloydb.project }}/locations/{{ .Values.alloydb.region }}/clusters/{{ .Values.alloydb.cluster }}/instances/{{ .Values.alloydb.instance }}"
+            - "projects/$(GCP_PROJECT_ID)/locations/$(GCP_REGION)/clusters/wwrr-${{ parameters.environment }}-alloydb/instances/primary"
             - "--psc"
             - "--address=127.0.0.1"
             - "--port=5432"
