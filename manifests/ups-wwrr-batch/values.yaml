@@ -20,8 +20,10 @@ env:
   BatchLoad_ChunkSize: ""
   BatchLoad_Delimiter: ""
   BatchLoad_HasHeader: ""
-  
+
 ALLOYDB_INSTANCE: ""
+ALLOYDB_HOST_ALIAS_IP: ""
+ALLOYDB_HOST_ALIAS_NAME: ""
 
 resources:
   requests:
