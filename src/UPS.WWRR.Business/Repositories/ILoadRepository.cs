@@ -15,6 +15,8 @@ namespace UPS.WWRR.Business.Repositories
 
         Task UpdateTotalBatchNumber(long loadId, int totalBatchNumber, CancellationToken ct = default);
 
+        Task UpdateFileLocation(long loadId, string fileLocation, CancellationToken ct = default);
+
         Task<DataLoadDetail> AddDetailAsync(DataLoadDetail detail, CancellationToken ct = default);
 
         Task UpdateDetailAsync(DataLoadDetail detail, CancellationToken ct = default);

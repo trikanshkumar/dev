@@ -11,6 +11,7 @@
         public const string processedDataFilesFolder = "ProcessedDataFiles";
         public const string csvValidationError = "CSV_Validation_Failed";
         public const string filenameCaseMismatchError = "Filename_Case_Mismatch";
+        public const string fileNotFoundError = "File_Not_Found";
         // Regex pattern that matches timestamps like yyyy-MM-dd-HH.mm.ss.ffffff (date with dashes, time with dots, 1–6 fractional digits)
         public const string DashDotTimestampRegexPattern = @"(\d{4}-\d{2}-\d{2})-(\d{2})\.(\d{2})\.(\d{2})\.(\d{1,6})";
 

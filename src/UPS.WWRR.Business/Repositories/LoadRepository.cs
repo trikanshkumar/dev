@@ -47,6 +47,14 @@ namespace UPS.WWRR.Business.Repositories
             await _db.SaveChangesAsync(ct);
         }
 
+        public async Task UpdateFileLocation(long loadId, string fileLocation, CancellationToken ct = default)
+        {
+            var load = await _db.DataLoads.FirstOrDefaultAsync(l => l.Id == loadId, ct);
+            if (load == null) return;
+            load.FileLocation = fileLocation;
+            await _db.SaveChangesAsync(ct);
+        }
+
         public async Task<DataLoadDetail> AddDetailAsync(DataLoadDetail detail, CancellationToken ct = default)
         {
             detail.CreatedOn = Utc(detail.CreatedOn == default ? DateTime.UtcNow : detail.CreatedOn);

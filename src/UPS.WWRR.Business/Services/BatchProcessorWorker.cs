@@ -894,7 +894,7 @@ namespace UPS.WWRR.Business.Services
                                 TableName = descriptor.TableName,
                                 TableKey = $"LOAD:{load.Id}",
                                 ErrorFieldName = ServiceConstants.filenameCaseMismatchError,
-                                ErrorFieldValue = errorMessage[..100],
+                                ErrorFieldValue = errorMessage.Length > 100 ? errorMessage[..100] : errorMessage,
                                 CreatedOn = DateTime.UtcNow
                             };
 
@@ -910,10 +910,27 @@ namespace UPS.WWRR.Business.Services
                             }
                             continue;
                         }
+                        
                         _logger.LogError("File not found in GCS bucket. Bucket: {bucket}, Object: {object}, FileLocation: {fileLocation}",
                             _gcpBucketName, gcsFileName, load.FileLocation);
                         await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
                         
+                        DataLoadDetail fileNotFoundDetail = await CreateDataLoadDetailForError(load, ct);
+                        var fileNotFoundMessage = $"File not found: {load.FileLocation}";
+                        var fileNotFoundException = new DataLoadException
+                        {
+                            DataLoadDetailId = fileNotFoundDetail.Id,
+                            TableName = descriptor.TableName,
+                            TableKey = $"LOAD:{load.Id}",
+                            ErrorFieldName = ServiceConstants.fileNotFoundError,
+                            ErrorFieldValue = fileNotFoundMessage.Length > 100 ? fileNotFoundMessage[..100] : fileNotFoundMessage,
+                            CreatedOn = DateTime.UtcNow
+                        };
+
+                        await _loadRepository.AddExceptionsAsync([fileNotFoundException], ct);
+
+                        await _loadRepository.UpdateFileLocation(load.Id, "", ct);
+
                         // Clean up temp file (even though download didn't happen, the temp file was created)
                         if (tempFile != null)
                         {
