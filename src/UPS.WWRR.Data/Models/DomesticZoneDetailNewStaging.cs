@@ -21,7 +21,7 @@ namespace UPS.WWRR.Data.Models
         [Column("svc_typ_cd", TypeName = "char")]
         public string ServiceTypeCode { get; set; } = string.Empty;
 
-        [Required, StringLength(3)]
+        [Required, StringLength(2)]
         [Column("zn_ncv_typ_cd", TypeName = "char")]
         public string ZoneIncentiveTypeCode { get; set; } = string.Empty;
 
