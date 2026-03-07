@@ -47,8 +47,7 @@ BEGIN
         )
         WHEN MATCHED AND (
             tgt.dtr_cri_end_dt IS DISTINCT FROM src.dtr_cri_end_dt OR
-            tgt.dcl_vlu_max_a  IS DISTINCT FROM src.dcl_vlu_max_a OR
-            tgt.load_ref_te    IS DISTINCT FROM src.load_ref_te
+            tgt.dcl_vlu_max_a  IS DISTINCT FROM src.dcl_vlu_max_a 
         ) THEN
             UPDATE SET
                 dtr_cri_end_dt = src.dtr_cri_end_dt,

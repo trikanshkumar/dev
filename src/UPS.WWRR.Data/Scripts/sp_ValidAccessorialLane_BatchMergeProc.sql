@@ -105,8 +105,8 @@ BEGIN
                AND tgt.asy_svc_alt_nmc_cd = src.asy_svc_alt_nmc_cd
                AND tgt.org_gpn_mnm_te = src.org_gpn_mnm_te
                AND tgt.dtn_gpn_mnm_te = src.dtn_gpn_mnm_te
-            WHEN MATCHED AND (tgt.svc_typ_alt_nmc_cd, tgt.rec_eff_end_dt, tgt.load_ref_te)
-                IS DISTINCT FROM (src.svc_typ_alt_nmc_cd, src.rec_eff_end_dt, src.load_ref_te) THEN
+            WHEN MATCHED AND (tgt.svc_typ_alt_nmc_cd, tgt.rec_eff_end_dt)
+                IS DISTINCT FROM (src.svc_typ_alt_nmc_cd, src.rec_eff_end_dt) THEN
                 UPDATE SET
                     svc_typ_alt_nmc_cd = src.svc_typ_alt_nmc_cd,
                     rec_eff_end_dt = src.rec_eff_end_dt,

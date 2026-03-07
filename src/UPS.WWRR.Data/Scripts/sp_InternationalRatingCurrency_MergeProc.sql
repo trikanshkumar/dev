@@ -39,8 +39,7 @@ BEGIN
             tgt.apv_sts_cd    = src.apv_sts_cd
         )
         WHEN MATCHED AND (
-            tgt.rtg_ccy_end_dt IS DISTINCT FROM src.rtg_ccy_end_dt OR
-            tgt.load_ref_te    IS DISTINCT FROM src.load_ref_te
+            tgt.rtg_ccy_end_dt IS DISTINCT FROM src.rtg_ccy_end_dt 
         ) THEN
             UPDATE SET
                 rtg_ccy_end_dt = src.rtg_ccy_end_dt,

@@ -70,8 +70,7 @@ BEGIN
         )
         WHEN MATCHED AND (
             tgt.rec_eff_end_dt IS DISTINCT FROM src.rec_eff_end_dt OR
-            tgt.dtr_cha_vlu_qy IS DISTINCT FROM src.dtr_cha_vlu_qy OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.dtr_cha_vlu_qy IS DISTINCT FROM src.dtr_cha_vlu_qy 
         ) THEN UPDATE SET
             rec_eff_end_dt = src.rec_eff_end_dt,
             dtr_cha_vlu_qy = src.dtr_cha_vlu_qy,

@@ -38,8 +38,7 @@ BEGIN
         )
         WHEN MATCHED AND (
             tgt.nxt_lwr_svc_typ_cd IS DISTINCT FROM src.nxt_lwr_svc_typ_cd OR
-            tgt.rec_eff_end_dt     IS DISTINCT FROM src.rec_eff_end_dt OR
-            tgt.load_ref_te        IS DISTINCT FROM src.load_ref_te
+            tgt.rec_eff_end_dt     IS DISTINCT FROM src.rec_eff_end_dt 
         ) THEN
             UPDATE SET
                 nxt_lwr_svc_typ_cd = src.nxt_lwr_svc_typ_cd,

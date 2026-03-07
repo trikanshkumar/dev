@@ -92,8 +92,7 @@ BEGIN
             tgt.svc_ra_cht_end_dt = src.svc_ra_cht_end_dt
         )
         WHEN MATCHED AND (
-            tgt.svc_ra_cht_sts_cd IS DISTINCT FROM src.svc_ra_cht_sts_cd OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.svc_ra_cht_sts_cd IS DISTINCT FROM src.svc_ra_cht_sts_cd 
         ) THEN UPDATE SET
             svc_ra_cht_sts_cd = src.svc_ra_cht_sts_cd,
             load_ref_te = src.load_ref_te

@@ -62,8 +62,7 @@ BEGIN
         )
         WHEN MATCHED AND (
             tgt.svc_typ_alt_nmc_cd IS DISTINCT FROM src.svc_typ_alt_nmc_cd OR
-            tgt.rec_eff_end_dt     IS DISTINCT FROM src.rec_eff_end_dt OR
-            tgt.load_ref_te        IS DISTINCT FROM src.load_ref_te
+            tgt.rec_eff_end_dt     IS DISTINCT FROM src.rec_eff_end_dt 
         ) THEN UPDATE SET
             svc_typ_alt_nmc_cd = src.svc_typ_alt_nmc_cd,
             rec_eff_end_dt     = src.rec_eff_end_dt,

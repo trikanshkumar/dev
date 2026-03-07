@@ -66,8 +66,7 @@ BEGIN
             tgt.ins_min_wgt_qy    IS DISTINCT FROM src.ins_min_wgt_qy OR
             tgt.ins_max_wgt_qy    IS DISTINCT FROM src.ins_max_wgt_qy OR
             tgt.ins_cri_eff_end_dt IS DISTINCT FROM src.ins_cri_eff_end_dt OR
-            tgt.isn_max_dcl_vlu_a IS DISTINCT FROM src.isn_max_dcl_vlu_a OR
-            tgt.load_ref_te       IS DISTINCT FROM src.load_ref_te
+            tgt.isn_max_dcl_vlu_a IS DISTINCT FROM src.isn_max_dcl_vlu_a 
         )
             THEN UPDATE SET
                 ins_bss_a          = src.ins_bss_a,

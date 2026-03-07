@@ -52,7 +52,6 @@ BEGIN
             tgt.rec_eff_stt_dt    = src.rec_eff_stt_dt
         )
         WHEN MATCHED AND (
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te OR
             tgt.rec_eff_end_dt  IS DISTINCT FROM src.rec_eff_end_dt
         ) THEN UPDATE SET
             load_ref_te = src.load_ref_te,

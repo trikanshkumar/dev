@@ -28,7 +28,8 @@ BEGIN
                dtr_cri_eff_dt,
                dtr_cri_end_dt,
                dtr_cri_vlu_qy,
-               cus_csf_typ_cd
+               cus_csf_typ_cd,
+               load_ref_te
           FROM tinftrh_stg
     ),
     cc_merge AS (
@@ -47,7 +48,8 @@ BEGIN
         )
             THEN UPDATE SET
                 dtr_cri_end_dt = src.dtr_cri_end_dt,
-                dtr_cri_vlu_qy = src.dtr_cri_vlu_qy
+                dtr_cri_vlu_qy = src.dtr_cri_vlu_qy,
+                load_ref_te    = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 cny_cd,
@@ -56,7 +58,8 @@ BEGIN
                 dtr_cri_eff_dt,
                 dtr_cri_end_dt,
                 dtr_cri_vlu_qy,
-                cus_csf_typ_cd
+                cus_csf_typ_cd,
+                load_ref_te
             ) VALUES (
                 src.cny_cd,
                 src.asy_svc_typ_cd,
@@ -64,7 +67,8 @@ BEGIN
                 src.dtr_cri_eff_dt,
                 src.dtr_cri_end_dt,
                 src.dtr_cri_vlu_qy,
-                src.cus_csf_typ_cd
+                src.cus_csf_typ_cd,
+                src. load_ref_te
             )
         WHEN NOT MATCHED BY SOURCE THEN
             DELETE
