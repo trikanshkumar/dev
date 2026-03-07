@@ -20,6 +20,11 @@ env:
   BatchLoad_ChunkSize: ""
   BatchLoad_Delimiter: ""
   BatchLoad_HasHeader: ""
+  EnableIAMTokenAuth: ""
+
+ALLOYDB_INSTANCE: ""
+ALLOYDB_HOST_ALIAS_IP: ""
+ALLOYDB_HOST_ALIAS_NAME: ""
 
 resources:
   requests:
@@ -28,6 +33,15 @@ resources:
   limits:
     memory: "4Gi"
     cpu: "4"
+
+alloydbProxy:
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
 
 nodeSelector: {}
 tolerations: []
