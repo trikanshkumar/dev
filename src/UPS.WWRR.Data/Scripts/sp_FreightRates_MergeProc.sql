@@ -57,8 +57,7 @@ BEGIN
             tgt.wgt_cgy_max_wgt_qy  IS DISTINCT FROM src.wgt_cgy_max_wgt_qy OR
             tgt.ac_spl_bil_ter_pr   IS DISTINCT FROM src.ac_spl_bil_ter_pr OR
             tgt.cns_spl_bil_ter_pr  IS DISTINCT FROM src.cns_spl_bil_ter_pr OR
-            tgt.svc_ra_cht_end_dt   IS DISTINCT FROM src.svc_ra_cht_end_dt OR
-            tgt.load_ref_te         IS DISTINCT FROM src.load_ref_te
+            tgt.svc_ra_cht_end_dt   IS DISTINCT FROM src.svc_ra_cht_end_dt
         ) THEN UPDATE SET
             wgt_cgy_max_wgt_qy  = src.wgt_cgy_max_wgt_qy,
             ac_spl_bil_ter_pr   = src.ac_spl_bil_ter_pr,

@@ -31,7 +31,8 @@ BEGIN
                alt_ccy_xch_or_qy,
                alt_ccy_dmc_ccl_qy,
                alt_ccy_rou_dmc_qy,
-               usr_nr
+               usr_nr,
+               load_ref_te
           FROM taltccy_stg
     ),
     cc_merge AS (
@@ -56,7 +57,8 @@ BEGIN
                 alt_ccy_xch_or_qy  = src.alt_ccy_xch_or_qy,
                 alt_ccy_dmc_ccl_qy = src.alt_ccy_dmc_ccl_qy,
                 alt_ccy_rou_dmc_qy = src.alt_ccy_rou_dmc_qy,
-                usr_nr             = src.usr_nr
+                usr_nr             = src.usr_nr,
+                load_ref_te        = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 xpt_cny_cd,
@@ -68,7 +70,8 @@ BEGIN
                 alt_ccy_xch_or_qy,
                 alt_ccy_dmc_ccl_qy,
                 alt_ccy_rou_dmc_qy,
-                usr_nr
+                usr_nr,
+                load_ref_te
             ) VALUES (
                 src.xpt_cny_cd,
                 src.cnv_fr_ccy_cd,
@@ -79,7 +82,8 @@ BEGIN
                 src.alt_ccy_xch_or_qy,
                 src.alt_ccy_dmc_ccl_qy,
                 src.alt_ccy_rou_dmc_qy,
-                src.usr_nr
+                src.usr_nr,
+                src.load_ref_te
             )
         WHEN NOT MATCHED BY SOURCE THEN
             DELETE

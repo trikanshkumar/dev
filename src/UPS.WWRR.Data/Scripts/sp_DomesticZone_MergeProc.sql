@@ -42,8 +42,7 @@ lkup_merge AS (
         )
         WHEN MATCHED AND (
             tgt.zch_sht_dsc_te IS DISTINCT FROM src.zch_sht_dsc_te OR
-            tgt.zch_lg_dsc_te IS DISTINCT FROM src.zch_lg_dsc_te OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.zch_lg_dsc_te IS DISTINCT FROM src.zch_lg_dsc_te
         ) THEN UPDATE SET
             zch_sht_dsc_te = src.zch_sht_dsc_te,
             zch_lg_dsc_te = src.zch_lg_dsc_te,
@@ -84,8 +83,7 @@ lkup_merge AS (
             tgt.svc_typ_cd = src.svc_typ_cd
         )
         WHEN MATCHED AND (
-            tgt.zn_ncv_typ_cd IS DISTINCT FROM src.zn_ncv_typ_cd OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.zn_ncv_typ_cd IS DISTINCT FROM src.zn_ncv_typ_cd
         ) THEN UPDATE SET
             zn_ncv_typ_cd = src.zn_ncv_typ_cd,
             load_ref_te = src.load_ref_te
@@ -126,8 +124,7 @@ lkup_merge AS (
         )
         WHEN MATCHED AND (
             tgt.svc_typ_cd IS DISTINCT FROM src.svc_typ_cd OR
-            tgt.mvm_drc_cd IS DISTINCT FROM src.mvm_drc_cd OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.mvm_drc_cd IS DISTINCT FROM src.mvm_drc_cd
         ) THEN UPDATE SET
             svc_typ_cd = src.svc_typ_cd,
             mvm_drc_cd = src.mvm_drc_cd,
@@ -174,8 +171,7 @@ lkup_merge AS (
         WHEN MATCHED AND (
             tgt.dtn_cny_cd IS DISTINCT FROM src.dtn_cny_cd OR
             tgt.dtn_rng_hi_psl_cd IS DISTINCT FROM src.dtn_rng_hi_psl_cd OR
-            tgt.del_zn_nr IS DISTINCT FROM src.del_zn_nr OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.del_zn_nr IS DISTINCT FROM src.del_zn_nr
         ) THEN UPDATE SET
             dtn_cny_cd = src.dtn_cny_cd,
             dtn_rng_hi_psl_cd = src.dtn_rng_hi_psl_cd,
@@ -227,8 +223,7 @@ lkup_merge AS (
         )
         WHEN MATCHED AND (
             tgt.org_cny_cd IS DISTINCT FROM src.org_cny_cd OR
-            tgt.org_rng_hi_psl_cd IS DISTINCT FROM src.org_rng_hi_psl_cd OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.org_rng_hi_psl_cd IS DISTINCT FROM src.org_rng_hi_psl_cd
         ) THEN UPDATE SET
             org_cny_cd = src.org_cny_cd,
             org_rng_hi_psl_cd = src.org_rng_hi_psl_cd,

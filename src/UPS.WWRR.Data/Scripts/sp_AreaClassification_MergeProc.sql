@@ -43,8 +43,7 @@ BEGIN
         )
         WHEN MATCHED AND (
             tgt.zch_sht_dsc_te IS DISTINCT FROM src.zch_sht_dsc_te OR
-            tgt.zch_lg_dsc_te IS DISTINCT FROM src.zch_lg_dsc_te OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.zch_lg_dsc_te IS DISTINCT FROM src.zch_lg_dsc_te
         ) THEN UPDATE SET
             zch_sht_dsc_te = src.zch_sht_dsc_te,
             zch_lg_dsc_te = src.zch_lg_dsc_te,

@@ -42,8 +42,7 @@ BEGIN
             tgt.apv_sts_cd     = src.apv_sts_cd
         )
         WHEN MATCHED AND (
-            tgt.dco_cd_dsc_te IS DISTINCT FROM src.dco_cd_dsc_te OR
-            tgt.load_ref_te   IS DISTINCT FROM src.load_ref_te
+            tgt.dco_cd_dsc_te IS DISTINCT FROM src.dco_cd_dsc_te 
         )
             THEN UPDATE SET
                 dco_cd_dsc_te = src.dco_cd_dsc_te,

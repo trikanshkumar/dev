@@ -28,7 +28,8 @@ BEGIN
                wgt_dat_ppn_ir,
                apv_sts_cd,
                rec_eff_stt_dt,
-               rec_eff_end_dt
+               rec_eff_end_dt,
+               load_ref_te
           FROM tdfwthr_stg
     ),
     cc_merge AS (
@@ -48,7 +49,8 @@ BEGIN
             THEN UPDATE SET
                 dfw_rtg_min_wgt_qy = src.dfw_rtg_min_wgt_qy,
                 wgt_dat_ppn_ir     = src.wgt_dat_ppn_ir,
-                rec_eff_end_dt     = src.rec_eff_end_dt
+                rec_eff_end_dt     = src.rec_eff_end_dt,
+                load_ref_te        = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 cny_cd,
@@ -57,7 +59,8 @@ BEGIN
                 wgt_dat_ppn_ir,
                 apv_sts_cd,
                 rec_eff_stt_dt,
-                rec_eff_end_dt
+                rec_eff_end_dt,
+                load_ref_te
             ) VALUES (
                 src.cny_cd,
                 src.wgt_ms_unt_typ_cd,
@@ -65,7 +68,8 @@ BEGIN
                 src.wgt_dat_ppn_ir,
                 src.apv_sts_cd,
                 src.rec_eff_stt_dt,
-                src.rec_eff_end_dt
+                src.rec_eff_end_dt,
+                src.load_ref_te
             )
         WHEN NOT MATCHED BY SOURCE THEN
             DELETE

@@ -117,8 +117,8 @@ BEGIN
                AND tgt.asy_svc_ra_eff_dt  = src.asy_svc_ra_eff_dt
                AND tgt.svc_ra_cht_sts_cd  = src.svc_ra_cht_sts_cd
                AND tgt.cus_csf_typ_cd     = src.cus_csf_typ_cd
-            WHEN MATCHED AND (tgt.ccl_mth_typ_cd, tgt.asy_svc_ra_end_dt, tgt.asy_svc_ra, tgt.asy_svc_min_amt, tgt.load_ref_te)
-                IS DISTINCT FROM (src.ccl_mth_typ_cd, src.asy_svc_ra_end_dt, src.asy_svc_ra, src.asy_svc_min_amt, src.load_ref_te) THEN
+            WHEN MATCHED AND (tgt.ccl_mth_typ_cd, tgt.asy_svc_ra_end_dt, tgt.asy_svc_ra, tgt.asy_svc_min_amt)
+                IS DISTINCT FROM (src.ccl_mth_typ_cd, src.asy_svc_ra_end_dt, src.asy_svc_ra, src.asy_svc_min_amt) THEN
                 UPDATE SET
                     ccl_mth_typ_cd     = src.ccl_mth_typ_cd,
                     asy_svc_ra_end_dt  = src.asy_svc_ra_end_dt,
