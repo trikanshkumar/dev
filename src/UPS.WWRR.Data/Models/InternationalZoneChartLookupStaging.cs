@@ -20,8 +20,8 @@ namespace UPS.WWRR.Data.Models
         [Column("zch_sht_dsc_te", TypeName = "char(35)")]
         public string ZoneChartShortDescriptionText { get; set; } = string.Empty;
 
-        [Required, StringLength(100)]
-        [Column("zch_lg_dsc_te", TypeName = "char(100)")]
+        [Required, StringLength(135)]
+        [Column("zch_lg_dsc_te", TypeName = "char(135)")]
         public string ZoneChartLongDescriptionText { get; set; } = string.Empty;
 
         [Required]
