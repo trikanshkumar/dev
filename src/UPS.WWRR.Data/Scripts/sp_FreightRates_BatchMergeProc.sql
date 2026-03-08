@@ -135,15 +135,13 @@ BEGIN
                     tgt.wgt_cgy_max_wgt_qy,
                     tgt.ac_spl_bil_ter_pr,
                     tgt.cns_spl_bil_ter_pr,
-                    tgt.svc_ra_cht_end_dt,
-                    tgt.load_ref_te
+                    tgt.svc_ra_cht_end_dt
                 )
                 IS DISTINCT FROM (
                     src.wgt_cgy_max_wgt_qy,
                     src.ac_spl_bil_ter_pr,
                     src.cns_spl_bil_ter_pr,
-                    src.svc_ra_cht_end_dt,
-                    src.load_ref_te
+                    src.svc_ra_cht_end_dt
                 ) 
                 THEN
                 UPDATE SET

@@ -67,7 +67,8 @@ BEGIN
             chg_ccl_rul_cd     = src.chg_ccl_rul_cd,
             spm_chg_rfd_elg_ir = src.spm_chg_rfd_elg_ir,
             spm_typ_cd         = src.spm_typ_cd,
-            inf_xmp_ir         = src.inf_xmp_ir
+            inf_xmp_ir         = src.inf_xmp_ir,
+            load_ref_te        = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 gpn_xpt_cny_cd,

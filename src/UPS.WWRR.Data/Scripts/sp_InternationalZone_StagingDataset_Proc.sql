@@ -75,8 +75,7 @@ BEGIN
             tgt.inl_zn_hdr_end_dt   = src.inl_zn_hdr_end_dt
         )
         WHEN MATCHED AND (
-            tgt.bus_eny_acs_sts_cd IS DISTINCT FROM src.bus_eny_acs_sts_cd OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.bus_eny_acs_sts_cd IS DISTINCT FROM src.bus_eny_acs_sts_cd 
         ) THEN UPDATE SET
             bus_eny_acs_sts_cd = src.bus_eny_acs_sts_cd,
             load_ref_te = src.load_ref_te

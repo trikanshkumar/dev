@@ -44,8 +44,7 @@ BEGIN
         WHEN MATCHED AND (
             tgt.max_ncv_pr      IS DISTINCT FROM src.max_ncv_pr OR
             tgt.ups_ofr_pgm_cd  IS DISTINCT FROM src.ups_ofr_pgm_cd OR
-            tgt.rec_eff_end_dt  IS DISTINCT FROM src.rec_eff_end_dt OR
-            tgt.load_ref_te     IS DISTINCT FROM src.load_ref_te
+            tgt.rec_eff_end_dt  IS DISTINCT FROM src.rec_eff_end_dt
         ) THEN UPDATE SET
             max_ncv_pr      = src.max_ncv_pr,
             ups_ofr_pgm_cd  = src.ups_ofr_pgm_cd,

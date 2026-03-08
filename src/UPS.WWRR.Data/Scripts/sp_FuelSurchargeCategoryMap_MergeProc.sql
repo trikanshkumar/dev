@@ -55,8 +55,7 @@ BEGIN
         WHEN MATCHED AND (
             tgt.rec_eff_end_dt     IS DISTINCT FROM src.rec_eff_end_dt OR
             tgt.pse_idx_fu_cgy_cd  IS DISTINCT FROM src.pse_idx_fu_cgy_cd OR
-            tgt.rec_ins_ts         IS DISTINCT FROM src.rec_ins_ts OR
-            tgt.load_ref_te        IS DISTINCT FROM src.load_ref_te
+            tgt.rec_ins_ts         IS DISTINCT FROM src.rec_ins_ts 
         ) THEN UPDATE SET
             rec_eff_end_dt     = src.rec_eff_end_dt,
             pse_idx_fu_cgy_cd  = src.pse_idx_fu_cgy_cd,

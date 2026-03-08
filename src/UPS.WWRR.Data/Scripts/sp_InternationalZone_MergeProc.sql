@@ -43,8 +43,7 @@ BEGIN
         )
         WHEN MATCHED AND (
             tgt.zch_sht_dsc_te IS DISTINCT FROM src.zch_sht_dsc_te OR
-            tgt.zch_lg_dsc_te IS DISTINCT FROM src.zch_lg_dsc_te OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.zch_lg_dsc_te IS DISTINCT FROM src.zch_lg_dsc_te 
         ) THEN UPDATE SET
             zch_sht_dsc_te = src.zch_sht_dsc_te,
             zch_lg_dsc_te = src.zch_lg_dsc_te,
@@ -87,8 +86,7 @@ BEGIN
         WHEN MATCHED AND (
             tgt.svc_typ_cd IS DISTINCT FROM src.svc_typ_cd OR
             tgt.mvm_drc_cd IS DISTINCT FROM src.mvm_drc_cd OR
-            tgt.pkg_cha_typ_cd IS DISTINCT FROM src.pkg_cha_typ_cd OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.pkg_cha_typ_cd IS DISTINCT FROM src.pkg_cha_typ_cd 
         ) THEN UPDATE SET
             svc_typ_cd = src.svc_typ_cd,
             mvm_drc_cd = src.mvm_drc_cd,
@@ -132,8 +130,7 @@ BEGIN
         )
         WHEN MATCHED AND (
             tgt.svc_typ_cd IS DISTINCT FROM src.svc_typ_cd OR
-            tgt.zn_ncv_typ_cd IS DISTINCT FROM src.zn_ncv_typ_cd OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.zn_ncv_typ_cd IS DISTINCT FROM src.zn_ncv_typ_cd 
         ) THEN UPDATE SET
             svc_typ_cd = src.svc_typ_cd,
             zn_ncv_typ_cd = src.zn_ncv_typ_cd,
@@ -192,8 +189,7 @@ BEGIN
         )
         WHEN MATCHED AND (
             tgt.org_cny_cd IS DISTINCT FROM src.org_cny_cd OR
-            tgt.dtn_cny_cd IS DISTINCT FROM src.dtn_cny_cd OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.dtn_cny_cd IS DISTINCT FROM src.dtn_cny_cd 
         ) THEN UPDATE SET
             org_cny_cd = src.org_cny_cd,
             dtn_cny_cd = src.dtn_cny_cd,
@@ -252,8 +248,7 @@ BEGIN
             tgt.org_cny_cd = src.org_cny_cd
         )
         WHEN MATCHED AND (
-            tgt.org_pol_div_1_cd IS DISTINCT FROM src.org_pol_div_1_cd OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.org_pol_div_1_cd IS DISTINCT FROM src.org_pol_div_1_cd 
         ) THEN UPDATE SET
             org_pol_div_1_cd = src.org_pol_div_1_cd,
             load_ref_te = src.load_ref_te
@@ -293,8 +288,7 @@ BEGIN
             tgt.dtn_cny_cd = src.dtn_cny_cd
         )
         WHEN MATCHED AND (
-            tgt.dtn_pol_div_1_cd IS DISTINCT FROM src.dtn_pol_div_1_cd OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.dtn_pol_div_1_cd IS DISTINCT FROM src.dtn_pol_div_1_cd 
         ) THEN UPDATE SET
             dtn_pol_div_1_cd = src.dtn_pol_div_1_cd,
             load_ref_te = src.load_ref_te

@@ -60,8 +60,7 @@ BEGIN
             tgt.svc_dfl_vlu_te  IS DISTINCT FROM src.svc_dfl_vlu_te OR
             tgt.udt_ts          IS DISTINCT FROM src.udt_ts OR
             tgt.rec_eff_end_dt  IS DISTINCT FROM src.rec_eff_end_dt OR
-            tgt.cri_vlu_rng_hi_qy IS DISTINCT FROM src.cri_vlu_rng_hi_qy OR
-            tgt.load_ref_te     IS DISTINCT FROM src.load_ref_te
+            tgt.cri_vlu_rng_hi_qy IS DISTINCT FROM src.cri_vlu_rng_hi_qy 
         ) THEN
             UPDATE SET
                 svc_dfl_vlu_te   = src.svc_dfl_vlu_te,

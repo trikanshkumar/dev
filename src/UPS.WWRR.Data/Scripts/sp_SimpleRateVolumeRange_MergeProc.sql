@@ -79,8 +79,7 @@ BEGIN
             tgt.ms_unt_typ_cd   IS DISTINCT FROM src.ms_unt_typ_cd OR
             tgt.dw_min_qy       IS DISTINCT FROM src.dw_min_qy OR
             tgt.dw_max_qy       IS DISTINCT FROM src.dw_max_qy OR
-            tgt.pbh_max_wgt_qy  IS DISTINCT FROM src.pbh_max_wgt_qy OR
-            tgt.load_ref_te     IS DISTINCT FROM src.load_ref_te
+            tgt.pbh_max_wgt_qy  IS DISTINCT FROM src.pbh_max_wgt_qy 
         ) THEN UPDATE SET
             rec_eff_end_dt = src.rec_eff_end_dt,
             vol_rng_min_qy = src.vol_rng_min_qy,

@@ -43,8 +43,7 @@ BEGIN
             tgt.apv_sts_cd     = src.apv_sts_cd
         )
         WHEN MATCHED AND (
-            tgt.tbl_row_exp_dt IS DISTINCT FROM src.tbl_row_exp_dt OR
-            tgt.load_ref_te    IS DISTINCT FROM src.load_ref_te
+            tgt.tbl_row_exp_dt IS DISTINCT FROM src.tbl_row_exp_dt
         ) THEN UPDATE SET
             tbl_row_exp_dt = src.tbl_row_exp_dt,
             load_ref_te    = src.load_ref_te

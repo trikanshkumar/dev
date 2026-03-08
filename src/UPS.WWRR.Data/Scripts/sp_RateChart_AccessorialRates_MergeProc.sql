@@ -92,8 +92,7 @@ BEGIN
             tgt.ccl_mth_typ_cd     = src.ccl_mth_typ_cd
         )
         WHEN MATCHED AND (
-            tgt.dtr_cri_hi_rng_te IS DISTINCT FROM src.dtr_cri_hi_rng_te OR
-            tgt.load_ref_te       IS DISTINCT FROM src.load_ref_te
+            tgt.dtr_cri_hi_rng_te IS DISTINCT FROM src.dtr_cri_hi_rng_te 
         ) THEN UPDATE SET
             dtr_cri_hi_rng_te = src.dtr_cri_hi_rng_te,
             load_ref_te = src.load_ref_te
@@ -149,8 +148,7 @@ BEGIN
         )
         WHEN MATCHED AND (
             tgt.svc_ra_cht_seq_nr  IS DISTINCT FROM src.svc_ra_cht_seq_nr OR
-            tgt.pkg_acq_mth_csf_cd IS DISTINCT FROM src.pkg_acq_mth_csf_cd OR
-            tgt.load_ref_te        IS DISTINCT FROM src.load_ref_te
+            tgt.pkg_acq_mth_csf_cd IS DISTINCT FROM src.pkg_acq_mth_csf_cd 
         ) THEN UPDATE SET
             svc_ra_cht_seq_nr  = src.svc_ra_cht_seq_nr,
             pkg_acq_mth_csf_cd = src.pkg_acq_mth_csf_cd,
@@ -211,8 +209,7 @@ BEGIN
         )
         WHEN MATCHED AND (
             tgt.xpt_cny_cd  IS DISTINCT FROM src.xpt_cny_cd OR
-            tgt.ipt_cny_cd  IS DISTINCT FROM src.ipt_cny_cd OR
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.ipt_cny_cd  IS DISTINCT FROM src.ipt_cny_cd 
         ) THEN UPDATE SET
             xpt_cny_cd  = src.xpt_cny_cd,
             ipt_cny_cd  = src.ipt_cny_cd,
@@ -267,8 +264,7 @@ BEGIN
             tgt.asy_svc_typ_cd IS DISTINCT FROM src.asy_svc_typ_cd OR
             tgt.bil_ter_typ_cd IS DISTINCT FROM src.bil_ter_typ_cd OR
             tgt.mvm_drc_cd     IS DISTINCT FROM src.mvm_drc_cd OR
-            tgt.ccy_cd         IS DISTINCT FROM src.ccy_cd OR
-            tgt.load_ref_te    IS DISTINCT FROM src.load_ref_te
+            tgt.ccy_cd         IS DISTINCT FROM src.ccy_cd 
         ) THEN UPDATE SET
             asy_svc_typ_cd = src.asy_svc_typ_cd,
             bil_ter_typ_cd = src.bil_ter_typ_cd,

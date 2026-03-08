@@ -52,8 +52,7 @@ BEGIN
         WHEN MATCHED AND (
             tgt.asy_trh_a      IS DISTINCT FROM src.asy_trh_a OR
             tgt.ccl_mth_typ_cd IS DISTINCT FROM src.ccl_mth_typ_cd OR
-            tgt.rec_eff_end_dt IS DISTINCT FROM src.rec_eff_end_dt OR
-            tgt.load_ref_te    IS DISTINCT FROM src.load_ref_te
+            tgt.rec_eff_end_dt IS DISTINCT FROM src.rec_eff_end_dt
         )
             THEN UPDATE SET
                 asy_trh_a           = src.asy_trh_a,

@@ -64,8 +64,7 @@ BEGIN
             tgt.ctl_vlu_5_te       IS DISTINCT FROM src.ctl_vlu_5_te OR
             tgt.ctl_vlu_6_te       IS DISTINCT FROM src.ctl_vlu_6_te OR
             tgt.ctl_vlu_dsc_te     IS DISTINCT FROM src.ctl_vlu_dsc_te OR
-            tgt.ra_typ_cd_ary_te   IS DISTINCT FROM src.ra_typ_cd_ary_te OR
-            tgt.load_ref_te        IS DISTINCT FROM src.load_ref_te
+            tgt.ra_typ_cd_ary_te   IS DISTINCT FROM src.ra_typ_cd_ary_te
         ) THEN UPDATE SET
             asy_svc_chg_typ_cd = src.asy_svc_chg_typ_cd,
             ctl_vlu_1_te       = src.ctl_vlu_1_te,

@@ -58,8 +58,7 @@ BEGIN
             tgt.dtr_cri_hi_rng_te IS DISTINCT FROM src.dtr_cri_hi_rng_te OR
             tgt.dtr_cri_end_dt    IS DISTINCT FROM src.dtr_cri_end_dt OR
             tgt.ccl_mth_typ_cd    IS DISTINCT FROM src.ccl_mth_typ_cd OR
-            tgt.dtr_cri_ra_a      IS DISTINCT FROM src.dtr_cri_ra_a OR
-            tgt.load_ref_te       IS DISTINCT FROM src.load_ref_te
+            tgt.dtr_cri_ra_a      IS DISTINCT FROM src.dtr_cri_ra_a 
         )
             THEN UPDATE SET
                 dtr_cri_hi_rng_te = src.dtr_cri_hi_rng_te,
