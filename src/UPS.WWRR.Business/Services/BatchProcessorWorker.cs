@@ -401,6 +401,28 @@ namespace UPS.WWRR.Business.Services
                         // Move failed file to processed folder
                         await MoveObjectToProcessedAsync(gcsFileName);
                     }
+                    else if (rowsLoaded == 0)
+                    {
+                        // CSV file has a header but no data rows — do NOT run the MERGE SP
+                        // because an empty staging table would cause all records in the main table to be deleted.
+                        _logger.LogWarning("Empty .csv file found. No data to process. Table: {tbl}, Load: {id}, File: {file}.",
+                            load.LoadTableName, load.Id, gcsFileName);
+
+                        DataLoadDetail emptyDetail = await CreateDataLoadDetailForError(load, ct);
+                        var emptyException = new DataLoadException
+                        {
+                            DataLoadDetailId = emptyDetail.Id,
+                            TableName = descriptor.TableName,
+                            TableKey = $"LOAD:{load.Id}",
+                            ErrorFieldName = ServiceConstants.emptyDataFileError,
+                            ErrorFieldValue = $"Empty .csv file found. No data to process: {gcsFileName}",
+                            CreatedOn = DateTime.UtcNow
+                        };
+                        await _loadRepository.AddExceptionsAsync([emptyException], ct);
+
+                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedMissingData, DateTime.UtcNow, ct);
+                        await MoveObjectToProcessedAsync(gcsFileName);
+                    }
                 }
                 catch (Exception ex)
                 {

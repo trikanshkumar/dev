@@ -1,15 +1,16 @@
 CREATE OR REPLACE PROCEDURE sp_validdestinationbillterm_merge_proc(
-    OUT insertcount integer,
-    OUT updatecount integer,
-    OUT deletecount integer,
-    OUT errornumber text,
-    OUT errorstate text,
-    OUT errorprocedure text,
-    OUT errorline text,
-    OUT errormessage text)
+	OUT insertcount integer,
+	OUT updatecount integer,
+	OUT deletecount integer,
+	OUT errornumber text,
+	OUT errorstate text,
+	OUT errorprocedure text,
+	OUT errorline text,
+	OUT errormessage text)
 LANGUAGE 'plpgsql'
-AS $BODY$
+AS $BODY$ 
 BEGIN
+  PERFORM set_config('search_path', 'a886aa_ao', true);
     CREATE TEMP TABLE merge_actions (
         table_name text,
         action     text,
@@ -19,7 +20,7 @@ BEGIN
         rec_eff_stt_dt date,
         rec_eff_end_dt date
     );
-
+ 
     WITH src_dedup AS (
         SELECT DISTINCT
                gpn_ipt_cny_cd,
@@ -77,20 +78,20 @@ BEGIN
     SELECT 'tvdstbt', merge_action,
            gpn_ipt_cny_cd, bil_ter_typ_cd, apv_sts_cd, rec_eff_stt_dt, rec_eff_end_dt
     FROM cc_merge;
-
+ 
     SELECT
         COUNT(*) FILTER (WHERE action = 'INSERT'),
         COUNT(*) FILTER (WHERE action = 'UPDATE'),
         COUNT(*) FILTER (WHERE action = 'DELETE')
     INTO InsertCount, UpdateCount, DeleteCount
     FROM merge_actions;
-
+ 
     ErrorNumber    := NULL;
     ErrorState     := NULL;
     ErrorProcedure := 'sp_validdestinationbillterm_merge_proc';
     ErrorLine      := NULL;
     ErrorMessage   := NULL;
-
+ 
 EXCEPTION WHEN OTHERS THEN
     ErrorNumber    := SQLSTATE;
     ErrorState     := SQLSTATE;

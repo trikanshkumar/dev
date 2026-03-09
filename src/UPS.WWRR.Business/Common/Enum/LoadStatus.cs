@@ -12,5 +12,6 @@ namespace UPS.WWRR.Business.Common.Enum
         Failed = 4,
         Processed = 5,
         MissingRequiredPair = 6,
+        FailedMissingData = 7,
     }
 }
