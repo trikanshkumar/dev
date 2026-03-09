@@ -44,9 +44,14 @@ BEGIN
             tgt.rec_eff_stt_dt  = src.rec_eff_stt_dt
         )
         WHEN MATCHED AND (
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
+            tgt.asy_dly_trh_qy IS DISTINCT FROM src.asy_dly_trh_qy OR
+            tgt.asy_wky_trh_qy IS DISTINCT FROM src.asy_wky_trh_qy OR
+            tgt.rec_eff_end_dt IS DISTINCT FROM src.rec_eff_end_dt
         ) THEN UPDATE SET
-            load_ref_te = src.load_ref_te
+            asy_dly_trh_qy = src.asy_dly_trh_qy,
+            asy_wky_trh_qy = src.asy_wky_trh_qy,
+            rec_eff_end_dt = src.rec_eff_end_dt,
+            load_ref_te    = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 cny_cd,

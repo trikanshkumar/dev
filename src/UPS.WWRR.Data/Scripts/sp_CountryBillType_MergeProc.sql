@@ -43,11 +43,6 @@ BEGIN
             tgt.cny_bil_ter_end_dt   = src.cny_bil_ter_end_dt AND
             tgt.apv_sts_cd           = src.apv_sts_cd
         )
-        WHEN MATCHED AND (
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
-        ) THEN
-            UPDATE SET
-                load_ref_te = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 cny_cd,

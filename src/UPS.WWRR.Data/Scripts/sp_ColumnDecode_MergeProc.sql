@@ -34,9 +34,6 @@ BEGIN
             tgt.tbl_clu_vlu_te = src.tbl_clu_vlu_te AND
             tgt.scr_cd_vlu_te  = src.scr_cd_vlu_te
         )
-        WHEN MATCHED THEN
-            UPDATE SET
-                load_ref_te = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 tbl_clu_na,

@@ -40,10 +40,6 @@ BEGIN
             tgt.tbl_row_eff_dt = src.tbl_row_eff_dt AND
             tgt.tbl_row_end_dt = src.tbl_row_end_dt
         )
-        WHEN MATCHED AND (
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
-        ) THEN UPDATE SET
-            load_ref_te = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 gpn_xpt_cny_cd,

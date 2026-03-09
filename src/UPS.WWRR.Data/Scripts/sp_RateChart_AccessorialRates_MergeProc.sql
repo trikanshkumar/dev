@@ -44,10 +44,6 @@ BEGIN
             tgt.del_zn_nr         = src.del_zn_nr AND
             tgt.ra_chg_csf_typ_cd = src.ra_chg_csf_typ_cd
         )
-        WHEN MATCHED AND (
-            tgt.load_ref_te IS DISTINCT FROM src.load_ref_te
-        ) THEN UPDATE SET
-            load_ref_te = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 zch_sts_nr,
