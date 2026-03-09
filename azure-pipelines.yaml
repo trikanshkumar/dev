@@ -106,11 +106,17 @@ stages:
           chmod +x efbundle
 
     - task: Bash@3
+      displayName: Authenticate Docker
+      inputs:
+        targetType: inline
+        script: |
+          gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet      
+
+    - task: Bash@3
       displayName: Build EF Migration Image
       inputs:
         targetType: inline
         script: |
-
           cat <<EOF > Dockerfile.migration
           FROM mcr.microsoft.com/dotnet/aspnet:8.0
           RUN apt-get update \
