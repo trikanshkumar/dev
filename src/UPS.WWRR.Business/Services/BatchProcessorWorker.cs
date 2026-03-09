@@ -1090,24 +1090,9 @@ namespace UPS.WWRR.Business.Services
             // Build configuration for staging table
             var cfg = new UPS.WWRR.Business.DTO.Models.Request.TableConfigurationRequest { TableName = descriptor.StagingTableName, DataLoadId = load.Id };
             var copyResult = await _copyBatchService.CopyAsync(tempFile, cfg, ct);
-            DataLoadDetail? stagingDetail = null;
-            if (copyResult.Errors.Count > 0)
-            {
-                stagingDetail = new DataLoadDetail
-                {
-                    DataLoadId = load.Id,
-                    DataLoadType = "STG",
-                    ErrorIndicator = 1,
-                    TimeProcessValue = (int)(copyResult.CompletedAt - copyResult.StartedAt).TotalSeconds,
-                    TimePeriodTypeCode = "SECONDS",
-                    RecordsInserted = copyResult.RowsLoaded,
-                    RecordsUpdated = 0,
-                    RecordsDeleted = 0,
-                    BatchNumber = 1
-                };
-                await _loadRepository.AddDetailAsync(stagingDetail, ct);
-            }
-            return (copyResult.Errors.Count == 0, stagingDetail, copyResult.RowsLoaded, copyResult.Errors);
+            // Per-chunk DataLoadDetail records are already created by CopyBatchDataService.CopyAsync,
+            // so no additional summary detail is needed here.
+            return (copyResult.Errors.Count == 0, null, copyResult.RowsLoaded, copyResult.Errors);
         }
 
         /// <summary>
