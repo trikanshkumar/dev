@@ -204,6 +204,9 @@ namespace UPS.WWRR.Business.Services
         private async Task<List<DataLoad>> BuildLoadsAsync(CancellationToken ct)
         {
             var newLoads = new List<DataLoad>();
+            // Track table/version combinations in this receipt to prevent duplicates
+            var processedInReceipt = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            
             // Discover the new  receipt CSV directly from GCS bucket
             string? dynamicReceiptName = await _storageService.DiscoverReceiptLogFileAsync(ct);
             if (string.IsNullOrWhiteSpace(dynamicReceiptName))
@@ -313,6 +316,14 @@ namespace UPS.WWRR.Business.Services
                         continue;
                     }
 
+                    // Check if this table/version combination is already in the current receipt
+                    var loadKey = $"{tableNamePart}|{loadVersion}";
+                    if (processedInReceipt.Contains(loadKey))
+                    {
+                        _logger.LogWarning("Duplicate entry found in receipt file for {tbl} version {ver}. Skipping duplicate.", tableNamePart, loadVersion);
+                        continue;
+                    }
+
                     newLoads.Add(new DataLoad
                     {
                         LoadTableName = tableNamePart,
@@ -326,6 +337,9 @@ namespace UPS.WWRR.Business.Services
                         BatchSize = batchSizeEnv,
                         DataSource = destination[..Math.Min(destination.Length, 25)]
                     });
+                    
+                    // Mark this table/version as processed in this receipt
+                    processedInReceipt.Add(loadKey);
                 }
             }
 
@@ -909,6 +923,7 @@ namespace UPS.WWRR.Business.Services
                             // Move the file with actual name to processed folder
                             await MoveObjectToProcessedAsync(actualName);
                             
+
                             // Clean up temp file
                             if (tempFile != null)
                             {
