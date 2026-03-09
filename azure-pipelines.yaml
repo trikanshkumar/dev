@@ -1,11 +1,11 @@
 trigger:
-  - testing1
+  - feature/dev
 
 parameters:
   - name: environment
     displayName: Select environment
     type: string
-    default: dev
+    default: prod
     values:
       - dev
       - uat
@@ -70,6 +70,7 @@ stages:
           gcloud config set project $(GCP_PROJECT_ID)
 
           echo "Using VM service account identity"
+          gcloud config set account wwrr-${{ parameters.environment }}-vm-sa@gcp-cti-wwrr-${{ parameters.environment }}.iam.gserviceaccount.com
 
           gcloud container clusters get-credentials $(GKE_CLUSTER_NAME) \
             --region $(GCP_REGION) \
