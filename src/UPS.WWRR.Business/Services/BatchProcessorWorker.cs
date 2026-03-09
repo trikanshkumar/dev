@@ -228,6 +228,12 @@ namespace UPS.WWRR.Business.Services
             }
 
             var rows = ParseCsv(logContent);
+            if (rows == null)
+            {
+                // ParseCsv already logged the error (e.g., unexpected header)
+                await MoveObjectToProcessedAsync(dynamicReceiptName);
+                return newLoads;
+            }
             if (rows.Count <= 1)
             {
                 _logger.LogInformation("Receipt file {file} contains no data rows", dynamicReceiptName);
@@ -1094,18 +1100,16 @@ namespace UPS.WWRR.Business.Services
         /// </summary>
         /// <param name="content"></param>
         /// <returns></returns>
-        private List<string[]> ParseCsv(string content)
+        private List<string[]>? ParseCsv(string content)
         {
-            var list = new List<string[]>();
             try
             {
-                list = ParseCsvWithValidationHelper.ParseCsvWithValidation(content);
-                return list;
+                return ParseCsvWithValidationHelper.ParseCsvWithValidation(content);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
-                return list = new List<string[]>();
+                return null;
             }
         }
 

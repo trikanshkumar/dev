@@ -80,7 +80,7 @@ namespace UPS.WWRR.Business.Common.Helper
                 if (string.IsNullOrWhiteSpace(row[0]))
                     throw new FormatException($"Row {csv.Context.Parser.Row}: {ServiceConstants.tableNameColumn} is required.");
                 if (string.IsNullOrWhiteSpace(row[1]))
-                    throw new FormatException($"Row {csv.Context.Parser.Row}: {ServiceConstants.receiptLogFilePattern} is required.");
+                    throw new FormatException($"Row {csv.Context.Parser.Row}: {ServiceConstants.fileExtractName} is required.");
 
                 // 2) Simple shape checks (e.g., FileExtractName ends with .csv)
                 if (!row[1].Trim().EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
