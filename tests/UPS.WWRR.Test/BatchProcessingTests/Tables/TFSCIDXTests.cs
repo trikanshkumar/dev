@@ -38,7 +38,7 @@ public class TFSCIDXTests : BatchProcessorTests
             .Returns(Task.CompletedTask);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
-        _repo.Verify(r => r.UpdateStatusAsync(4130, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(4130, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

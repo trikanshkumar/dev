@@ -58,13 +58,14 @@ public class InternationalZoneTests : BatchProcessorTests
         // Act
         var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
 
-        // Assert - TINZNHD should be skipped
+        // Assert - TINZNDT should be added with the MissingRequiredPair status
         Assert.Empty(list);
-        _repo.Verify(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repo.Verify(r => r.AddLoadsAsync(It.Is<IEnumerable<DataLoad>>(list =>
+            list != null && list.Count() == 1 && list.First().LoadStatusCode == LoadStatus.MissingRequiredPair.ToString()), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task BuildLoadsAsync_OnlyTINZNDT_SkipsWithWarning()
+    public async Task BuildLoadsAsync_OnlyTINZNDT_AddsLoadWithMissingPairStatus()
     {
         // Arrange - Only TINZNDT is present, TINZNHD is missing
         _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
@@ -78,9 +79,10 @@ public class InternationalZoneTests : BatchProcessorTests
         // Act
         var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
 
-        // Assert - TINZNDT should be skipped
+        // Assert - TINZNDT should be added with the MissingRequiredPair status
         Assert.Empty(list);
-        _repo.Verify(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repo.Verify(r => r.AddLoadsAsync(It.Is<IEnumerable<DataLoad>>(list =>
+            list != null && list.Count() == 1 && list.First().LoadStatusCode == LoadStatus.MissingRequiredPair.ToString()), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -222,7 +224,7 @@ public class InternationalZoneTests : BatchProcessorTests
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
         
-        _repo.Verify(r => r.UpdateStatusAsync(603, LoadStatus.FailedValidation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(603, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -237,7 +239,7 @@ public class InternationalZoneTests : BatchProcessorTests
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
         
-        _repo.Verify(r => r.UpdateStatusAsync(604, LoadStatus.FailedValidation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(604, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -347,7 +349,7 @@ public class InternationalZoneTests : BatchProcessorTests
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "CopyBatchLoadAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
         
-        _repo.Verify(r => r.UpdateStatusAsync(615, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(615, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -371,7 +373,7 @@ public class InternationalZoneTests : BatchProcessorTests
         await InvokeAsync<object>(sut, "CopyBatchLoadAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
         
         // Should NOT set Failed status when copy succeeds
-        _repo.Verify(r => r.UpdateStatusAsync(616, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Never);
+        _repo.Verify(r => r.UpdateStatusAsync(616, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion
@@ -438,7 +440,7 @@ public class InternationalZoneTests : BatchProcessorTests
 
         // Assert - Verify merge was NOT called (staging failed) and status is Failed
         _repo.Verify(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repo.Verify(r => r.UpdateStatusAsync(702, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(702, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -461,7 +463,7 @@ public class InternationalZoneTests : BatchProcessorTests
 
         // Assert
         _repo.Verify(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
-        _repo.Verify(r => r.UpdateStatusAsync(703, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(703, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -501,7 +503,7 @@ public class InternationalZoneTests : BatchProcessorTests
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         
         _repo.Verify(r => r.AddErrorsAsync(It.IsAny<IEnumerable<DataLoadError>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repo.Verify(r => r.UpdateStatusAsync(730, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(730, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -611,7 +613,7 @@ public class InternationalZoneTests : BatchProcessorTests
     #region ValidateAndFilterPairedTableGroups Tests for International Zone
 
     [Fact]
-    public void ValidateAndFilterPairedTableGroups_CompletePair_TINZNHD_TINZNDT_ReturnsAll()
+    public async Task ValidateAndFilterPairedTableGroups_CompletePair_TINZNHD_TINZNDT_ReturnsAll()
     {
         var loads = new List<DataLoad>
         {
@@ -620,7 +622,7 @@ public class InternationalZoneTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = InvokeSync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
 
         Assert.Equal(2, result.Count);
         Assert.Contains(result, l => l.LoadTableName == "TINZNHD");
@@ -628,7 +630,7 @@ public class InternationalZoneTests : BatchProcessorTests
     }
 
     [Fact]
-    public void ValidateAndFilterPairedTableGroups_IncompletePair_TINZNHD_Only_RemovesIt()
+    public async Task ValidateAndFilterPairedTableGroups_IncompletePair_TINZNHD_Only_RemovesIt()
     {
         var loads = new List<DataLoad>
         {
@@ -637,14 +639,14 @@ public class InternationalZoneTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = InvokeSync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
 
         Assert.Single(result);
         Assert.Equal("TALTCCY", result[0].LoadTableName);
     }
 
     [Fact]
-    public void ValidateAndFilterPairedTableGroups_IncompletePair_TINZNDT_Only_RemovesIt()
+    public async Task ValidateAndFilterPairedTableGroups_IncompletePair_TINZNDT_Only_RemovesIt()
     {
         var loads = new List<DataLoad>
         {
@@ -653,14 +655,14 @@ public class InternationalZoneTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = InvokeSync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
 
         Assert.Single(result);
         Assert.Equal("TDECODE", result[0].LoadTableName);
     }
 
     [Fact]
-    public void ValidateAndFilterPairedTableGroups_MultiplePairedGroups_AllComplete_ReturnsAll()
+    public async Task ValidateAndFilterPairedTableGroups_MultiplePairedGroups_AllComplete_ReturnsAll()
     {
         var loads = new List<DataLoad>
         {
@@ -672,13 +674,13 @@ public class InternationalZoneTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = InvokeSync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
 
         Assert.Equal(5, result.Count);
     }
 
     [Fact]
-    public void ValidateAndFilterPairedTableGroups_MultiplePairedGroups_OneIncomplete_RemovesIncomplete()
+    public async Task ValidateAndFilterPairedTableGroups_MultiplePairedGroups_OneIncomplete_RemovesIncomplete()
     {
         var loads = new List<DataLoad>
         {
@@ -689,7 +691,7 @@ public class InternationalZoneTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = InvokeSync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
 
         Assert.Equal(3, result.Count);
         Assert.Contains(result, l => l.LoadTableName == "TINZNHD");
@@ -794,7 +796,7 @@ public class InternationalZoneTests : BatchProcessorTests
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
         
         // Assert - Validation failed, no copy or merge should happen
-        _repo.Verify(r => r.UpdateStatusAsync(802, LoadStatus.FailedValidation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(802, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
         _copy.Verify(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

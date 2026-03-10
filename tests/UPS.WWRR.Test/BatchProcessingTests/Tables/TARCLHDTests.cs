@@ -221,7 +221,7 @@ public class TARCLHDTests : BatchProcessorTests
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
         
-        _repo.Verify(r => r.UpdateStatusAsync(503, LoadStatus.FailedValidation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(503, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -324,7 +324,7 @@ public class TARCLHDTests : BatchProcessorTests
 
         // Assert - Staging failed so merge should NOT be called (only staging procedure called once)
         _repo.Verify(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repo.Verify(r => r.UpdateStatusAsync(101, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(101, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -347,7 +347,7 @@ public class TARCLHDTests : BatchProcessorTests
 
         // Assert - Both staging and merge were called (2 times total)
         _repo.Verify(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
-        _repo.Verify(r => r.UpdateStatusAsync(102, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(102, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -410,7 +410,7 @@ public class TARCLHDTests : BatchProcessorTests
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         
-        _repo.Verify(r => r.UpdateStatusAsync(530, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(530, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -434,15 +434,15 @@ public class TARCLHDTests : BatchProcessorTests
     #region ValidateAndFilterPairedTableGroups Direct Tests
 
     [Fact]
-    public void ValidateAndFilterPairedTableGroups_EmptyList_ReturnsEmpty()
+    public async Task ValidateAndFilterPairedTableGroups_EmptyList_ReturnsEmpty()
     {
         var sut = CreateSut();
-        var result = InvokeSync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", new List<DataLoad>());
+        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", new List<DataLoad>());
         Assert.Empty(result);
     }
 
     [Fact]
-    public void ValidateAndFilterPairedTableGroups_NoPairedTables_ReturnsAll()
+    public async Task ValidateAndFilterPairedTableGroups_NoPairedTables_ReturnsAll()
     {
         var loads = new List<DataLoad>
         {
@@ -451,13 +451,13 @@ public class TARCLHDTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = InvokeSync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
 
         Assert.Equal(2, result.Count);
     }
 
     [Fact]
-    public void ValidateAndFilterPairedTableGroups_CompletePair_ReturnsAll()
+    public async Task ValidateAndFilterPairedTableGroups_CompletePair_ReturnsAll()
     {
         var loads = new List<DataLoad>
         {
@@ -466,13 +466,13 @@ public class TARCLHDTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = InvokeSync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
 
         Assert.Equal(2, result.Count);
     }
 
     [Fact]
-    public void ValidateAndFilterPairedTableGroups_IncompletePair_RemovesPresent()
+    public async Task ValidateAndFilterPairedTableGroups_IncompletePair_RemovesPresent()
     {
         var loads = new List<DataLoad>
         {
@@ -481,7 +481,7 @@ public class TARCLHDTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = InvokeSync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
 
         Assert.Single(result);
         Assert.Equal("TALTCCY", result[0].LoadTableName);

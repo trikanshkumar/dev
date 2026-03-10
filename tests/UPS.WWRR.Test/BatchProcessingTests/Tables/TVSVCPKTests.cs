@@ -118,7 +118,7 @@ public class TVSVCPKTests : BatchProcessorTests
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
-        _repo.Verify(r => r.UpdateStatusAsync(3802, LoadStatus.FailedValidation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(3802, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class TVSVCPKTests : BatchProcessorTests
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
         _repo.Verify(r => r.AddExceptionsAsync(It.IsAny<IEnumerable<DataLoadException>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repo.Verify(r => r.UpdateStatusAsync(3803, LoadStatus.FailedValidation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(3803, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public class TVSVCPKTests : BatchProcessorTests
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
-        _repo.Verify(r => r.UpdateStatusAsync(3804, LoadStatus.FailedValidation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(3804, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -174,7 +174,7 @@ public class TVSVCPKTests : BatchProcessorTests
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
-        _repo.Verify(r => r.UpdateStatusAsync(3805, LoadStatus.FailedValidation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(3805, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -189,7 +189,7 @@ public class TVSVCPKTests : BatchProcessorTests
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
-        _repo.Verify(r => r.UpdateStatusAsync(3806, LoadStatus.FailedValidation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(3806, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -204,7 +204,7 @@ public class TVSVCPKTests : BatchProcessorTests
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
-        _repo.Verify(r => r.UpdateStatusAsync(3807, LoadStatus.FailedValidation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(3807, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -265,7 +265,7 @@ public class TVSVCPKTests : BatchProcessorTests
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "CopyBatchLoadAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
-        _repo.Verify(r => r.UpdateStatusAsync(3812, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(3812, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -333,7 +333,7 @@ public class TVSVCPKTests : BatchProcessorTests
         var sut = CreateSut();
         var tempFiles = new Dictionary<string, string>();
         await InvokeAsync<object>(sut, "CopyBatchLoadAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
-        _repo.Verify(r => r.UpdateStatusAsync(3815, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(3815, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -350,7 +350,7 @@ public class TVSVCPKTests : BatchProcessorTests
             .Returns(Task.CompletedTask);
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
-        _repo.Verify(r => r.UpdateStatusAsync(3830, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(3830, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -387,7 +387,7 @@ public class TVSVCPKTests : BatchProcessorTests
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.AddErrorsAsync(It.IsAny<IEnumerable<DataLoadError>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repo.Verify(r => r.UpdateStatusAsync(3833, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(3833, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -445,7 +445,7 @@ public class TVSVCPKTests : BatchProcessorTests
         var sut = CreateSut();
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
         _repo.Verify(r => r.AddErrorsAsync(It.IsAny<IEnumerable<DataLoadError>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _repo.Verify(r => r.UpdateStatusAsync(3838, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(3838, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion

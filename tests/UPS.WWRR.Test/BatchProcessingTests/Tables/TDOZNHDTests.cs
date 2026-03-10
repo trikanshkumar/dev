@@ -161,7 +161,7 @@ public class TDOZNHDTests : BatchProcessorTests
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
 
         // Assert - Verify status is Failed
-        _repo.Verify(r => r.UpdateStatusAsync(4230, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(4230, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -183,7 +183,7 @@ public class TDOZNHDTests : BatchProcessorTests
         await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
 
         // Assert
-        _repo.Verify(r => r.UpdateStatusAsync(4231, LoadStatus.Failed, null, It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateStatusAsync(4231, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
