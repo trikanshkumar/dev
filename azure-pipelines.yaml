@@ -276,6 +276,13 @@ stages:
         targetType: inline
         script: |
           IMAGE_REPOSITORY=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/$(IMAGE_NAME)
+          echo "Checking helm release status..."
+          STATUS=$(helm status ups-wwrr-batch -n wwrr-${{ parameters.environment }} -o json 2>/dev/null | jq -r '.info.status' || echo "notfound")
+          echo "Helm status: $STATUS"
+          if [[ "$STATUS" == "pending-install" || "$STATUS" == "pending-upgrade" || "$STATUS" == "pending-rollback" ]]; then
+            echo "Helm release stuck. Cleaning..."
+            helm uninstall ups-wwrr-batch -n wwrr-${{ parameters.environment }}
+          fi
           helm upgrade --install ups-wwrr-batch ./manifests/ups-wwrr-batch \
           --namespace wwrr-${{ parameters.environment }} \
           --wait \
