@@ -5,7 +5,7 @@ parameters:
   - name: environment
     displayName: Select environment
     type: string
-    default: prod
+    default: dev
     values:
       - dev
       - uat
