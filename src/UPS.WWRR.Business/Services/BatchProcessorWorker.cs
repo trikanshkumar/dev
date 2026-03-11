@@ -107,7 +107,8 @@ namespace UPS.WWRR.Business.Services
                     await ValidateLoadsAsync(newLoads, stoppingToken, tempFiles);
 
                     // Copy batches to staging for ReadyToProcess loads
-                    var readyAfterValidation = await _loadRepository.GetLoadsByStatusAsync(LoadStatus.ReadyToProcess, stoppingToken);
+                    string loadVersion = newLoads.Select(lv => lv.LoadVersion).FirstOrDefault() ?? string.Empty;
+                    var readyAfterValidation = await _loadRepository.GetLoadsByStatusAsync(LoadStatus.ReadyToProcess, loadVersion, stoppingToken);
                     if (readyAfterValidation.Count > 0)
                     {
                         readyAfterValidation = FilterByTableName(readyAfterValidation);
@@ -115,7 +116,7 @@ namespace UPS.WWRR.Business.Services
                         tempFiles.Clear(); // Clear references after copy
 
                         //  main table for loads that are still Processing after copy
-                        var processingLoads = await _loadRepository.GetLoadsByStatusAsync(LoadStatus.Processing, stoppingToken);
+                        var processingLoads = await _loadRepository.GetLoadsByStatusAsync(LoadStatus.Processing, loadVersion, stoppingToken);
                         if (processingLoads.Count > 0)
                         {
                             processingLoads = FilterByTableName(processingLoads);

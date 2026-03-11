@@ -27,7 +27,7 @@ namespace UPS.WWRR.Business.Repositories
 
         Task<bool> ExistsAsync(string tableName, string loadVersion, CancellationToken ct = default);
 
-        Task<List<DataLoad>> GetLoadsByStatusAsync(LoadStatus status, CancellationToken ct = default);
+        Task<List<DataLoad>> GetLoadsByStatusAsync(LoadStatus status, string loadVersion, CancellationToken ct = default);
 
         Task<MergeResult> ExecuteMergeStoredProcedureAsync(string storedProcedureName, CancellationToken ct = default);
 
