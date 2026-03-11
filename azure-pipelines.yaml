@@ -1,5 +1,5 @@
 trigger:
-  - feature/dev
+  - main
 
 parameters:
   - name: environment
