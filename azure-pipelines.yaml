@@ -247,6 +247,9 @@ stages:
         targetType: inline
         script: |
 
+          echo "Waiting for migration pod..."
+          sleep 15
+
           kubectl wait --for=condition=Ready pod \
           -l job-name=efbundle-migration-${{ parameters.environment }}-$(Build.BuildId) \
           -n wwrr-${{ parameters.environment }} \
