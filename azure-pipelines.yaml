@@ -1,5 +1,5 @@
 trigger:
-  - helm
+  - main
 
 parameters:
   - name: environment
