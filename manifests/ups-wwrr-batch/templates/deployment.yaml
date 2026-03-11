@@ -14,10 +14,18 @@ spec:
     spec:
       serviceAccountName: {{ include "ups-wwrr-batch.serviceAccountName" . }}
       terminationGracePeriodSeconds: 60
+      
+      hostAliases:
+        - ip: "{{ .Values.ALLOYDB_HOST_ALIAS_IP }}"
+          hostnames:
+            - "{{ .Values.ALLOYDB_HOST_ALIAS_NAME }}"
+
       containers:
+
         - name: ups-wwrr-batch
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+
           env:
             - name: GOOGLE_CLOUD_STORAGE_BUCKET_NAME
               value: {{ .Values.env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME | quote }}
@@ -28,14 +36,34 @@ spec:
             - name: BATCH_SIZE
               value: {{ .Values.env.BATCH_SIZE | quote }}
             - name: ALLOYDB_CONNECTION
-              value: {{ .Values.env.ALLOYDB_CONNECTION | quote }} 
+              value: {{ .Values.env.ALLOYDB_CONNECTION | quote }}
             - name: ASPNETCORE_ENVIRONMENT
-              value: {{ .Values.env.ASPNETCORE_ENVIRONMENT | quote }} 
+              value: {{ .Values.env.ASPNETCORE_ENVIRONMENT | quote }}
             - name: BatchLoad_ChunkSize
-              value: {{ .Values.env.BatchLoad_ChunkSize | quote }}              
+              value: {{ .Values.env.BatchLoad_ChunkSize | quote }}
             - name: BatchLoad_Delimiter
-              value: {{ .Values.env.BatchLoad_Delimiter | quote }}              
+              value: {{ .Values.env.BatchLoad_Delimiter | quote }}
             - name: BatchLoad_HasHeader
               value: {{ .Values.env.BatchLoad_HasHeader | quote }}
+            - name: EnableIAMTokenAuth
+              value: {{ .Values.env.EnableIAMTokenAuth | quote }}
+
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+
+        - name: alloydb-auth-proxy
+          image: gcr.io/alloydb-connectors/alloydb-auth-proxy:1.13.11
+          args:
+            - "{{ .Values.ALLOYDB_INSTANCE }}"
+            - "--psc"
+            - "--address=127.0.0.1"
+            - "--port=5432"
+            - "--auto-iam-authn"
+          resources:
+            {{- toYaml .Values.alloydbProxy.resources | nindent 12 }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}

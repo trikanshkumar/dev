@@ -1,13 +1,11 @@
 trigger:
-  branches:
-    include:
-      - main
+  - main
 
 parameters:
   - name: environment
     displayName: Select environment
     type: string
-    default: uat
+    default: dev
     values:
       - dev
       - uat
@@ -15,8 +13,7 @@ parameters:
 
 variables:
   - group: wwrr-${{ parameters.environment }}-pipeline-password
-  - name: GOOGLE_APPLICATION_CREDENTIALS
-    value: $(Agent.TempDirectory)/gcp-key.json
+
   - name: agentName
     ${{ if eq(parameters.environment, 'dev') }}:
       value: 'wwrr-dev-agent'
@@ -24,13 +21,15 @@ variables:
       value: 'wwrr-uat-agent'
     ${{ if eq(parameters.environment, 'prod') }}:
       value: 'wwrr-prod-agent'
+
   - name: ALLOYDB_ADMIN_EMAIL
     ${{ if eq(parameters.environment, 'dev') }}:
       value: 'wwrr-mod-admin-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com'
     ${{ if eq(parameters.environment, 'uat') }}:
       value: 'wwrr-mod-admin-alloydb@gcp-cti-wwrr-uat.iam.gserviceaccount.com'
     ${{ if eq(parameters.environment, 'prod') }}:
-      value: 'wwrr-mod-admin-alloydb@gcp-cti-wwrr-prod.iam.gserviceaccount.com'    
+      value: 'wwrr-mod-admin-alloydb@gcp-cti-wwrr-prod.iam.gserviceaccount.com'
+
   - name: ALLOYDB_APP_EMAIL
     ${{ if eq(parameters.environment, 'dev') }}:
       value: 'wwrr-mod-app-alloydb@gcp-cti-wwrr-dev.iam.gserviceaccount.com'
@@ -38,138 +37,275 @@ variables:
       value: 'wwrr-mod-app-alloydb@gcp-cti-wwrr-uat.iam.gserviceaccount.com'
     ${{ if eq(parameters.environment, 'prod') }}:
       value: 'wwrr-mod-app-alloydb@gcp-cti-wwrr-prod.iam.gserviceaccount.com'
-    
+
 pool:
   name: WWRR Mod Custom Agent Pool
-  demands:
-    - Agent.Name -equals $(agentName)
+
 stages:
-  - stage: BuildAndDeploy
-    displayName: Build and Deploy
-    jobs:
-      - job: BuildAndDeployJob
-        workspace:
-          clean: all
-        steps:
-          - checkout: self
-          # Authenticate with AlloyDB App Service Account
-          - task: Bash@3
-            displayName: Setup GCP Credentials (App SA)
-            inputs:
-              targetType: inline
-              script: |
-                printf "%s" "$(ALLOYDB_ADMIN_SA_KEY)" | base64 --decode > $(GOOGLE_APPLICATION_CREDENTIALS)
-                if [ ! -s $(GOOGLE_APPLICATION_CREDENTIALS) ]; then
-                  echo "ERROR: GCP_SERVICE_ACCOUNT_KEY is empty. Check your Variable Group."
-                  exit 1
-                fi
-                gcloud auth activate-service-account --key-file=$(GOOGLE_APPLICATION_CREDENTIALS)
-                gcloud config set project $(GCP_PROJECT_ID)
-                gcloud config set compute/region $(GCP_REGION)
-                gcloud config set compute/zone $(GCP_ZONE)
-                gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet
-                gcloud auth list
-            env:
-              ALLOYDB_ADMIN_SA_KEY: $(ALLOYDB_ADMIN_SA_KEY)
-              GCP_PROJECT_ID: $(GCP_PROJECT_ID)
-              GCP_REGION: $(GCP_REGION)
-              GCP_ZONE: $(GCP_ZONE)
 
-          # Build EF Bundle
-          - task: UseDotNet@2
-            inputs:
-              version: "8.x"
-          - bash: |
-              dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj --runtime linux-x64
-              dotnet restore src/UPS.WWRR.Data/UPS.WWRR.Data.csproj --runtime linux-x64
-              BASE_CONNECTION=$(gcloud secrets versions access latest \
-                  --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
-                  --project=$(GCP_PROJECT_ID))
-              # IAM token
-              IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=$ALLOYDB_ADMIN_EMAIL)
-              export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
-              dotnet ef migrations bundle \
-                --project src/UPS.WWRR.Data \
-                --startup-project src/UPS.WWRR.APP \
-                --output efbundle
-              chmod +x efbundle
-            displayName: Build EFBundle
+- stage: Build_And_Deploy
+  displayName: Build Deploy And Run EF Migration
 
-          # Run EF migrations with IAM token
-          - task: Bash@3
-            displayName: Run EFBundle (DB Migration)
-            inputs:
-              targetType: inline
-              script: |
-                BASE_CONNECTION=$(gcloud secrets versions access latest \
-                  --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
-                  --project=$(GCP_PROJECT_ID))
+  jobs:
 
-                # IAM token
-                IAM_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=$ALLOYDB_ADMIN_EMAIL)
-                export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
-                ./efbundle --connection "$ALLOYDB_CONNECTION"
+  - job: BuildDeploy
+    displayName: Build Image Deploy Run Migration
+    pool:
+      name: WWRR Mod Custom Agent Pool
+      demands:
+        - Agent.Name -equals $(agentName)
 
-          # Build & Push Docker Image
-          - task: Bash@3
-            displayName: Build and Push Image
-            inputs:
-              targetType: inline
-              script: |
-                IMAGE_URI=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/$(IMAGE_NAME)
-                IMAGE_TAG=$(Build.BuildId)
-                docker build -t $IMAGE_URI:$IMAGE_TAG .
-                docker push $IMAGE_URI:$IMAGE_TAG
-                docker image prune -f
+    steps:
 
-          # Deploy to GKE with App connection string
-          - task: Bash@3
-            displayName: Deploy to GKE
-            inputs:
-              targetType: inline
-              script: |
-                gcloud container clusters get-credentials $(GKE_CLUSTER_NAME) --region $(GCP_REGION) --project $(GCP_PROJECT_ID)
-                export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-                export ALLOYDB_CONNECTION="$(gcloud secrets versions access latest --secret=wwrr-${{ parameters.environment }}-alloydb-app-conn)"
-                export ALLOYDB_APP_EMAIL="$ALLOYDB_APP_EMAIL"
-                if [ -z "$ALLOYDB_CONNECTION" ]; then
-                    echo "ERROR: AlloyDB connection string not retrieved"
-                    exit 1
-                fi
-                echo "Deploying to GKE using dynamic AlloyDB connection"    
-                helm upgrade --install ups-wwrr-batch ./manifests/ups-wwrr-batch \
-                  --namespace default \
-                  --create-namespace \
-                  --wait \
-                  --timeout 600s \
-                  --force \
-                  --set image.repository="$(IMAGE_REPOSITORY)" \
-                  --set image.tag="$(Build.BuildId)" \
-                  --set serviceAccount.annotations."iam\.gke\.io/gcp-service-account"="$(ALLOYDB_APP_EMAIL)" \
-                  --set-string env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME="$(GOOGLE_CLOUD_STORAGE_BUCKET_NAME)" \
-                  --set-string env.LOAD_INTERVAL_MINUTES="$(LOAD_INTERVAL_MINUTES)" \
-                  --set-string env.TABLE_NAME="$(TABLE_NAME)" \
-                  --set-string env.BATCH_SIZE="$(BATCH_SIZE)" \
-                  --set-string env.ASPNETCORE_ENVIRONMENT="$(ASPNETCORE_ENVIRONMENT)" \
-                  --set-string env.ALLOYDB_CONNECTION="$ALLOYDB_CONNECTION" \
-                  --set-string env.BatchLoad_ChunkSize="$(BatchLoad_ChunkSize)" \
-                  --set-string env.BatchLoad_Delimiter="$(BatchLoad_Delimiter)" \
-                  --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)"
-          - task: Bash@3
-            displayName: Cleanup Agent
-            condition: always()
-            inputs:
-              targetType: inline
-              script: |
-                echo "Cleaning credentials..."
-                rm -f $(GOOGLE_APPLICATION_CREDENTIALS) || true
-                echo "Cleaning docker..."
-                docker system prune -af --volumes || true
-                echo "Cleaning apt..."
-                sudo apt-get clean
-                sudo apt-get autoremove -y
-                pkill -f dotnet || true
-                sudo sync
-                sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
-                free -h
-                echo "Done."
+    - checkout: self
+
+    - task: Bash@3
+      displayName: Configure GCP
+      inputs:
+        targetType: inline
+        script: |
+
+          set -e
+
+          gcloud config set project $(GCP_PROJECT_ID)
+
+          echo "Using VM service account identity"
+          gcloud config set account wwrr-${{ parameters.environment }}-vm-sa@gcp-cti-wwrr-${{ parameters.environment }}.iam.gserviceaccount.com
+
+          gcloud container clusters get-credentials $(GKE_CLUSTER_NAME) \
+            --region $(GCP_REGION) \
+            --project $(GCP_PROJECT_ID)
+
+    - task: UseDotNet@2
+      inputs:
+        version: "8.x"
+
+    - task: Bash@3
+      displayName: Build EFBundle
+      inputs:
+        targetType: inline
+        script: |
+
+          dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj --runtime linux-x64
+          dotnet restore src/UPS.WWRR.Data/UPS.WWRR.Data.csproj --runtime linux-x64
+
+          BASE_CONNECTION=$(gcloud secrets versions access latest \
+            --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
+            --project=$(GCP_PROJECT_ID))
+          export ALLOYDB_CONNECTION="$BASE_CONNECTION"
+          # IAM_TOKEN=$(gcloud auth print-access-token \
+          #   --impersonate-service-account=$ALLOYDB_ADMIN_EMAIL)
+
+          # export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
+
+          dotnet ef migrations bundle \
+            --project src/UPS.WWRR.Data \
+            --startup-project src/UPS.WWRR.APP \
+            --output efbundle
+
+          chmod +x efbundle
+
+    - task: Bash@3
+      displayName: Authenticate Docker
+      inputs:
+        targetType: inline
+        script: |
+          gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet      
+
+    - task: Bash@3
+      displayName: Build EF Migration Image
+      inputs:
+        targetType: inline
+        script: |
+          cat <<EOF > Dockerfile.migration
+          FROM mcr.microsoft.com/dotnet/aspnet:8.0
+          RUN apt-get update \
+              && apt-get install -y postgresql-client procps \
+              && rm -rf /var/lib/apt/lists/*
+          WORKDIR /app
+          COPY efbundle /app/efbundle
+          RUN chmod +x /app/efbundle
+          ENTRYPOINT ["/app/efbundle"]
+          EOF
+
+          MIGRATION_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/ef-migration
+          IMAGE_TAG=$(Build.BuildId)
+
+          docker build -f Dockerfile.migration -t $MIGRATION_IMAGE:$IMAGE_TAG .
+          docker push $MIGRATION_IMAGE:$IMAGE_TAG
+
+    - task: Bash@3
+      displayName: 'Fetch AlloyDB Secrets'
+      inputs:
+        targetType: inline
+        script: |
+          set -e
+
+          echo "Fetching AlloyDB admin connection..."
+
+          BASE_CONNECTION=$(gcloud secrets versions access latest \
+            --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
+            --project=$(GCP_PROJECT_ID))
+          BASE_CONNECTION=$(echo "$BASE_CONNECTION" | sed 's/SslMode=Require/SslMode=Disable/g')
+
+          echo "##vso[task.setvariable variable=ALLOYDB_CONNECTION;issecret=true]$BASE_CONNECTION"   
+
+    - task: Bash@3
+      displayName: Run EFBundle (DB Migration) Job
+      inputs:
+        targetType: inline
+        script: |
+
+          MIGRATION_IMAGE=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/ef-migration
+          IMAGE_TAG=$(Build.BuildId)
+
+          kubectl delete job efbundle-migration-${{ parameters.environment }}-$(Build.BuildId) \
+          -n wwrr-${{ parameters.environment }} --ignore-not-found
+
+          cat <<EOF | kubectl apply -f -
+
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: efbundle-migration-${{ parameters.environment }}-$(Build.BuildId)
+            namespace: wwrr-${{ parameters.environment }}
+
+          spec:
+            ttlSecondsAfterFinished: 300
+            backoffLimit: 0
+
+            template:
+              spec:
+
+                restartPolicy: Never
+                serviceAccountName: ups-wwrr-batch
+                shareProcessNamespace: true
+
+                hostAliases:
+                - ip: "$(ALLOYDB_HOST_ALIAS_IP)"
+                  hostnames:
+                  - "$(ALLOYDB_HOST_ALIAS_NAME)"
+
+                containers:
+
+                - name: ef-runner
+                  image: $MIGRATION_IMAGE:$IMAGE_TAG
+                  env:
+                    - name: ALLOYDB_CONNECTION
+                      value: "$(ALLOYDB_CONNECTION)" 
+                    - name: GOOGLE_CLOUD_STORAGE_BUCKET_NAME
+                      value: "$(GOOGLE_CLOUD_STORAGE_BUCKET_NAME)"  
+                    - name: LOAD_INTERVAL_MINUTES
+                      value: "$(LOAD_INTERVAL_MINUTES)"
+                    - name: TABLE_NAME
+                      value: "$(TABLE_NAME)"
+                    - name: BATCH_SIZE
+                      value: "$(BATCH_SIZE)"
+                    - name: ASPNETCORE_ENVIRONMENT
+                      value: "$(ASPNETCORE_ENVIRONMENT)"
+                    - name: BatchLoad_ChunkSize
+                      value: "$(BatchLoad_ChunkSize)"
+                    - name: BatchLoad_Delimiter
+                      value: "$(BatchLoad_Delimiter)"
+                    - name: BatchLoad_HasHeader
+                      value: "$(BatchLoad_HasHeader)"
+                    - name: EnableIAMTokenAuth
+                      value: "$(EnableIAMTokenAuth)"  
+        
+
+                  command:
+                  - /bin/sh
+                  - -c
+                  - |
+
+                    echo "Waiting for AlloyDB proxy..."
+
+                    until pg_isready -h 127.0.0.1 -p 5432; do
+                      echo "Proxy not ready yet..."
+                      sleep 2
+                    done
+                    echo "Proxy is ready!"
+                    /app/efbundle --connection "\$ALLOYDB_CONNECTION"
+                    echo "Migration finished"
+
+                    pkill -f alloydb-auth-proxy || true
+
+                - name: alloydb-auth-proxy
+                  image: gcr.io/alloydb-connectors/alloydb-auth-proxy:1.13.11
+                  args:
+                    - "projects/$(GCP_PROJECT_ID)/locations/$(GCP_REGION)/clusters/wwrr-${{ parameters.environment }}-alloydb/instances/primary"
+                    - "--psc"
+                    - "--address=127.0.0.1"
+                    - "--port=5432"
+                    - "--auto-iam-authn"
+
+          EOF
+
+    - task: Bash@3
+      displayName: Migration Logs
+      inputs:
+        targetType: inline
+        script: |
+
+          kubectl wait --for=condition=Ready pod \
+          -l job-name=efbundle-migration-${{ parameters.environment }}-$(Build.BuildId) \
+          -n wwrr-${{ parameters.environment }} \
+          --timeout=120s
+
+          kubectl logs -f job/efbundle-migration-${{ parameters.environment }}-$(Build.BuildId) \
+          -n wwrr-${{ parameters.environment }} \
+          -c ef-runner
+
+    - task: Bash@3
+      displayName: Build and Push Docker Image
+      inputs:
+        targetType: inline
+        script: |
+
+          IMAGE_URI=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/$(IMAGE_NAME)
+          IMAGE_TAG=$(Build.BuildId)
+
+          docker build -t $IMAGE_URI:$IMAGE_TAG .
+          docker push $IMAGE_URI:$IMAGE_TAG
+
+          docker image prune -f
+
+    - task: Bash@3
+      displayName: Deploy to GKE
+      inputs:
+        targetType: inline
+        script: |
+          IMAGE_REPOSITORY=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/$(IMAGE_NAME)
+          helm upgrade --install ups-wwrr-batch ./manifests/ups-wwrr-batch \
+          --namespace wwrr-${{ parameters.environment }} \
+          --wait \
+          --timeout 600s \
+          --force \
+          --set image.repository="$IMAGE_REPOSITORY" \
+          --set image.tag="$(Build.BuildId)" \
+          --set serviceAccount.annotations."iam\.gke\.io/gcp-service-account"="$(ALLOYDB_ADMIN_EMAIL)" \
+          --set-string env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME="$(GOOGLE_CLOUD_STORAGE_BUCKET_NAME)" \
+          --set-string env.LOAD_INTERVAL_MINUTES="$(LOAD_INTERVAL_MINUTES)" \
+          --set-string env.TABLE_NAME="$(TABLE_NAME)" \
+          --set-string env.BATCH_SIZE="$(BATCH_SIZE)" \
+          --set-string env.ASPNETCORE_ENVIRONMENT="$(ASPNETCORE_ENVIRONMENT)" \
+          --set-string env.ALLOYDB_CONNECTION="$(ALLOYDB_CONNECTION)" \
+          --set-string env.EnableIAMTokenAuth="$(EnableIAMTokenAuth)" \
+          --set-string env.BatchLoad_ChunkSize="$(BatchLoad_ChunkSize)" \
+          --set-string env.BatchLoad_Delimiter="$(BatchLoad_Delimiter)" \
+          --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)" \
+          --set-string ALLOYDB_HOST_ALIAS_IP="$(ALLOYDB_HOST_ALIAS_IP)" \
+          --set-string ALLOYDB_HOST_ALIAS_NAME="$(ALLOYDB_HOST_ALIAS_NAME)" \
+          --set-string ALLOYDB_INSTANCE="projects/$(GCP_PROJECT_ID)/locations/$(GCP_REGION)/clusters/wwrr-${{ parameters.environment }}-alloydb/instances/primary"     
+
+    - task: Bash@3
+      displayName: Cleanup
+      condition: always()
+      inputs:
+        targetType: inline
+        script: |
+
+          docker system prune -af --volumes || true
+          sudo apt-get clean
+          sudo apt-get autoremove -y
+          free -h
