@@ -93,7 +93,7 @@ namespace UPS.WWRR.Business.Repositories
         => _db.DataLoads.AnyAsync(l => l.LoadTableName == tableName && l.LoadVersion == loadVersion, ct);
 
         public Task<List<DataLoad>> GetLoadsByStatusAsync(LoadStatus status, string loadVersion, CancellationToken ct = default)
-        => _db.DataLoads.Where(l => l.LoadStatusCode == status.ToString() && l.LoadVersion == loadVersion).ToListAsync(ct);
+        => _db.DataLoads.Where(l => l.LoadStatusCode == status.ToString() && l.LogFileLocation == loadVersion).ToListAsync(ct);
 
 
         public async Task<MergeResult> ExecuteMergeStoredProcedureAsync(string storedProcedureName, CancellationToken ct = default)

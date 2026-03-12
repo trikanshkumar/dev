@@ -119,7 +119,7 @@ namespace UPS.WWRR.UnitTests
                 new DataLoad { LoadTableName = "taltccy", LoadVersionNumber = 2, LoadStatusCode = LoadStatus.Processing.ToString(), FileLocation = "f2", DataSource = "src", CreatedOn = DateTime.UtcNow, LogFileLocation = "log", TotalBatchNumber = 0, BatchSize = 10, LoadVersion = "2026_02_18_2" }
             );
             await ctx.SaveChangesAsync();
-            var list = await repo.GetLoadsByStatusAsync(LoadStatus.Processing, "2026_02_18_2");
+            var list = await repo.GetLoadsByStatusAsync(LoadStatus.Processing, "log");
             Assert.Single(list);
             Assert.Equal(2, list[0].LoadVersionNumber);
         }
