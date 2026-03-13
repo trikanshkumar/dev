@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
 using Serilog;
+using Serilog.Filters;
+using Serilog.Formatting.Compact;
 using System.Diagnostics.CodeAnalysis;
 using UPS.WWRR.API.Infrastructure;
 using UPS.WWRR.Business.Common.Helper;
@@ -18,9 +20,19 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        // Configure Serilog
+        // Configure Serilog — CsvLoadLogEntry and CsvLoadSummaryLogEntry go as JSON to Log console,
+        // all other logs use plain-text console output.
         Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
+            .WriteTo.Logger(lc => lc
+                .Filter.ByIncludingOnly(e =>
+                    Matching.WithProperty("CsvLoadLogEntry")(e) ||
+                    Matching.WithProperty("CsvLoadSummaryLogEntry")(e))
+                .WriteTo.Console(new RenderedCompactJsonFormatter()))
+            .WriteTo.Logger(lc => lc
+                .Filter.ByExcluding(e =>
+                    Matching.WithProperty("CsvLoadLogEntry")(e) ||
+                    Matching.WithProperty("CsvLoadSummaryLogEntry")(e))
+                .WriteTo.Console())
             .CreateLogger();
 
         // Direct environment variable reads (no helper methods)

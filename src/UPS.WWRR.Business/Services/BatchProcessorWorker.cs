@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.Extensions.Logging;
 using UPS.WWRR.Business.Common.Constants;
 using UPS.WWRR.Business.Common.Enum;
@@ -14,7 +14,6 @@ namespace UPS.WWRR.Business.Services
 {
     public class BatchProcessorWorker : IBatchProcessorWorker
     {
-
         private readonly ILogger<BatchProcessorWorker> _logger;
         private readonly IStorageService _storageService;
         private readonly ICsvValidator _csvValidator;
@@ -29,6 +28,12 @@ namespace UPS.WWRR.Business.Services
         private readonly bool _trastdUseBatchMerge;
         private readonly bool _tsubchgUseBatchMerge;
         private readonly HashSet<string> _movedObjects = new(StringComparer.OrdinalIgnoreCase);
+        
+        /// <summary>
+        /// Accumulates CSV load log entries during a processing cycle.
+        /// A single summary log is emitted at the end of the cycle.
+        /// </summary>
+        private readonly List<CsvLoadLogEntry> _csvLoadLogEntries = [];
         
         /// <summary>
         /// Tracks which paired table groups have already executed their merge SP in the current processing cycle.
@@ -91,6 +96,7 @@ namespace UPS.WWRR.Business.Services
                 _movedObjects.Clear();
                 _processedMergeSPs.Clear();
                 _pairedMergeResults.Clear();
+                _csvLoadLogEntries.Clear();
 
                 // Discover and validate new loads (creates DataLoad entries)
                 var newLoads = await BuildLoadsAsync(stoppingToken);
@@ -129,6 +135,10 @@ namespace UPS.WWRR.Business.Services
             {
                 _logger.LogInformation("BatchProcessorWorker ended with errors at {Time}", DateTimeOffset.UtcNow);
                 _logger.LogError(ex, "Unhandled error in Processor");
+            }
+            finally
+            {
+                LogCsvLoadSummary();
             }
 
             _logger.LogInformation("BatchProcessorWorker ended at {Time}", DateTimeOffset.UtcNow);
@@ -183,6 +193,7 @@ namespace UPS.WWRR.Business.Services
                 {
                     load.LoadStatusCode = LoadStatus.MissingRequiredPair.ToString();
                     load.ProcessedOn = DateTime.UtcNow;
+                    BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Missing paired table(s) of {load.LoadTableName}");
                     // The file may not exist, we didn't check for that yet, but the MoveObjectToProcessedAsync method handles and logs that exception gracefully
                     var fileName = Path.GetFileName(load.FileLocation);
                     await MoveObjectToProcessedAsync(fileName);
@@ -399,12 +410,13 @@ namespace UPS.WWRR.Business.Services
                     if (!copySuccess)
                     {
                         await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
+                        BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Staging Load Failed: {string.Join("; ", copyErrors)}");
                         // Move failed file to processed folder
                         await MoveObjectToProcessedAsync(gcsFileName);
                     }
                     else if (rowsLoaded == 0)
                     {
-                        // CSV file has a header but no data rows — do NOT run the MERGE SP
+                        // CSV file has a header but no data rows � do NOT run the MERGE SP
                         // because an empty staging table would cause all records in the main table to be deleted.
                         _logger.LogWarning("Empty .csv file found. No data to process. Table: {tbl}, Load: {id}, File: {file}.",
                             load.LoadTableName, load.Id, gcsFileName);
@@ -422,6 +434,7 @@ namespace UPS.WWRR.Business.Services
                         await _loadRepository.AddExceptionsAsync([emptyException], ct);
 
                         await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedMissingData, DateTime.UtcNow, ct);
+                        BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Empty .csv file: {gcsFileName}");
                         await MoveObjectToProcessedAsync(gcsFileName);
                     }
                 }
@@ -429,6 +442,7 @@ namespace UPS.WWRR.Business.Services
                 {
                     _logger.LogError(ex, "CopyBatch failed for table {tbl} load {id}", load.LoadTableName, load.Id);
                     await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
+                    BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Staging Load failed: {ex.Message}");
                     // Move failed file to processed folder
                     await MoveObjectToProcessedAsync(gcsFileName);
                 }
@@ -513,15 +527,17 @@ namespace UPS.WWRR.Business.Services
                                 ErrorMessage = mergeResult.ErrorMessage,
                                 CreatedOn = DateTime.UtcNow
                             };
-                            await _loadRepository.AddErrorsAsync(new[] { error }, ct);
+                        await _loadRepository.AddErrorsAsync(new[] { error }, ct);
                             await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
+                            BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted, mergeResult.ErrorMessage);
                         }
                         else
                         {
-                            await _loadRepository.MarkStagingCompletedAsync(descriptor.StagingTableName, ct);
+                        await _loadRepository.MarkStagingCompletedAsync(descriptor.StagingTableName, ct);
                             _logger.LogInformation("Staging table {stg} marked as completed for load {id}", descriptor.StagingTableName, load.Id);
                             await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
                             _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
+                            BuildCsvLoadLog(load, ServiceConstants.LoadStatusSuccess, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
                         }
                     }
                 }
@@ -529,6 +545,7 @@ namespace UPS.WWRR.Business.Services
                 {
                     _logger.LogError(ex, "Merge failed for table {tbl} load {id}", load.LoadTableName, load.Id);
                     await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
+                    BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Main Merge Failed: {ex.Message}");
                 }
                 finally
                 {
@@ -904,6 +921,7 @@ namespace UPS.WWRR.Business.Services
                 {
                     await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
                     _logger.LogWarning("Validation unsupported for table {tbl}", load.LoadTableName);
+                    BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Unsupported table {load.LoadTableName}");
                     
                     // Move unsupported file to processed folder
                     var unsupportedFileName = Path.GetFileName(load.FileLocation);
@@ -945,7 +963,7 @@ namespace UPS.WWRR.Business.Services
                             
                             // Move the file with actual name to processed folder
                             await MoveObjectToProcessedAsync(actualName);
-                            
+                            BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: errorMessage);
 
                             // Clean up temp file
                             if (tempFile != null)
@@ -974,6 +992,7 @@ namespace UPS.WWRR.Business.Services
                         await _loadRepository.AddExceptionsAsync([fileNotFoundException], ct);
 
                         await _loadRepository.UpdateFileLocation(load.Id, "", ct);
+                        BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: fileNotFoundMessage);
 
                         // Clean up temp file (even though download didn't happen, the temp file was created)
                         if (tempFile != null)
@@ -990,6 +1009,7 @@ namespace UPS.WWRR.Business.Services
                         _logger.LogError("Downloaded file size mismatch. Remote file: {remoteFile}, Local file: {localFile}. Skipping load.",
                             gcsFileName, tempFile);
                         await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
+                        BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Download file size mismatch for {gcsFileName}");
                         
                         // Clean up temp file
                         try { File.Delete(tempFile); } catch { }
@@ -1033,11 +1053,16 @@ namespace UPS.WWRR.Business.Services
 
                     await _loadRepository.UpdateStatusAsync(load.Id, valid ? LoadStatus.ReadyToProcess : LoadStatus.FailedValidation, valid ? null : DateTime.UtcNow, ct);
                     _logger.LogInformation("Validation {result} for table {tbl} load {id}", valid ? "passed" : "failed", load.LoadTableName, load.Id);
+                    if (!valid)
+                    {
+                        BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"CSV validation failed: {string.Join("; ", validation.ValidationErrors ?? new List<string>())}");
+                    }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Validation error for table {tbl} load {id}", load.LoadTableName, load.Id);
                     await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
+                    BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Validation Failed: {ex.Message}");
                     
                     // Clean up temp file if it was created
                     if (tempFile != null)
@@ -1209,6 +1234,7 @@ namespace UPS.WWRR.Business.Services
                 await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
                 _logger.LogInformation("Load Process Completed for second table {tbl} load {id} in this pair load. Records Count: Inserted={ins}, Updated={upd}, Deleted={del}", 
                     load.LoadTableName, load.Id, skipDetail.RecordsInserted, skipDetail.RecordsUpdated, skipDetail.RecordsDeleted);
+                BuildCsvLoadLog(load, ServiceConstants.LoadStatusSuccess, skipDetail.RecordsInserted, skipDetail.RecordsUpdated, skipDetail.RecordsDeleted);
                 return;
             }
 
@@ -1231,6 +1257,7 @@ namespace UPS.WWRR.Business.Services
                 };
                 await _loadRepository.AddErrorsAsync(new[] { error }, ct);
                 await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
+                BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted, mergeResult.ErrorMessage);
             }
             else
             {
@@ -1248,6 +1275,7 @@ namespace UPS.WWRR.Business.Services
                 }
                 await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
                 _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
+                BuildCsvLoadLog(load, ServiceConstants.LoadStatusSuccess, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
             }
         }
 
@@ -1385,6 +1413,89 @@ namespace UPS.WWRR.Business.Services
             { "izchartorgpoldiv_stg", "izchartorgpoldiv" },
             { "izchartdtnpoldiv_stg", "izchartdtnpoldiv" }
         };
+
+        /// <summary>
+        /// Accumulates a structured log entry for a CSV file load operation.
+        /// The entry is added to the collection and emitted as a single summary at the end of the processing cycle.
+        /// </summary>
+        private void BuildCsvLoadLog(DataLoad load, string loadStatus, int recordsInserted = 0, int recordsUpdated = 0, int recordsDeleted = 0, string? errorDetails = null)
+        {
+            var logEntry = new CsvLoadLogEntry
+            {
+                TableName = load.LoadTableName,
+                CsvFileName = Path.GetFileName(load.FileLocation),
+                LoadStatus = loadStatus,
+                LoadVersion = load.LoadVersion,
+                RecordsInserted = recordsInserted,
+                RecordsUpdated = recordsUpdated,
+                RecordsDeleted = recordsDeleted,
+                ErrorDetails = errorDetails
+            };
+
+            _csvLoadLogEntries.Add(logEntry);
+        }
+
+        /// <summary>
+        /// Emits a single structured summary log entry containing all CSV load results for the current processing cycle.
+        /// </summary>
+        private void LogCsvLoadSummary()
+        {
+            if (_csvLoadLogEntries.Count == 0) return;
+
+            int totalFiles = _csvLoadLogEntries.Count;
+            int successCount = _csvLoadLogEntries.Count(e => e.LoadStatus == ServiceConstants.LoadStatusSuccess);
+            int failedCount = totalFiles - successCount;
+
+            var summary = new CsvLoadSummaryLogEntry
+            {
+                TotalFiles = totalFiles,
+                SuccessCount = successCount,
+                FailedCount = failedCount,
+                Summary = BuildSummaryTable(_csvLoadLogEntries, totalFiles, successCount, failedCount)
+            };
+
+            using (_logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CsvLoadSummaryLogEntry"] = true,
+                [nameof(summary.TotalFiles)] = summary.TotalFiles,
+                [nameof(summary.SuccessCount)] = summary.SuccessCount,
+                [nameof(summary.FailedCount)] = summary.FailedCount,
+                [nameof(summary.Summary)] = summary.Summary
+            }))
+            {
+                _logger.LogInformation("CsvLoadSummary");
+            }
+        }
+
+        /// <summary>
+        /// Builds a fixed-width formatted summary table from the accumulated CSV load log entries.
+        /// The output is suitable for email alert display and structured log Summary field.
+        /// </summary>
+        private static string BuildSummaryTable(List<CsvLoadLogEntry> entries, int totalFiles, int successCount, int failedCount)
+        {
+            var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+            const string separator = "------------------------------------------------------------------------------------------------------------------------";
+            const int maxErrorLength = 50;
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"WWRR Data Load Summary \u2014 {timestamp} UTC");
+            sb.AppendLine($"Total Files: {totalFiles} | Success: {successCount} | Failed: {failedCount}");
+            sb.AppendLine(separator);
+            sb.AppendLine($"{"Table",-12}{"CSV File",-29}{"Status",-10}{"Inserted",10}{"Updated",10}{"Deleted",10}   Error");
+            sb.AppendLine(separator);
+
+            foreach (var entry in entries)
+            {
+                var error = entry.ErrorDetails ?? string.Empty;
+                if (error.Length > maxErrorLength)
+                    error = string.Concat(error.AsSpan(0, maxErrorLength - 3), "...");
+
+                sb.AppendLine($"{entry.TableName,-12}{entry.CsvFileName,-29}{entry.LoadStatus,-10}{entry.RecordsInserted,10}{entry.RecordsUpdated,10}{entry.RecordsDeleted,10}   {error}");
+            }
+
+            sb.AppendLine(separator);
+            return sb.ToString();
+        }
 
         private async Task MoveObjectToProcessedAsync(string objectName)
         {
