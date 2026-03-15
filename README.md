@@ -83,6 +83,18 @@ dotnet test --no-build --verbosity normal
 dotnet test --filter FullyQualifiedName~CsvSplitterServiceTest
 ```
 Coverage via `coverlet.collector` (already referenced).
+### Adding Batch Processor Tests
+When adding support for a new table, you will need to update the tests in the `BatchProcessingTests/` directory. It has three files:
+
+- `BatchProcessingTests.cs`: BatchProcessorWorker tests that do not involve specific tables (probably won't need to update)
+- `BatchProcessingTableTests.cs`: BatchProcessorWorker tests that involve tables with standard data loads.
+- `BatchProcessingPairedTableTests.cs`: BatchProcessorWorker tests that involve paired tables with aggregated data loads.
+
+If you add a table that has a standard, simple data load, add it to the `Tables` list at the top of `BatchProcessingTableTests.cs`
+
+If you add two paired tables that involve an aggregated data load, add it to the `TablePairs` map at the top of `BatchProcessingPairedTableTests.cs`
+
+Then run the tests again and your new table should pass.
 
 ## API References (High-Level Contracts)
 | Interface | Method | Purpose |
