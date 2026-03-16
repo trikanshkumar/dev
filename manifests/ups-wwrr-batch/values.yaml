@@ -21,6 +21,10 @@ env:
   BatchLoad_Delimiter: ""
   BatchLoad_HasHeader: ""
   EnableIAMTokenAuth: ""
+  GCS_DOWNLOAD_CHUNK_SIZE: ""
+  TVASYLN_USE_BATCH_MERGE: ""
+  TRASTD_USE_BATCH_MERGE: ""
+  TSUBCHG_USE_BATCH_MERGE: ""
 
 ALLOYDB_INSTANCE: ""
 ALLOYDB_HOST_ALIAS_IP: ""
