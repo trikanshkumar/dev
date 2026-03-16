@@ -13,9 +13,9 @@ parameters:
 
 variables:
   - group: wwrr-${{ parameters.environment }}-pipeline-password
-  
+
   - name: SonarQubeProjectKey
-    value: wwrr-mod-app-data-load
+    value: P4AG_MARKETING_APPS_wwrr-mod-app-data-load_283c95c3-74f2-49e6-aa5a-fb36cc97a13b
 
   - name: SonarQubeServiceConnection
     value: wwrr-mod-sq
