@@ -47,6 +47,16 @@ spec:
               value: {{ .Values.env.BatchLoad_HasHeader | quote }}
             - name: EnableIAMTokenAuth
               value: {{ .Values.env.EnableIAMTokenAuth | quote }}
+            - name: GCS_DOWNLOAD_CHUNK_SIZE
+              value: {{ .Values.env.GCS_DOWNLOAD_CHUNK_SIZE | quote }}
+            - name: TVASYLN_USE_BATCH_MERGE
+              value: {{ .Values.env.TVASYLN_USE_BATCH_MERGE | quote }}
+            - name: TRASTD_USE_BATCH_MERGE
+              value: {{ .Values.env.TRASTD_USE_BATCH_MERGE | quote }}
+            - name: TSUBCHG_USE_BATCH_MERGE
+              value: {{ .Values.env.TSUBCHG_USE_BATCH_MERGE | quote }}
+            - name: EnableIAMTokenAuth
+              value: {{ .Values.env.EnableIAMTokenAuth | quote }}
 
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
