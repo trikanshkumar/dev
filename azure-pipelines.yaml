@@ -14,6 +14,12 @@ parameters:
 variables:
   - group: wwrr-${{ parameters.environment }}-pipeline-password
 
+  - name: SonarQubeProjectKey
+    value: P4AG_MARKETING_APPS_wwrr-mod-app-data-load_283c95c3-74f2-49e6-aa5a-fb36cc97a13b
+
+  - name: SonarQubeServiceConnection
+    value: wwrr-mod-sq
+
   - name: agentName
     ${{ if eq(parameters.environment, 'dev') }}:
       value: 'wwrr-dev-agent'
@@ -58,6 +64,12 @@ stages:
     steps:
 
     - checkout: self
+
+    - task: SonarQubePrepare@5
+      inputs:
+        SonarQube: '$(SonarQubeServiceConnection)'
+        scannerMode: 'MSBuild'
+        projectKey: '$(SonarQubeProjectKey)'
 
     - task: Bash@3
       displayName: Configure GCP
