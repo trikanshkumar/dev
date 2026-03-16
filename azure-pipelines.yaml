@@ -210,7 +210,15 @@ stages:
                     - name: BatchLoad_HasHeader
                       value: "$(BatchLoad_HasHeader)"
                     - name: EnableIAMTokenAuth
-                      value: "$(EnableIAMTokenAuth)"  
+                      value: "$(EnableIAMTokenAuth)"
+                    - name: GCS_DOWNLOAD_CHUNK_SIZE
+                      value: "$(GCS_DOWNLOAD_CHUNK_SIZE)"
+                    - name: TVASYLN_USE_BATCH_MERGE
+                      value: "$(TVASYLN_USE_BATCH_MERGE)"
+                    - name: TRASTD_USE_BATCH_MERGE
+                      value: "$(TRASTD_USE_BATCH_MERGE)"
+                    - name: TSUBCHG_USE_BATCH_MERGE
+                      value: "$(TSUBCHG_USE_BATCH_MERGE)"  
         
 
                   command:
@@ -303,6 +311,10 @@ stages:
           --set-string env.EnableIAMTokenAuth="$(EnableIAMTokenAuth)" \
           --set-string env.BatchLoad_ChunkSize="$(BatchLoad_ChunkSize)" \
           --set-string env.BatchLoad_Delimiter="$(BatchLoad_Delimiter)" \
+          --set-string env.GCS_DOWNLOAD_CHUNK_SIZE="$(GCS_DOWNLOAD_CHUNK_SIZE)" \
+          --set-string env.TVASYLN_USE_BATCH_MERGE="$(TVASYLN_USE_BATCH_MERGE)" \
+          --set-string env.TRASTD_USE_BATCH_MERGE="$(TRASTD_USE_BATCH_MERGE)" \
+          --set-string env.TSUBCHG_USE_BATCH_MERGE="$(TSUBCHG_USE_BATCH_MERGE)" \
           --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)" \
           --set-string ALLOYDB_HOST_ALIAS_IP="$(ALLOYDB_HOST_ALIAS_IP)" \
           --set-string ALLOYDB_HOST_ALIAS_NAME="$(ALLOYDB_HOST_ALIAS_NAME)" \
