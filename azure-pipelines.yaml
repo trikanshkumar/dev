@@ -65,6 +65,12 @@ stages:
 
     - checkout: self
 
+    - task: SonarQubePrepare@5
+      inputs:
+        SonarQube: '$(SonarQubeServiceConnection)'
+        scannerMode: 'MSBuild'
+        projectKey: '$(SonarQubeProjectKey)'
+
     - task: Bash@3
       displayName: Configure GCP
       inputs:
