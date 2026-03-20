@@ -52,10 +52,16 @@ BEGIN
             tgt.rec_eff_stt_dt    = src.rec_eff_stt_dt
         )
         WHEN MATCHED AND (
-            tgt.rec_eff_end_dt  IS DISTINCT FROM src.rec_eff_end_dt
+            tgt.pce_max_alw_wgt_qy IS DISTINCT FROM src.pce_max_alw_wgt_qy OR
+            tgt.trh_max_wgt_qy     IS DISTINCT FROM src.trh_max_wgt_qy OR
+            tgt.sn_tln_wgt_qy      IS DISTINCT FROM src.sn_tln_wgt_qy OR
+            tgt.rec_eff_end_dt     IS DISTINCT FROM src.rec_eff_end_dt
         ) THEN UPDATE SET
-            load_ref_te = src.load_ref_te,
-            rec_eff_end_dt  = src.rec_eff_end_dt
+            load_ref_te        = src.load_ref_te,
+            pce_max_alw_wgt_qy = src.pce_max_alw_wgt_qy,
+            trh_max_wgt_qy     = src.trh_max_wgt_qy,
+            sn_tln_wgt_qy      = src.sn_tln_wgt_qy,
+            rec_eff_end_dt     = src.rec_eff_end_dt
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 cny_cd,

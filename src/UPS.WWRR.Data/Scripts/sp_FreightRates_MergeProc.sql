@@ -24,7 +24,7 @@ BEGIN
     );
 
     WITH src_dedup AS (
-        SELECT DISTINCT
+        SELECT
                svc_ra_cht_nr,
                svc_ra_cht_eff_dt,
                svc_ra_cht_sts_cd,

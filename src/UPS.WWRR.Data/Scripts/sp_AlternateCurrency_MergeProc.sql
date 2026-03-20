@@ -43,22 +43,13 @@ BEGIN
             tgt.cnv_fr_ccy_cd      = src.cnv_fr_ccy_cd AND
             tgt.cnv_to_ccy_cd      = src.cnv_to_ccy_cd AND
             tgt.alt_ccy_xch_stt_dt = src.alt_ccy_xch_stt_dt AND
-            tgt.alt_ccy_xch_end_dt = src.alt_ccy_xch_end_dt
+            tgt.alt_ccy_xch_end_dt = src.alt_ccy_xch_end_dt AND
+            tgt.alt_ccy_xch_ra_qy  = src.alt_ccy_xch_ra_qy AND
+            tgt.alt_ccy_xch_or_qy  = src.alt_ccy_xch_or_qy AND
+            tgt.alt_ccy_dmc_ccl_qy = src.alt_ccy_dmc_ccl_qy AND
+            tgt.alt_ccy_rou_dmc_qy = src.alt_ccy_rou_dmc_qy AND
+            tgt.usr_nr             = src.usr_nr
         )
-        WHEN MATCHED AND (
-            tgt.alt_ccy_xch_ra_qy  IS DISTINCT FROM src.alt_ccy_xch_ra_qy OR
-            tgt.alt_ccy_xch_or_qy  IS DISTINCT FROM src.alt_ccy_xch_or_qy OR
-            tgt.alt_ccy_dmc_ccl_qy IS DISTINCT FROM src.alt_ccy_dmc_ccl_qy OR
-            tgt.alt_ccy_rou_dmc_qy IS DISTINCT FROM src.alt_ccy_rou_dmc_qy OR
-            tgt.usr_nr             IS DISTINCT FROM src.usr_nr
-        )
-            THEN UPDATE SET
-                alt_ccy_xch_ra_qy  = src.alt_ccy_xch_ra_qy,
-                alt_ccy_xch_or_qy  = src.alt_ccy_xch_or_qy,
-                alt_ccy_dmc_ccl_qy = src.alt_ccy_dmc_ccl_qy,
-                alt_ccy_rou_dmc_qy = src.alt_ccy_rou_dmc_qy,
-                usr_nr             = src.usr_nr,
-                load_ref_te        = src.load_ref_te
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
                 xpt_cny_cd,
