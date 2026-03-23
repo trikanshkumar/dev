@@ -236,5 +236,61 @@ public class ExtensionsHelperTests
         Assert.Equal(originalText, result);
     }
 
+    [Fact]
+    public void UnixTimeSecondsToDateTime_InvalidFormat_ThrowsFormatException()
+    {
+        Assert.Throws<FormatException>(() => "not_a_number".UnixTimeSecondsToDateTime());
+    }
+
+    [Fact]
+    public void UnixTimeMillisecondsToDateTime_InvalidFormat_ThrowsFormatException()
+    {
+        Assert.Throws<FormatException>(() => "not_a_number".UnixTimeMillisecondsToDateTime());
+    }
+
+    [Fact]
+    public void UnixTimeSecondsToDateTime_ZeroValue_ReturnsEpoch()
+    {
+        var result = "0".UnixTimeSecondsToDateTime();
+
+        Assert.Equal(1970, result.Year);
+        Assert.Equal(1, result.Month);
+        Assert.Equal(1, result.Day);
+    }
+
+    [Fact]
+    public void UnixTimeMillisecondsToDateTime_ZeroValue_ReturnsEpoch()
+    {
+        var result = "0".UnixTimeMillisecondsToDateTime();
+
+        Assert.Equal(1970, result.Year);
+        Assert.Equal(1, result.Month);
+        Assert.Equal(1, result.Day);
+    }
+
+    [Fact]
+    public void ToUnixTime_EpochDate_ReturnsZero()
+    {
+        var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var result = epoch.ToUnixTime();
+
+        Assert.Equal("0", result);
+    }
+
+    [Fact]
+    public void ToUnixTimeMilliSeconds_EpochDate_ReturnsZero()
+    {
+        var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var result = epoch.ToUnixTimeMilliSeconds();
+
+        Assert.Equal("0", result);
+    }
+
+    [Fact]
+    public void DecompressMessage_InvalidBase64_ThrowsFormatException()
+    {
+        Assert.Throws<FormatException>(() => StringExtension.DecompressMessage("!!!not-base64!!!"));
+    }
+
     #endregion
 }

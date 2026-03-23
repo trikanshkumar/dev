@@ -24,6 +24,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.20" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.20" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,5 +45,6 @@
     <None Update="Resources\tarclhd-valid.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <EmbeddedResource Include="Resources\EmbeddedTestResource.txt" />
   </ItemGroup>
 </Project>
