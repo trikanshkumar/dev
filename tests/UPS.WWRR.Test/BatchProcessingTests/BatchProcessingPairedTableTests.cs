@@ -819,6 +819,336 @@ public class BatchProcessingPairedTableTests : BatchProcessorTests
 
     #endregion
 
+    #region BuildLoadsAsync - Edge Case Tests
+
+    [Theory]
+    [MemberData(nameof(TablePairs))]
+    public async Task BuildLoadsAsync_GetFileAsStringThrows_ReturnsEmpty(string baseTableName, string pairedTableName)
+    {
+        // Arrange - GetFileAsString throws an exception
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ThrowsAsync(new IOException("Network error reading file"));
+
+        var sut = CreateSut();
+
+        // Act
+        var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
+
+        // Assert - Should return empty list and not throw
+        Assert.Empty(list);
+        _repo.Verify(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [MemberData(nameof(TablePairs))]
+    public async Task BuildLoadsAsync_MalformedFilename_PartsLessThan5_SkipsEntry(string baseTableName, string pairedTableName)
+    {
+        var baseTableUpperCase = baseTableName.ToUpper();
+        // Malformed filename with fewer than 5 underscore-separated parts
+        var malformedFileName = $"{baseTableUpperCase}_2025_01.csv";
+
+        // Arrange
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        var content = $"TableName,FileExtractName,Destination\n{baseTableUpperCase},{malformedFileName},SRC";
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
+        _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
+
+        var sut = CreateSut();
+
+        // Act
+        var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
+
+        // Assert - Malformed entry is skipped, no loads created
+        Assert.Empty(list);
+        _repo.Verify(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [MemberData(nameof(TablePairs))]
+    public async Task BuildLoadsAsync_InvalidDateLoadIdValues_ParsingError_SkipsEntry(string baseTableName, string pairedTableName)
+    {
+        var baseTableUpperCase = baseTableName.ToUpper();
+        // Invalid date parts (non-numeric) that will cause parsing to fail
+        var invalidFileName = $"{baseTableUpperCase}_ABCD_EF_GH_XYZ.csv";
+
+        // Arrange
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        var content = $"TableName,FileExtractName,Destination\n{baseTableUpperCase},{invalidFileName},SRC";
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
+        _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
+
+        var sut = CreateSut();
+
+        // Act
+        var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
+
+        // Assert - Entry with invalid date/loadId is skipped
+        Assert.Empty(list);
+        _repo.Verify(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [MemberData(nameof(TablePairs))]
+    public async Task BuildLoadsAsync_DuplicateEntryInSameReceipt_SkipsDuplicate(string baseTableName, string pairedTableName)
+    {
+        var baseTableUpperCase = baseTableName.ToUpper();
+        var baseFileName = $"{baseTableUpperCase}_2025_01_15_12345.csv";
+        var pairedTableUpperCase = pairedTableName.ToUpper();
+        var pairedFileName = $"{pairedTableUpperCase}_2025_01_15_12345.csv";
+
+        // Arrange - Same table entry appears twice in receipt
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        var content = $"TableName,FileExtractName,Destination\n{baseTableUpperCase},{baseFileName},SRC\n{pairedTableUpperCase},{pairedFileName},SRC\n{baseTableUpperCase},{baseFileName},SRC";
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
+        _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
+        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
+            .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
+
+        var sut = CreateSut();
+
+        // Act
+        var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
+
+        // Assert - Duplicate is skipped, only 2 unique entries processed
+        Assert.Equal(2, list.Count);
+        Assert.Single(list, l => l.LoadTableName == baseTableUpperCase);
+        Assert.Single(list, l => l.LoadTableName == pairedTableUpperCase);
+    }
+
+    [Theory]
+    [MemberData(nameof(TablePairs))]
+    public async Task BuildLoadsAsync_MissingFileExtractNameColumn_ReturnsEmpty(string baseTableName, string pairedTableName)
+    {
+        var baseTableUpperCase = baseTableName.ToUpper();
+
+        // Arrange - Header is missing the FileExtractName column
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        var content = $"TableName,SomeOtherColumn,Destination\n{baseTableUpperCase},somevalue,SRC";
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
+        _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
+
+        var sut = CreateSut();
+
+        // Act
+        var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
+
+        // Assert - No loads created because required column is missing
+        Assert.Empty(list);
+        _repo.Verify(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [MemberData(nameof(TablePairs))]
+    public async Task BuildLoadsAsync_MissingDestinationColumn_UsesDefaultDestination(string baseTableName, string pairedTableName)
+    {
+        var baseTableUpperCase = baseTableName.ToUpper();
+        var baseFileName = $"{baseTableUpperCase}_2025_01_15_12345.csv";
+        var pairedTableUpperCase = pairedTableName.ToUpper();
+        var pairedFileName = $"{pairedTableUpperCase}_2025_01_15_12345.csv";
+
+        // Arrange - Header does NOT have a Destination column
+        _storage.Setup(s => s.DiscoverReceiptLogFileAsync(It.IsAny<CancellationToken>())).ReturnsAsync("receipt.csv");
+        var content = $"TableName,FileExtractName\n{baseTableUpperCase},{baseFileName}\n{pairedTableUpperCase},{pairedFileName}";
+        _storage.Setup(s => s.GetFileAsString("receipt.csv")).ReturnsAsync(content);
+        _storage.Setup(s => s.PrependBaseDirectory(It.IsAny<string>())).Returns<string>(s => s);
+        _repo.Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _repo.Setup(r => r.AddLoadsAsync(It.IsAny<IEnumerable<DataLoad>>(), It.IsAny<CancellationToken>()))
+            .Returns<IEnumerable<DataLoad>, CancellationToken>((loads, _) => Task.FromResult(loads.ToList()));
+
+        var sut = CreateSut();
+
+        // Act
+        var list = await InvokeAsync<List<DataLoad>>(sut, "BuildLoadsAsync", CancellationToken.None);
+
+        // Assert - Loads are created with the default destination value
+        Assert.Equal(2, list.Count);
+        Assert.All(list, l => Assert.StartsWith("No target env.", l.DataSource));
+    }
+
+    #endregion
+
+    #region ValidateLoadsAsync - Edge Case Tests
+
+    [Theory]
+    [MemberData(nameof(Tables))]
+    public async Task ValidateLoadsAsync_UnsupportedTable_SetsFailedValidation(string table)
+    {
+        var loadId = fixture.Create<int>();
+        // Use an unsupported table name
+        var unsupportedTableName = "ZZZZZZZ";
+        var fileName = $"{unsupportedTableName}_2026_03_13_1.csv";
+        var fileLocation = $"gs://bucket/{fileName}";
+
+        var load = new DataLoad { Id = loadId, LoadTableName = unsupportedTableName, FileLocation = fileLocation };
+
+        var sut = CreateSut();
+        var tempFiles = new Dictionary<string, string>();
+        await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
+
+        // Assert - Should set FailedValidation for unsupported table
+        _repo.Verify(r => r.UpdateStatusAsync(loadId, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [MemberData(nameof(Tables))]
+    public async Task ValidateLoadsAsync_FileNotFoundInGcs_NoCaseInsensitiveMatch_SetsFailedValidation(string table)
+    {
+        var tableUpper = table.ToUpper();
+        var fileName = $"{tableUpper}_2026_03_13_1.csv";
+        var fileLocation = $"gs://bucket/{fileName}";
+        var loadId = fixture.Create<int>();
+
+        var load = new DataLoad { Id = loadId, LoadTableName = tableUpper, FileLocation = fileLocation };
+
+        // File does not exist and no case-insensitive match either
+        _storage.Setup(s => s.FileExistsAsync(fileName, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _storage.Setup(s => s.GetFilenameCaseInsensitive(fileName)).Returns((string?)null);
+
+        var sut = CreateSut();
+        var tempFiles = new Dictionary<string, string>();
+        await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
+
+        // Assert - Should set FailedValidation and record file not found exception
+        _repo.Verify(r => r.UpdateStatusAsync(loadId, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.AddExceptionsAsync(It.IsAny<IEnumerable<DataLoadException>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.UpdateFileLocation(loadId, "", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [MemberData(nameof(Tables))]
+    public async Task ValidateLoadsAsync_FileCaseMismatch_SetsFailedValidation(string table)
+    {
+        var tableUpper = table.ToUpper();
+        var fileName = $"{tableUpper}_2026_03_13_1.csv";
+        var fileLocation = $"gs://bucket/{fileName}";
+        var loadId = fixture.Create<int>();
+        var actualFileName = $"{table}_2026_03_13_1.csv"; // different casing
+
+        var load = new DataLoad { Id = loadId, LoadTableName = tableUpper, FileLocation = fileLocation };
+
+        // File does not exist with exact name but case-insensitive match is found
+        _storage.Setup(s => s.FileExistsAsync(fileName, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _storage.Setup(s => s.GetFilenameCaseInsensitive(fileName)).Returns(actualFileName);
+
+        var sut = CreateSut();
+        var tempFiles = new Dictionary<string, string>();
+        await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
+
+        // Assert - Should set FailedValidation and record case mismatch exception
+        _repo.Verify(r => r.UpdateStatusAsync(loadId, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.AddExceptionsAsync(It.IsAny<IEnumerable<DataLoadException>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [MemberData(nameof(Tables))]
+    public async Task ValidateLoadsAsync_ValidationThrowsException_SetsFailedValidation(string table)
+    {
+        var tableUpper = table.ToUpper();
+        var fileName = $"{tableUpper}_2026_03_13_1.csv";
+        var fileLocation = $"gs://bucket/{fileName}";
+        var loadId = fixture.Create<int>();
+
+        var load = new DataLoad { Id = loadId, LoadTableName = tableUpper, FileLocation = fileLocation };
+
+        // Validation throws an unexpected exception
+        _validator.Setup(v => v.ValidateCsvAsync<It.IsAnyType>(It.IsAny<string>()))
+            .ThrowsAsync(new InvalidOperationException("Unexpected validation error"));
+        _storage.Setup(s => s.DownloadFile(fileName, It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        var sut = CreateSut();
+        var tempFiles = new Dictionary<string, string>();
+        await InvokeAsync<object>(sut, "ValidateLoadsAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
+
+        // Assert - Should catch exception and set FailedValidation
+        _repo.Verify(r => r.UpdateStatusAsync(loadId, LoadStatus.FailedValidation, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
+    #region CopyBatchLoadAsync - Edge Case Tests
+
+    [Theory]
+    [MemberData(nameof(Tables))]
+    public async Task CopyBatchLoadAsync_ZeroRowsLoaded_SetsFailedMissingData(string table)
+    {
+        var tableUpper = table.ToUpper();
+        var fileName = $"{tableUpper}_2026_03_13_1.csv";
+        var fileLocation = $"gs://bucket/{fileName}";
+        var loadId = fixture.Create<int>();
+        var stagingTableName = $"{table}_stg";
+
+        var load = new DataLoad { Id = loadId, LoadTableName = tableUpper, FileLocation = fileLocation };
+        _storage.Setup(s => s.DownloadFile(fileName, It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        // CopyAsync returns zero rows loaded (empty CSV)
+        _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CopyBatchResultDto { TableName = stagingTableName, SourceFile = "temp", RowsLoaded = 0, TotalRowsAttempted = 0, StartedAt = DateTimeOffset.UtcNow, CompletedAt = DateTimeOffset.UtcNow });
+
+        var sut = CreateSut();
+        var tempFiles = new Dictionary<string, string>();
+        await InvokeAsync<object>(sut, "CopyBatchLoadAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
+
+        // Assert - Should set FailedMissingData and record empty data exception
+        _repo.Verify(r => r.UpdateStatusAsync(loadId, LoadStatus.FailedMissingData, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repo.Verify(r => r.AddExceptionsAsync(It.IsAny<IEnumerable<DataLoadException>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [MemberData(nameof(Tables))]
+    public async Task CopyBatchLoadAsync_CopyAsyncThrowsException_SetsFailedStatus(string table)
+    {
+        var tableUpper = table.ToUpper();
+        var fileName = $"{tableUpper}_2026_03_13_1.csv";
+        var fileLocation = $"gs://bucket/{fileName}";
+        var loadId = fixture.Create<int>();
+
+        var load = new DataLoad { Id = loadId, LoadTableName = tableUpper, FileLocation = fileLocation };
+        _storage.Setup(s => s.DownloadFile(fileName, It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        // CopyAsync throws an exception
+        _copy.Setup(c => c.CopyAsync(It.IsAny<string>(), It.IsAny<TableConfigurationRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Database connection failed"));
+
+        var sut = CreateSut();
+        var tempFiles = new Dictionary<string, string>();
+        await InvokeAsync<object>(sut, "CopyBatchLoadAsync", new List<DataLoad> { load }, CancellationToken.None, tempFiles);
+
+        // Assert - Should catch exception and set Failed status
+        _repo.Verify(r => r.UpdateStatusAsync(loadId, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
+    #region PerformMergeLoadAsync - Edge Case Tests
+
+    [Theory]
+    [MemberData(nameof(Tables))]
+    public async Task PerformMergeLoadAsync_MergeThrowsException_SetsFailedStatus(string table)
+    {
+        // Arrange
+        var tableUpper = table.ToUpper();
+        var fileName = $"{tableUpper}_2026_03_13_1.csv";
+        var fileLocation = $"gs://bucket/{fileName}";
+        var loadId = fixture.Create<int>();
+
+        var load = new DataLoad { Id = loadId, LoadTableName = tableUpper, FileLocation = fileLocation };
+
+        // ExecuteMergeStoredProcedureAsync throws an exception
+        _repo.Setup(r => r.ExecuteMergeStoredProcedureAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Stored procedure execution failed"));
+
+        var sut = CreateSut();
+
+        // Act
+        await InvokeAsync<object>(sut, "PerformMergeLoadAsync", new List<DataLoad> { load }, CancellationToken.None);
+
+        // Assert - Should catch exception and set Failed status
+        _repo.Verify(r => r.UpdateStatusAsync(loadId, LoadStatus.Failed, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private static T InvokeSync<T>(object target, string name, params object[] args)
