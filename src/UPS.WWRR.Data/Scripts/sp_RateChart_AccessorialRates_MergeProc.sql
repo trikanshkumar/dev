@@ -27,8 +27,7 @@ BEGIN
 
     -- 1. MERGE accrate
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                asy_svc_ra,
                del_zn_nr,
                ra_chg_csf_typ_cd,
@@ -67,8 +66,7 @@ BEGIN
 
     -- 2. MERGE accratecrit
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                asy_svc_ra,
                dtr_cri_vlu_typ_cd,
                dtr_cri_lo_rng_te,
@@ -119,8 +117,7 @@ BEGIN
 
     -- 3. MERGE chartsvcpkg
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                svc_typ_cd,
                pkg_cha_typ_cd,
                svc_fea_typ_cd,
@@ -180,8 +177,7 @@ BEGIN
 
     -- 4. MERGE chartorggeo
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                xpt_cny_cd,
                gpu_xpt_cny_cd,
                ipt_cny_cd,
@@ -241,8 +237,7 @@ BEGIN
 
     -- 5. MERGE chartacccd
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                asy_svc_typ_cd,
                bil_ter_typ_cd,
                mvm_drc_cd,

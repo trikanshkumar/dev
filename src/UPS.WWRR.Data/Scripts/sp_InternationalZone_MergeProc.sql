@@ -28,8 +28,7 @@ BEGIN
 
     -- 1. MERGE izchartlkup (Chart Lookup)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_nr,
+        SELECT zch_nr,
                zch_sht_dsc_te,
                zch_lg_dsc_te,
                load_ref_te
@@ -69,8 +68,7 @@ BEGIN
 
     -- 2. MERGE izcharthd (International Zone Chart Header)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                svc_typ_cd,
                mvm_drc_cd,
                pkg_cha_typ_cd,
@@ -115,8 +113,7 @@ BEGIN
 
     -- 3. MERGE izchartdtl (International Zone Chart Detail)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                svc_typ_cd,
                zn_ncv_typ_cd,
                load_ref_te
@@ -156,8 +153,7 @@ BEGIN
 
     -- 4. MERGE izchartorgdtnpst (International Zone Chart Origin Destination Postal)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                org_cny_cd,
                org_rng_lo_psl_cd,
                org_rng_hi_psl_cd,
@@ -233,8 +229,7 @@ BEGIN
 
     -- 5. MERGE izchartorgpoldiv (International Zone Chart Origin Political Division)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                org_cny_cd,
                org_pol_div_1_cd,
                load_ref_te
@@ -273,8 +268,7 @@ BEGIN
 
     -- 6. MERGE izchartdtnpoldiv (International Zone Chart Destination Political Division)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                dtn_cny_cd,
                dtn_pol_div_1_cd,
                load_ref_te

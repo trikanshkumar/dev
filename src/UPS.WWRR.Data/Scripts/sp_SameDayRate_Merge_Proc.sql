@@ -34,8 +34,7 @@ BEGIN
     );
 
     WITH src_dedup AS (
-        SELECT DISTINCT
-               org_gpn_cd,
+        SELECT org_gpn_cd,
                dtn_gpn_cd,
                svc_typ_cd,
                del_zn_nr,

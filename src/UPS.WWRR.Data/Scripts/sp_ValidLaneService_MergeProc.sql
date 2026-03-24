@@ -21,8 +21,7 @@ BEGIN
     );
 
     WITH src_dedup AS (
-        SELECT DISTINCT
-               gpn_xpt_cny_cd,
+        SELECT gpn_xpt_cny_cd,
                gpn_ipt_cny_cd,
                svc_typ_cd,
                tbl_row_eff_dt,

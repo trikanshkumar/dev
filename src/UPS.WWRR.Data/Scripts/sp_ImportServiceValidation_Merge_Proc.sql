@@ -21,8 +21,7 @@ BEGIN
     );
 
     WITH src_dedup AS (
-        SELECT DISTINCT
-               org_cny_cd,
+        SELECT org_cny_cd,
                dtn_cny_cd,
                svc_typ_cd,
                rec_eff_stt_dt,

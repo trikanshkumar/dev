@@ -28,8 +28,7 @@ BEGIN
 
     -- 1. MERGE zchartlkup (Chart Lookup)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_nr,
+        SELECT zch_nr,
                zch_sht_dsc_te,
                zch_lg_dsc_te,
                load_ref_te
@@ -69,8 +68,7 @@ BEGIN
 
     -- 2. MERGE tarcldt (Area Classification Detail - Normalized)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                svc_typ_cd,
                ra_chg_csf_typ_cd,
                ara_csf_dtl_rul_cd,
@@ -118,8 +116,7 @@ BEGIN
 
     -- 3. MERGE tarclhd (Area Classification Header - Normalized)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                svc_typ_cd,
                asy_svc_typ_cd,
                load_ref_te
@@ -159,8 +156,7 @@ BEGIN
 
     -- 4. MERGE zchartdtngeo (Chart Destination Geo)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                dtn_cny_cd,
                dtn_gpu_nr,
                dtn_rng_lo_psl_cd,
@@ -207,8 +203,7 @@ BEGIN
 
     -- 5. MERGE zchartdtngpu (Chart Destination GPU)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                dtn_cny_cd,
                dtn_pol_div_2_na,
                dtn_pol_div_1_cd,
@@ -251,8 +246,7 @@ BEGIN
 
     -- 6. MERGE zchartorggeo (Chart Origin Geo)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                org_cny_cd,
                org_gpu_nr,
                org_rng_lo_psl_cd,
@@ -299,8 +293,7 @@ BEGIN
 
     -- 7. MERGE zchartorggpu (Chart Origin GPU)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               zch_sts_nr,
+        SELECT zch_sts_nr,
                org_cny_cd,
                org_pol_div_2_na,
                org_pol_div_1_cd,
@@ -343,8 +336,7 @@ BEGIN
 
     -- 8. MERGE zchartsvctyp (Chart Service Type)
     WITH src_dedup AS (
-        SELECT DISTINCT
-               cny_cd,
+        SELECT cny_cd,
                gpu_nr,
                svc_typ_cd,
                load_ref_te

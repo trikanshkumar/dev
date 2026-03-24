@@ -33,8 +33,7 @@ BEGIN
     );
 
     WITH src_dedup AS (
-        SELECT DISTINCT
-               gpn_xpt_cny_cd,
+        SELECT gpn_xpt_cny_cd,
                gpn_ipt_cny_cd,
                asy_svc_typ_cd,
                mvm_drc_cd,
