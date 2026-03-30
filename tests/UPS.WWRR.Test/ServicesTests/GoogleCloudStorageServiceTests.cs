@@ -1,4 +1,6 @@
 ﻿using AutoFixture;
+using Google.Api.Gax;
+using Google.Apis.Download;
 using Google.Apis.Storage.v1.Data;
 using Google.Cloud.Storage.V1;
 using Moq;
@@ -54,6 +56,56 @@ public class GoogleCloudStorageServiceTests
 
             _mockStorageClient.Verify(x => x.GetObjectAsync(_bucketName, storageFileName, It.IsAny<GetObjectOptions>(), It.IsAny<CancellationToken>()), Times.Once);
             _mockStorageClient.Verify(x => x.DownloadObjectAsync(_bucketName, storageFileName, It.IsAny<Stream>(), It.IsAny<DownloadObjectOptions>(), It.IsAny<CancellationToken>(), null), Times.Once);
+        }
+        finally
+        {
+            if (File.Exists(localFileName))
+                File.Delete(localFileName);
+        }
+    }
+
+    [Fact]
+    public async Task DownloadFile_WillRetryDownloadForMaxRetryCountThenThrowException_WhenDownloadObjectFails()
+    {
+        var storageFileName = $"{_fixture.Create<string>()}.csv";
+        var localFileName = Path.GetTempFileName();
+
+        try
+        {
+            var mockObject = new Google.Apis.Storage.v1.Data.Object { Size = 100 };
+            _mockStorageClient.Setup(x => x.GetObjectAsync(_bucketName, storageFileName, It.IsAny<GetObjectOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockObject);
+            _mockStorageClient.Setup(x => x.DownloadObjectAsync(_bucketName, storageFileName, It.IsAny<Stream>(), It.IsAny<DownloadObjectOptions>(), It.IsAny<CancellationToken>(), It.IsAny<IProgress<IDownloadProgress>>()))
+                .ThrowsAsync(new Exception());
+
+
+            await Assert.ThrowsAnyAsync<Exception>(async () => await _service.DownloadFile(storageFileName, localFileName));
+
+            // It should call 6 times. It will fail 5 times, then on the 6th it will throw the exception instead of catching it
+            _mockStorageClient.Verify(x => x.DownloadObjectAsync(_bucketName, storageFileName, It.IsAny<Stream>(), It.IsAny<DownloadObjectOptions>(), It.IsAny<CancellationToken>(), null), Times.Exactly(6));
+        }
+        finally
+        {
+            if (File.Exists(localFileName))
+                File.Delete(localFileName);
+        }
+    }
+
+    [Fact]
+    public async Task DownloadFile_ThrowsOperationCancelledException_WhenOperationIsCancelled()
+    {
+        var storageFileName = $"{_fixture.Create<string>()}.csv";
+        var localFileName = Path.GetTempFileName();
+
+        try
+        {
+            var mockObject = new Google.Apis.Storage.v1.Data.Object { Size = 100 };
+            _mockStorageClient.Setup(x => x.GetObjectAsync(_bucketName, storageFileName, It.IsAny<GetObjectOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockObject);
+            _mockStorageClient.Setup(x => x.DownloadObjectAsync(_bucketName, storageFileName, It.IsAny<Stream>(), It.IsAny<DownloadObjectOptions>(), It.IsAny<CancellationToken>(), It.IsAny<IProgress<IDownloadProgress>>()))
+                .ThrowsAsync(new OperationCanceledException());
+
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await _service.DownloadFile(storageFileName, localFileName, new CancellationToken(true)));
         }
         finally
         {
@@ -150,6 +202,199 @@ public class GoogleCloudStorageServiceTests
         var result = await _service.FileExistsAsync(fileName);
 
         Assert.False(result);
+    }
+
+    [Fact]
+    public void GetFilenameCaseInsensitive_ReturnsCaseInsentiveFilename_WhenFound()
+    {
+        var bucketFilenames = new List<string>
+        {
+            "ABC.csv",
+            "foo.csv",
+            "bar.csv"
+        };
+
+        var bucketObjects = bucketFilenames.Select(x => new Google.Apis.Storage.v1.Data.Object
+        {
+            Name = x
+        }).ToList();
+
+        var mockEnumerable = new MockEnumerable<Objects, Google.Apis.Storage.v1.Data.Object>(bucketObjects);
+
+        _mockStorageClient.Setup(x => x.ListObjects(_bucketName, It.IsAny<string>(), It.IsAny<ListObjectsOptions>()))
+            .Returns(mockEnumerable);
+
+        var response = _service.GetFilenameCaseInsensitive("abc.csv");
+        Assert.NotNull(response);
+        Assert.Equal("ABC.csv", response);
+    }
+
+    [Fact]
+    public void GetFilenameCaseInsensitive_ReturnsNull_WhenNotFound()
+    {
+        var bucketFilenames = new List<string>
+        {
+            "ABC.csv",
+            "foo.csv",
+            "bar.csv"
+        };
+
+        var bucketObjects = bucketFilenames.Select(x => new Google.Apis.Storage.v1.Data.Object
+        {
+            Name = x
+        }).ToList();
+
+        var mockEnumerable = new MockEnumerable<Objects, Google.Apis.Storage.v1.Data.Object>(bucketObjects);
+
+        _mockStorageClient.Setup(x => x.ListObjects(_bucketName, It.IsAny<string>(), It.IsAny<ListObjectsOptions>()))
+            .Returns(mockEnumerable);
+
+        var response = _service.GetFilenameCaseInsensitive("go_lions.csv");
+        Assert.Null(response);
+    }
+
+    [Fact]
+    public async Task VerifyFileSizeAsync_ReturnsTrue_WhenFileSizeIsCorrect()
+    {
+        var localFileName = "Resources/SingleLineFile.txt";
+        var fileName = $"{_fixture.Create<string>()}.csv";
+        var expectedSize = 170UL;
+        var mockObject = new Google.Apis.Storage.v1.Data.Object { Size = expectedSize };
+        _mockStorageClient.Setup(x => x.GetObjectAsync(_bucketName, fileName, It.IsAny<GetObjectOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockObject);
+
+        var result = await _service.VerifyFileSizeAsync(fileName, localFileName);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public async Task VerifyFileSizeAsync_ReturnsFalse_WhenFileSizeIsIncorrect()
+    {
+        var localFileName = "Resources/SingleLineFile.txt";
+        var fileName = $"{_fixture.Create<string>()}.csv";
+        var expectedSize = 1234567UL;
+        var mockObject = new Google.Apis.Storage.v1.Data.Object { Size = expectedSize };
+        _mockStorageClient.Setup(x => x.GetObjectAsync(_bucketName, fileName, It.IsAny<GetObjectOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockObject);
+
+        var result = await _service.VerifyFileSizeAsync(fileName, localFileName);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task VerifyFileSizeAsync_ReturnsFalse_WhenLocalFileNotFound()
+    {
+        var localFileName = "BOGUS_FILE_NAME.zyx";
+        var fileName = $"{_fixture.Create<string>()}.csv";
+        var expectedSize = 170UL;
+        var mockObject = new Google.Apis.Storage.v1.Data.Object { Size = expectedSize };
+        _mockStorageClient.Setup(x => x.GetObjectAsync(_bucketName, fileName, It.IsAny<GetObjectOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockObject);
+
+        var result = await _service.VerifyFileSizeAsync(fileName, localFileName);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task DiscoverReceiptLogFileAsync_ReturnsReceiptFileName_WhenFound()
+    {
+        var bucketFilenames = new List<string>
+        {
+            "WWRR_MOD_RECEIPT_FILES_123456.csv",
+            "WWRR_MOD_RECEIPT_FILES_2025_03_19_1",
+            "WWRR_MOD_RECEIPT_FILES_2025_03_19_1.csv",
+            "foo.csv",
+            "bar.csv"
+        };
+
+        var bucketObjects = bucketFilenames.Select(x => new Google.Apis.Storage.v1.Data.Object
+        {
+            Name = x
+        }).ToList();
+
+        var mockEnumerable = new MockAsyncEnumerable<Objects, Google.Apis.Storage.v1.Data.Object>(bucketObjects);
+
+
+        _mockStorageClient.Setup(x => x.ListObjectsAsync(_bucketName, It.IsAny<string>(), It.IsAny<ListObjectsOptions>()))
+            .Returns(mockEnumerable);
+
+        var result = await _service.DiscoverReceiptLogFileAsync();
+
+        Assert.Equal("WWRR_MOD_RECEIPT_FILES_2025_03_19_1.csv", result);
+    }
+
+    [Fact]
+    public async Task DiscoverReceiptLogFileAsync_WillParseLoadIdFromFileNameWithTooManyParts()
+    {
+        var bucketFilenames = new List<string>
+        {
+            "WWRR_MOD_RECEIPT_FILES_123456.csv",
+            "WWRR_MOD_RECEIPT_FILES_2025_03_19_1",
+            "WWRR_MOD_RECEIPT_FILES_2025_03_19_1_12345.csv",
+            "foo.csv",
+            "bar.csv"
+        };
+
+        var bucketObjects = bucketFilenames.Select(x => new Google.Apis.Storage.v1.Data.Object
+        {
+            Name = x
+        }).ToList();
+
+        var mockEnumerable = new MockAsyncEnumerable<Objects, Google.Apis.Storage.v1.Data.Object>(bucketObjects);
+
+
+        _mockStorageClient.Setup(x => x.ListObjectsAsync(_bucketName, It.IsAny<string>(), It.IsAny<ListObjectsOptions>()))
+            .Returns(mockEnumerable);
+
+        var result = await _service.DiscoverReceiptLogFileAsync();
+
+        Assert.Equal("WWRR_MOD_RECEIPT_FILES_2025_03_19_1_12345.csv", result);
+    }
+
+    [Fact]
+    public async Task DiscoverReceiptLogFileAsync_ReturnsNull_WhenNotFound()
+    {
+        var bucketFilenames = new List<string>
+        {
+            "WWRR_MOD_RECEIPT_FILES_123456.csv",
+            "WWRR_MOD_RECEIPT_FILES_2025_03_19_1",
+            "WWRR_MOD_RECEIPT_FILES_2025_03_abcdef.csv",
+            "foo.csv",
+            "bar.csv"
+        };
+
+        var bucketObjects = bucketFilenames.Select(x => new Google.Apis.Storage.v1.Data.Object
+        {
+            Name = x
+        }).ToList();
+
+        var mockEnumerable = new MockAsyncEnumerable<Objects, Google.Apis.Storage.v1.Data.Object>(bucketObjects);
+
+
+        _mockStorageClient.Setup(x => x.ListObjectsAsync(_bucketName, It.IsAny<string>(), It.IsAny<ListObjectsOptions>()))
+            .Returns(mockEnumerable);
+
+        var result = await _service.DiscoverReceiptLogFileAsync();
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void PrependBaseDirectory_ReturnsStringWithPrependedDirectory_WhenBaseDirectoryIsSet()
+    {
+        var serviceWithBaseDirectory = new GoogleCloudStorageService(_mockStorageClient.Object, _bucketName, "test", 1024 * 1024);
+        var result = serviceWithBaseDirectory.PrependBaseDirectory("example.csv");
+        Assert.Equal("test/example.csv", result);
+    }
+
+    [Fact]
+    public void PrependBaseDirectory_ReturnsTheSameString_WhenBaseDirectoryNotSet()
+    {
+        var result = _service.PrependBaseDirectory("example.csv");
+        Assert.Equal("example.csv", result);
     }
 
 }

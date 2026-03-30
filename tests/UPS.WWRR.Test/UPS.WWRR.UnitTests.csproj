@@ -36,6 +36,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Resources\SingleLineFile.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\tarclhd-bad-csv.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

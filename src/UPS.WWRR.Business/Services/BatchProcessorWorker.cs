@@ -264,95 +264,87 @@ namespace UPS.WWRR.Business.Services
 
             int destinationNameIndex = Array.FindIndex(header, h => h.Equals(ServiceConstants.destinationColumn, StringComparison.OrdinalIgnoreCase));
 
-            if (fileExtractNameIndex < 0)
+            var batchSizeEnv = int.TryParse(Environment.GetEnvironmentVariable("BATCH_SIZE"), out var bs) ? bs : _defaultChunkSize;
+            foreach (var r in rows.Skip(1))
             {
-                _logger.LogError("Required columns (FileExtractName) not found in receipt file. Columns: {cols}", string.Join("|", header));
-            }
-            else
-            {
+                if (r.Length <= fileExtractNameIndex) continue;
+                var fileExtractName = r[fileExtractNameIndex];
 
-                var batchSizeEnv = int.TryParse(Environment.GetEnvironmentVariable("BATCH_SIZE"), out var bs) ? bs : _defaultChunkSize;
-                foreach (var r in rows.Skip(1))
+                var destination = destinationNameIndex < 0 || r.Length <= destinationNameIndex || string.IsNullOrWhiteSpace(r[destinationNameIndex])
+                    ? ServiceConstants.defaultDestinationValue
+                    : r[destinationNameIndex].Trim();
+
+                if (string.IsNullOrWhiteSpace(fileExtractName)) continue;
+
+                allReceiptFileNames.Add(fileExtractName);
+
+                var parts = fileExtractName.Split('_', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 5)
                 {
-                    if (r.Length <= fileExtractNameIndex) continue;
-                    var fileExtractName = r[fileExtractNameIndex];
-
-                    var destination = destinationNameIndex < 0 || r.Length <= destinationNameIndex || string.IsNullOrWhiteSpace(r[destinationNameIndex])
-                        ? ServiceConstants.defaultDestinationValue 
-                        : r[destinationNameIndex].Trim();
-
-                    if (string.IsNullOrWhiteSpace(fileExtractName)) continue;
-
-                    allReceiptFileNames.Add(fileExtractName);
-
-                    var parts = fileExtractName.Split('_', StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length < 5)
-                    {
-                        _logger.LogWarning("Cannot parse table/load id from {val}", fileExtractName);
-                        continue;
-                    }
-
-                    var tableNamePart = parts[0];
-                    var yearPart = parts[1];
-                    var monthPart = parts[2];
-                    var dayPart = parts[3];
-                    var loadIdPart = parts[4];
-
-                    
-
-                    int year, month, day;
-                    long loadId;
-
-                    try
-                    {
-                        year = int.Parse(yearPart);
-                        month = int.Parse(monthPart);
-                        day = int.Parse(dayPart);
-
-                        // get just the digits to remove the ".csv" portion
-                        var loadIdDigits = new string(loadIdPart.Where(char.IsDigit).ToArray());
-
-                        loadId = long.Parse(loadIdDigits);
-                    }
-                    catch
-                    {
-                        _logger.LogWarning("Date/LoadId has invalid value(s) in file {fileExtractName}", fileExtractName);
-                        continue;
-                    }
-
-                    var loadVersion = $"{year}_{month}_{day}_{loadId}";
-
-                    if (await _loadRepository.ExistsAsync(tableNamePart, loadVersion, ct))
-                    {
-                        _logger.LogInformation("DataLoad already exists for {tbl} version {ver}. Skipping insert.", tableNamePart, loadVersion);
-                        continue;
-                    }
-
-                    // Check if this table/version combination is already in the current receipt
-                    var loadKey = $"{tableNamePart}|{loadVersion}";
-                    if (processedInReceipt.Contains(loadKey))
-                    {
-                        _logger.LogWarning("Duplicate entry found in receipt file for {tbl} version {ver}. Skipping duplicate.", tableNamePart, loadVersion);
-                        continue;
-                    }
-
-                    newLoads.Add(new DataLoad
-                    {
-                        LoadTableName = tableNamePart,
-                        LoadVersionNumber = loadId,
-                        LoadVersion = loadVersion,
-                        LoadStatusCode = LoadStatus.ReadyForValidation.ToString(),
-                        FileLocation = $"gs://{_gcpBucketName}/{_storageService.PrependBaseDirectory(fileExtractName)}",
-                        CreatedOn = DateTime.UtcNow,
-                        LogFileLocation = $"gs://{_gcpBucketName}/{_storageService.PrependBaseDirectory(dynamicReceiptName)}",
-                        TotalBatchNumber = 0,
-                        BatchSize = _batchLoadChunkSize,
-                        DataSource = destination[..Math.Min(destination.Length, 25)]
-                    });
-                    
-                    // Mark this table/version as processed in this receipt
-                    processedInReceipt.Add(loadKey);
+                    _logger.LogWarning("Cannot parse table/load id from {val}", fileExtractName);
+                    continue;
                 }
+
+                var tableNamePart = parts[0];
+                var yearPart = parts[1];
+                var monthPart = parts[2];
+                var dayPart = parts[3];
+                var loadIdPart = parts[4];
+
+
+
+                int year, month, day;
+                long loadId;
+
+                try
+                {
+                    year = int.Parse(yearPart);
+                    month = int.Parse(monthPart);
+                    day = int.Parse(dayPart);
+
+                    // get just the digits to remove the ".csv" portion
+                    var loadIdDigits = new string(loadIdPart.Where(char.IsDigit).ToArray());
+
+                    loadId = long.Parse(loadIdDigits);
+                }
+                catch
+                {
+                    _logger.LogWarning("Date/LoadId has invalid value(s) in file {fileExtractName}", fileExtractName);
+                    continue;
+                }
+
+                var loadVersion = $"{year}_{month}_{day}_{loadId}";
+
+                if (await _loadRepository.ExistsAsync(tableNamePart, loadVersion, ct))
+                {
+                    _logger.LogInformation("DataLoad already exists for {tbl} version {ver}. Skipping insert.", tableNamePart, loadVersion);
+                    continue;
+                }
+
+                // Check if this table/version combination is already in the current receipt
+                var loadKey = $"{tableNamePart}|{loadVersion}";
+                if (processedInReceipt.Contains(loadKey))
+                {
+                    _logger.LogWarning("Duplicate entry found in receipt file for {tbl} version {ver}. Skipping duplicate.", tableNamePart, loadVersion);
+                    continue;
+                }
+
+                newLoads.Add(new DataLoad
+                {
+                    LoadTableName = tableNamePart,
+                    LoadVersionNumber = loadId,
+                    LoadVersion = loadVersion,
+                    LoadStatusCode = LoadStatus.ReadyForValidation.ToString(),
+                    FileLocation = $"gs://{_gcpBucketName}/{_storageService.PrependBaseDirectory(fileExtractName)}",
+                    CreatedOn = DateTime.UtcNow,
+                    LogFileLocation = $"gs://{_gcpBucketName}/{_storageService.PrependBaseDirectory(dynamicReceiptName)}",
+                    TotalBatchNumber = 0,
+                    BatchSize = _batchLoadChunkSize,
+                    DataSource = destination[..Math.Min(destination.Length, 25)]
+                });
+
+                // Mark this table/version as processed in this receipt
+                processedInReceipt.Add(loadKey);
             }
 
             if (newLoads.Count > 0)
@@ -442,6 +434,19 @@ namespace UPS.WWRR.Business.Services
                 {
                     _logger.LogError(ex, "CopyBatch failed for table {tbl} load {id}", load.LoadTableName, load.Id);
                     await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
+
+                    DataLoadDetail dataLoadDetail = await CreateDataLoadDetailForError(load, ct);
+                    var emptyException = new DataLoadException
+                    {
+                        DataLoadDetailId = dataLoadDetail.Id,
+                        TableName = descriptor.TableName,
+                        TableKey = $"LOAD:{load.Id}",
+                        ErrorFieldName = ServiceConstants.copyBatchLoadError,
+                        ErrorFieldValue = ex.Message.Length > 100 ? ex.Message[..100] : ex.Message,
+                        CreatedOn = DateTime.UtcNow
+                    };
+                    await _loadRepository.AddExceptionsAsync([emptyException], ct);
+
                     BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Staging Load failed: {ex.Message}");
                     // Move failed file to processed folder
                     await MoveObjectToProcessedAsync(gcsFileName);
@@ -546,6 +551,18 @@ namespace UPS.WWRR.Business.Services
                     _logger.LogError(ex, "Merge failed for table {tbl} load {id}", load.LoadTableName, load.Id);
                     await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
                     BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Main Merge Failed: {ex.Message}");
+
+                    DataLoadDetail dataLoadDetail = await CreateDataLoadDetailForError(load, ct);
+                    var emptyException = new DataLoadException
+                    {
+                        DataLoadDetailId = dataLoadDetail.Id,
+                        TableName = descriptor.TableName,
+                        TableKey = $"LOAD:{load.Id}",
+                        ErrorFieldName = ServiceConstants.performMergeLoadError,
+                        ErrorFieldValue = ex.Message.Length > 100 ? ex.Message[..100] : ex.Message,
+                        CreatedOn = DateTime.UtcNow
+                    };
+                    await _loadRepository.AddExceptionsAsync([emptyException], ct);
                 }
                 finally
                 {
@@ -1063,7 +1080,20 @@ namespace UPS.WWRR.Business.Services
                     _logger.LogError(ex, "Validation error for table {tbl} load {id}", load.LoadTableName, load.Id);
                     await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
                     BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Validation Failed: {ex.Message}");
-                    
+
+                    DataLoadDetail exceptionDetail = await CreateDataLoadDetailForError(load, ct);
+                    var dataLoadException = new DataLoadException
+                    {
+                        DataLoadDetailId = exceptionDetail.Id,
+                        TableName = load.LoadTableName,
+                        TableKey = $"LOAD:{load.Id}",
+                        ErrorFieldName = ServiceConstants.validateLoadsError,
+                        ErrorFieldValue = ex.Message.Length > 100 ? ex.Message[..100] : ex.Message,
+                        CreatedOn = DateTime.UtcNow
+                    };
+
+                    await _loadRepository.AddExceptionsAsync([dataLoadException], ct);
+
                     // Clean up temp file if it was created
                     if (tempFile != null)
                     {
