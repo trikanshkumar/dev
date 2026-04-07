@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace UPS.WWRR.Business.Extensions
@@ -17,6 +18,7 @@ namespace UPS.WWRR.Business.Extensions
         /// <param name="storedProcName">The name of the stored procedure.</param>
         /// <returns>A DbCommand instance.</returns>
         /// <exception cref="System.InvalidOperationException">Thrown when the database connection is not set.</exception>
+        [ExcludeFromCodeCoverage(Justification = "SQLite does not support CommandType.StoredProcedure")]
         public static DbCommand LoadStoreProcedure(this DbContext context, string storedProcName)
         {
             var cmd = context.Database.GetDbConnection().CreateCommand();

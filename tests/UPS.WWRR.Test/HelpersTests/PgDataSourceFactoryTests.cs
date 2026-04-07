@@ -1,4 +1,3 @@
-using System.Data.Common;
 using UPS.WWRR.Business.Common.Helper;
 
 namespace UPS.WWRR.UnitTests.HelpersTests;
@@ -142,6 +141,40 @@ public class PgDataSourceFactoryTests
         // Act
         var dataSource = await PgDataSourceFactory.Create(connectionString, requireSsl: true);
 
+        // Assert
+        Assert.NotNull(dataSource);
+        dataSource.Dispose();
+    }
+
+    #endregion
+
+    #region CreateAsync Tests
+
+    [Fact]
+    public async Task CreateAsync_WithSsl_ReturnsDataSource()
+    {
+        // Arrange
+        var host = "localhost";
+        var database = "testdb";
+        var iamDbUser = "testuser";
+        var requireSsl = true;
+        // Act
+        var dataSource = await PgDataSourceFactory.CreateAsync(host, database, iamDbUser, requireSsl, CancellationToken.None);
+        // Assert
+        Assert.NotNull(dataSource);
+        dataSource.Dispose();
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithoutSsl_ReturnsDataSource()
+    {
+        // Arrange
+        var host = "localhost";
+        var database = "testdb";
+        var iamDbUser = "testuser";
+        var requireSsl = false;
+        // Act
+        var dataSource = await PgDataSourceFactory.CreateAsync(host, database, iamDbUser, requireSsl, CancellationToken.None);
         // Assert
         Assert.NotNull(dataSource);
         dataSource.Dispose();
