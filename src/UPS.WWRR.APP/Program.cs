@@ -1,4 +1,5 @@
-﻿using Google.Cloud.Storage.V1;
+﻿using Google.Cloud.PubSub.V1;
+using Google.Cloud.Storage.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -47,6 +48,8 @@ class Program
         var bucket = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_NAME") ?? string.Empty;
         var bucketSubName = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_SUB_NAME") ?? string.Empty;
         var enableIAMTokenAuth = bool.TryParse(Environment.GetEnvironmentVariable("EnableIAMTokenAuth"), out var iam_tok) ? iam_tok : true;
+        var pubSubProjectId = Environment.GetEnvironmentVariable("PUBSUB_PROJECT_ID") ?? string.Empty;
+        var pubSubTopicId = Environment.GetEnvironmentVariable("PUBSUB_TOPIC_ID") ?? string.Empty;
 
 
         // GCS download chunk size (separate from CSV batch processing)
@@ -100,6 +103,14 @@ class Program
                     var storageClient = StorageClient.Create();
                     services.AddSingleton<IStorageService>(_ => new GoogleCloudStorageService(storageClient, bucket, bucketSubName, gcsDownloadChunkSize));
                     services.AddSingleton(new LocalRuntimeSettings(connectionString, tableName, batchSize, chunkSize, delimiter, hasHeader, bucket));
+
+                    if (!string.IsNullOrEmpty(pubSubProjectId) && !string.IsNullOrEmpty(pubSubTopicId))
+                    {
+                        var topicName = TopicName.FromProjectTopic(pubSubProjectId, pubSubTopicId);
+                        var publisherClient = PublisherClient.CreateAsync(topicName).GetAwaiter().GetResult();
+                        services.AddSingleton(publisherClient);
+                        services.AddSingleton<IGooglePubSubService, GooglePubSubService>();
+                    }
                 })
                 .UseSerilog()
                 .Build();

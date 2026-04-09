@@ -7,9 +7,9 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "TABLE_NAME": "ALL",
         "BATCH_SIZE": "10000",
-        "ALLOYDB_CONNECTION": "Host=localhost;Port=5432;Database=uat_u7x_001;Username=postgres;Password=Vdimit13!!;Search Path=a886aa_ao;",
-        "GOOGLE_CLOUD_STORAGE_BUCKET_NAME": "wwrr-mod-alloydb-csv-uat",
-        "GOOGLE_CLOUD_STORAGE_BUCKET_SUB_NAME": "TestVD",
+        "ALLOYDB_CONNECTION": "Host=localhost;Port=5432;Database=WWRR;Username=postgres;Password=postgres;Search Path=a886aa_ao;",
+        "GOOGLE_CLOUD_STORAGE_BUCKET_NAME": "wwrr-mod-alloydb-csv-dev",
+        "GOOGLE_CLOUD_STORAGE_BUCKET_SUB_NAME": "",
         "BatchLoad_ChunkSize": "10000",
         "BatchLoad_Delimiter": ",",
         "BatchLoad_HasHeader": "true",
@@ -17,7 +17,9 @@
         "GCS_DOWNLOAD_CHUNK_SIZE": "4194304",
         "EnableIAMTokenAuth": "false",
         "TVASYLN_USE_BATCH_MERGE": "false",
-        "TRASTD_USE_BATCH_MERGE": "false"
+        "TRASTD_USE_BATCH_MERGE": "false",
+        "PUBSUB_PROJECT_ID": "gcp-cti-wwrr-dev",
+        "PUBSUB_TOPIC_ID": "test"
       }
     }
   }

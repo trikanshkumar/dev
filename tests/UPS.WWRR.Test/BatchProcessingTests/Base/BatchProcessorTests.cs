@@ -15,6 +15,7 @@ public abstract class BatchProcessorTests
     protected readonly Mock<ICsvValidator> _validator = new();
     protected readonly Mock<ICopyBatchDataService> _copy = new();
     protected readonly Mock<ILoadRepository> _repo = new();
+    protected readonly Mock<IGooglePubSubService> _pubSub = new();
 
     protected BatchProcessorTests()
     {
@@ -35,7 +36,7 @@ public abstract class BatchProcessorTests
         _storage.Setup(s => s.VerifyFileSizeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
     }
 
-    protected BatchProcessorWorker CreateSut() => new(_logger.Object, _storage.Object, _validator.Object, _copy.Object, _repo.Object);
+    protected BatchProcessorWorker CreateSut() => new(_logger.Object, _storage.Object, _validator.Object, _copy.Object, _repo.Object, _pubSub.Object);
 
     protected static async Task<T> InvokeAsync<T>(object target, string name, params object[] args)
     {

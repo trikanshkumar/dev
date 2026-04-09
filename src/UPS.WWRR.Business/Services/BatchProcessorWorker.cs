@@ -1,5 +1,6 @@
 #nullable enable
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using UPS.WWRR.Business.Common.Constants;
 using UPS.WWRR.Business.Common.Enum;
 using UPS.WWRR.Business.Common.Helper;
@@ -19,6 +20,7 @@ namespace UPS.WWRR.Business.Services
         private readonly ICsvValidator _csvValidator;
         private readonly ICopyBatchDataService _copyBatchService;
         private readonly ILoadRepository _loadRepository;
+        private readonly IGooglePubSubService? _pubSubService;
 
         private readonly string _gcpBucketName;
         private readonly string _tableNameFilter;
@@ -28,7 +30,13 @@ namespace UPS.WWRR.Business.Services
         private readonly bool _trastdUseBatchMerge;
         private readonly bool _tsubchgUseBatchMerge;
         private readonly HashSet<string> _movedObjects = new(StringComparer.OrdinalIgnoreCase);
-        
+
+        /// <summary>
+        /// Accumulates load versions that were successfully processed during the current cycle.
+        /// Used to build the Pub/Sub notification message at the end of the job.
+        /// </summary>
+        private readonly List<string> _processedLoadVersions = [];
+
         /// <summary>
         /// Accumulates CSV load log entries during a processing cycle.
         /// A single summary log is emitted at the end of the cycle.
@@ -63,13 +71,15 @@ namespace UPS.WWRR.Business.Services
                                 IStorageService storageService,
                                 ICsvValidator csvValidator,
                                 ICopyBatchDataService copyBatchService,
-                                ILoadRepository loadRepository)
+                                ILoadRepository loadRepository,
+                                IGooglePubSubService? pubSubService = null)
         {
             _logger = logger;
             _storageService = storageService;
             _csvValidator = csvValidator;
             _copyBatchService = copyBatchService;
             _loadRepository = loadRepository;
+            _pubSubService = pubSubService;
             _gcpBucketName = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_NAME")
                         ?? throw new InvalidOperationException("GOOGLE_CLOUD_STORAGE_BUCKET_NAME environment variable is not set.");
             _tableNameFilter = Environment.GetEnvironmentVariable("TABLE_NAME") ?? "ALL";
@@ -97,6 +107,7 @@ namespace UPS.WWRR.Business.Services
                 _processedMergeSPs.Clear();
                 _pairedMergeResults.Clear();
                 _csvLoadLogEntries.Clear();
+                _processedLoadVersions.Clear();
 
                 // Discover and validate new loads (creates DataLoad entries)
                 var newLoads = await BuildLoadsAsync(stoppingToken);
@@ -139,6 +150,7 @@ namespace UPS.WWRR.Business.Services
             finally
             {
                 LogCsvLoadSummary();
+                await PublishPubSubNotificationAsync();
             }
 
             _logger.LogInformation("BatchProcessorWorker ended at {Time}", DateTimeOffset.UtcNow);
@@ -539,10 +551,11 @@ namespace UPS.WWRR.Business.Services
                         else
                         {
                         await _loadRepository.MarkStagingCompletedAsync(descriptor.StagingTableName, ct);
-                            _logger.LogInformation("Staging table {stg} marked as completed for load {id}", descriptor.StagingTableName, load.Id);
-                            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
-                            _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
-                            BuildCsvLoadLog(load, ServiceConstants.LoadStatusSuccess, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
+                                _logger.LogInformation("Staging table {stg} marked as completed for load {id}", descriptor.StagingTableName, load.Id);
+                                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
+                                _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
+                                BuildCsvLoadLog(load, ServiceConstants.LoadStatusSuccess, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
+                                _processedLoadVersions.Add(load.LoadVersion);
                         }
                     }
                 }
@@ -1265,6 +1278,7 @@ namespace UPS.WWRR.Business.Services
                 _logger.LogInformation("Load Process Completed for second table {tbl} load {id} in this pair load. Records Count: Inserted={ins}, Updated={upd}, Deleted={del}", 
                     load.LoadTableName, load.Id, skipDetail.RecordsInserted, skipDetail.RecordsUpdated, skipDetail.RecordsDeleted);
                 BuildCsvLoadLog(load, ServiceConstants.LoadStatusSuccess, skipDetail.RecordsInserted, skipDetail.RecordsUpdated, skipDetail.RecordsDeleted);
+                _processedLoadVersions.Add(load.LoadVersion);
                 return;
             }
 
@@ -1306,6 +1320,7 @@ namespace UPS.WWRR.Business.Services
                 await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
                 _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
                 BuildCsvLoadLog(load, ServiceConstants.LoadStatusSuccess, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
+                _processedLoadVersions.Add(load.LoadVersion);
             }
         }
 
@@ -1525,6 +1540,37 @@ namespace UPS.WWRR.Business.Services
 
             sb.AppendLine(separator);
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Publishes a Pub/Sub notification message after the job completes successfully
+        /// and at least one data load was processed.
+        /// </summary>
+        private async Task PublishPubSubNotificationAsync()
+        {
+            if (_pubSubService == null || _processedLoadVersions.Count == 0)
+                return;
+
+            try
+            {
+                var message = new PubSubNotificationMessage
+                {
+                    RunId = Guid.NewGuid(),
+                    IsLocal = false,
+                    LoadVersions = _processedLoadVersions.ToList(),
+                    Bucket = _gcpBucketName,
+                    TestSuite = "full"
+                };
+
+                var messageJson = JsonConvert.SerializeObject(message);
+                await _pubSubService.PublishMessageAsync(messageJson);
+                _logger.LogInformation("Published Pub/Sub notification with {Count} load version(s): {Versions}",
+                    _processedLoadVersions.Count, string.Join(", ", _processedLoadVersions));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to publish Pub/Sub notification message.");
+            }
         }
 
         private async Task MoveObjectToProcessedAsync(string objectName)
