@@ -1,4 +1,5 @@
 #nullable enable
+using Google.Events.Protobuf.Firebase.TestLab.V1;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using UPS.WWRR.Business.Common.Constants;
@@ -1559,13 +1560,11 @@ namespace UPS.WWRR.Business.Services
                     IsLocal = false,
                     LoadVersions = _processedLoadVersions.ToList(),
                     Bucket = _gcpBucketName,
-                    TestSuite = "full"
+                    TestSuite = ServiceConstants.TestSuite
                 };
 
                 var messageJson = JsonConvert.SerializeObject(message);
                 await _pubSubService.PublishMessageAsync(messageJson);
-                _logger.LogInformation("Published Pub/Sub notification with {Count} load version(s): {Versions}",
-                    _processedLoadVersions.Count, string.Join(", ", _processedLoadVersions));
             }
             catch (Exception ex)
             {
