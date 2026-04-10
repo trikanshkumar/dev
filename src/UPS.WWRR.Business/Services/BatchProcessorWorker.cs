@@ -1560,7 +1560,7 @@ namespace UPS.WWRR.Business.Services
                     IsLocal = false,
                     LoadVersions = _processedLoadVersions.ToList(),
                     Bucket = _gcpBucketName,
-                    TestSuite = ServiceConstants.TestSuite
+                    BatchSize = _batchLoadChunkSize
                 };
 
                 var messageJson = JsonConvert.SerializeObject(message);

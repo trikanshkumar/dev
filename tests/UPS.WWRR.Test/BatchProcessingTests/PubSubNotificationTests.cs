@@ -44,7 +44,7 @@ public class PubSubNotificationTests : BatchProcessorTests
             json.Contains("2026_3_27_1") &&
             json.Contains("2026_3_27_2") &&
             json.Contains("\"isLocal\":false") &&
-            json.Contains("\"testSuite\":\"full\"") &&
+            json.Contains("\"batchSize\":") &&
             json.Contains("\"bucket\":\"test-bucket\"")
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -74,7 +74,7 @@ public class PubSubNotificationTests : BatchProcessorTests
         Assert.Single(message.LoadVersions);
         Assert.Equal("2026_3_27_1", message.LoadVersions[0]);
         Assert.Equal("test-bucket", message.Bucket);
-        Assert.Equal("full", message.TestSuite);
+        Assert.True(message.BatchSize >= 0);
     }
 
     [Fact]

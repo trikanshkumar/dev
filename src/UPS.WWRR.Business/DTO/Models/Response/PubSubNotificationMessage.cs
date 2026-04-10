@@ -16,7 +16,7 @@ namespace UPS.WWRR.Business.DTO.Models.Response
         [JsonProperty("bucket")]
         public string Bucket { get; set; } = string.Empty;
 
-        [JsonProperty("testSuite")]
-        public string TestSuite { get; set; } = "full";
+        [JsonProperty("batchSize")]
+        public int BatchSize { get; set; }
     }
 }
