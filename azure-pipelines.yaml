@@ -1,5 +1,5 @@
 trigger:
-  - dev
+  - yamlfix
 
 parameters:
   - name: environment
@@ -181,6 +181,8 @@ stages:
           metadata:
             name: efbundle-migration-${{ parameters.environment }}-$(Build.BuildId)
             namespace: wwrr-${{ parameters.environment }}
+            annotations:
+              sidecar.istio.io/inject: "false" 
 
           spec:
             ttlSecondsAfterFinished: 300
