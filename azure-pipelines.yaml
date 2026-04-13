@@ -189,8 +189,10 @@ stages:
             backoffLimit: 0
 
             template:
+              metadata:
+                annotations:
+                  sidecar.istio.io/inject: "false"
               spec:
-
                 restartPolicy: Never
                 serviceAccountName: ups-wwrr-batch
                 shareProcessNamespace: true
