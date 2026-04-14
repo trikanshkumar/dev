@@ -13,7 +13,7 @@ parameters:
 
 variables:
   - group: wwrr-${{ parameters.environment }}-pipeline-password
-  
+
   - name: agentName
     ${{ if eq(parameters.environment, 'dev') }}:
       value: 'wwrr-dev-agent'
@@ -278,12 +278,16 @@ stages:
             echo "Waiting for pod..."
             sleep 5
           done
-          echo "Waiting for pod to be Ready..."
+
+          if [[ -z "$POD_NAME" ]]; then
+            echo "ERROR: Pod not found"
+            kubectl get pods -n wwrr-${{ parameters.environment }}
+            exit 1
+          fi
+
           kubectl wait --for=condition=Ready pod/$POD_NAME -n wwrr-${{ parameters.environment }} --timeout=120s
-          echo "Streaming logs..."
-          kubectl logs -f $POD_NAME \
-            -n wwrr-${{ parameters.environment }} \
-            -c ef-runner
+
+          kubectl logs -f $POD_NAME -n wwrr-${{ parameters.environment }} -c ef-runner
 
           # echo "Waiting for migration pod..."
           # sleep 15
