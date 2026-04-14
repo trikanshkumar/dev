@@ -167,6 +167,8 @@ namespace UPS.WWRR.Data.Models
         public virtual DbSet<InternationalZoneChartOriginPoliticalDivisionStaging> InternationalZoneChartOriginPoliticalDivisionsStaging { get; set; }
         public virtual DbSet<InternationalZoneChartDestinationPoliticalDivision> InternationalZoneChartDestinationPoliticalDivisions { get; set; }
         public virtual DbSet<InternationalZoneChartDestinationPoliticalDivisionStaging> InternationalZoneChartDestinationPoliticalDivisionsStaging { get; set; }
+        public virtual DbSet<QaValidationTracker> QaValidationTrackers { get; set; }
+        public virtual DbSet<QaValidationResult> QaValidationResults { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -786,6 +788,29 @@ namespace UPS.WWRR.Data.Models
             {
                 e.ToTable("izchartdtnpoldiv_stg");
                 e.Property(p => p.IsCompletedIndicator).HasDefaultValue((short)0);
+            });
+
+            modelBuilder.Entity<QaValidationTracker>(e =>
+            {
+                e.ToTable("qa_validation_tracker", t =>
+                {
+                    t.HasCheckConstraint("chk_tracker_validation_status",
+                        "validation_status IN ('IN_PROGRESS','COMPLETED','FAILED')");
+                });
+                e.HasIndex(t => new { t.LoadVersion, t.LoadTableName })
+                    .IsUnique()
+                    .HasDatabaseName("uq_exec");
+                e.Property(p => p.StartTs).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                e.Property(p => p.RetryCount).HasDefaultValue(0);
+            });
+
+            modelBuilder.Entity<QaValidationResult>(e =>
+            {
+                e.ToTable("qa_validation_results", t =>
+                {
+                    t.HasCheckConstraint("chk_results_validation_status",
+                        "validation_status IN ('PASS','FAIL')");
+                });
             });
 
             // Relationships

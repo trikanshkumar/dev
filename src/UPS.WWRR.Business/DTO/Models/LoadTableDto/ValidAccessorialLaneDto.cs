@@ -42,10 +42,10 @@ namespace UPS.WWRR.Business.DTO.Models.LoadTableDto
         [Required]
         public DateTime REC_EFF_END_DT { get; set; }
 
-        [Required(AllowEmptyStrings = true), StringLength(4)]
+        [Required, StringLength(4)]
         public string ORG_GPN_MNM_TE { get; set; } = string.Empty;
 
-        [Required(AllowEmptyStrings = true), StringLength(4)]
+        [Required, StringLength(4)]
         public string DTN_GPN_MNM_TE { get; set; } = string.Empty;
     }
 }
