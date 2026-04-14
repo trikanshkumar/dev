@@ -181,14 +181,18 @@ stages:
           metadata:
             name: efbundle-migration-${{ parameters.environment }}-$(Build.BuildId)
             namespace: wwrr-${{ parameters.environment }}
+            annotations:
+              sidecar.istio.io/inject: "false" 
 
           spec:
             ttlSecondsAfterFinished: 300
             backoffLimit: 0
 
             template:
+              metadata:
+                annotations:
+                  sidecar.istio.io/inject: "false"
               spec:
-
                 restartPolicy: Never
                 serviceAccountName: ups-wwrr-batch
                 shareProcessNamespace: true
