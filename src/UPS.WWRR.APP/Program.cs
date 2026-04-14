@@ -48,7 +48,7 @@ class Program
         var bucket = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_NAME") ?? string.Empty;
         var bucketSubName = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_SUB_NAME") ?? string.Empty;
         var enableIAMTokenAuth = bool.TryParse(Environment.GetEnvironmentVariable("EnableIAMTokenAuth"), out var iam_tok) ? iam_tok : true;
-        var pubSubProjectId = Environment.GetEnvironmentVariable("PUBSUB_PROJECT_ID") ?? string.Empty;
+        var pubSubProjectId = Environment.GetEnvironmentVariable("GCP_PROJECT_ID") ?? string.Empty;
         var pubSubTopicId = Environment.GetEnvironmentVariable("PUBSUB_TOPIC_ID") ?? string.Empty;
 
 
