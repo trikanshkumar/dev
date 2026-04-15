@@ -15,6 +15,8 @@ using UPS.WWRR.Business.Services;
 using UPS.WWRR.Data.Common;
 using UPS.WWRR.Data.Models;
 
+namespace UPS.WWRR.App;
+
 [ExcludeFromCodeCoverage]
 class Program
 {
