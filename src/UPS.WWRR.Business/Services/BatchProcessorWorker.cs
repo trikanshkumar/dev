@@ -1556,7 +1556,7 @@ namespace UPS.WWRR.Business.Services
                 var message = new PubSubNotificationMessage
                 {
                     RunId = Guid.NewGuid(),
-                    IsLocal = false,
+                    IsLocal = ServiceConstants.IsLocal,
                     LoadVersions = _processedLoadVersions.ToList(),
                     Bucket = _gcpBucketName,
                     BatchSize = _batchLoadChunkSize
