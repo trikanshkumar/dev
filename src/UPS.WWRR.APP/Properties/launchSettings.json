@@ -19,7 +19,7 @@
         "TVASYLN_USE_BATCH_MERGE": "false",
         "TRASTD_USE_BATCH_MERGE": "false",
         "GCP_PROJECT_ID": "gcp-cti-wwrr-dev",
-        "PUBSUB_TOPIC_ID": "wwrr-mod-qe-dlv-request-dev"
+        "PUBSUB_TOPIC_ID": "wwrr-mod-qe-dlv-dev-topic"
       }
     }
   }
