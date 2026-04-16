@@ -49,6 +49,7 @@ namespace UPS.WWRR.Business.Common.Helper
 
             var header = csv.HeaderRecord ?? Array.Empty<string>();
 
+            // Example: enforce exact header names (customize as needed)
             var expectedWithoutDestination = new[] { ServiceConstants.tableNameColumn, ServiceConstants.fileExtractName };
             var expectedWithDestination = new[] { ServiceConstants.tableNameColumn, ServiceConstants.fileExtractName, ServiceConstants.destinationColumn };
 

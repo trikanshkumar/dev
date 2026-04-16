@@ -9,18 +9,18 @@ namespace UPS.WWRR.Business.Common.Helper
     /// </summary>
     public class NpgsqlConnectionHelper : INpgsqlConnectionHelper
     {
-        private readonly string _connectionString;
         private readonly NpgsqlDataSource _dataSource;
 
         /// <summary>
         /// constructor that reads connection string from configuration
         /// </summary>
+        /// <param name="dataSource"></param>
         /// <param name="configuration"></param>
         /// <exception cref="InvalidOperationException"></exception>
         public NpgsqlConnectionHelper(NpgsqlDataSource dataSource, IConfiguration configuration)
         {
-            _connectionString = Environment.GetEnvironmentVariable("ALLOYDB_CONNECTION")
-            ?? throw new InvalidOperationException("Required environment variable 'ALLOYDB_CONNECTION' not set.");
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ALLOYDB_CONNECTION")))
+                throw new InvalidOperationException("Required environment variable 'ALLOYDB_CONNECTION' not set.");
             _dataSource = dataSource;
         }
 
