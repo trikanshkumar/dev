@@ -11,6 +11,8 @@ spec:
     metadata:
       labels:
         app: ups-wwrr-batch
+      annotations:
+        sidecar.istio.io/inject: "true"  
     spec:
       serviceAccountName: {{ include "ups-wwrr-batch.serviceAccountName" . }}
       terminationGracePeriodSeconds: 60

@@ -72,7 +72,7 @@ public class GoogleCloudStorageService(StorageClient storageClient, string bucke
     private async Task DownloadChunkAsync(string bucketName, string storageFileName, string localFileName, long offset, long chunkEnd, CancellationToken ct)
     {
         int attempt = 0;
-        int MaxRetriesPerRange = 5;
+        const int maxRetriesPerRange = 5;
 
         var options = new DownloadObjectOptions
         {
@@ -106,16 +106,13 @@ public class GoogleCloudStorageService(StorageClient storageClient, string bucke
                 // Always respect cancellation
                 throw;
             }
-            catch (Exception ex) when (attempt < MaxRetriesPerRange)
+            catch (Exception ex) when (attempt < maxRetriesPerRange)
             {
                 attempt++;
 
                 // Exponential backoff with jitter
                 var delayMs = 200 * Math.Pow(2, attempt) + Random.Shared.Next(0, 250);
                 var delay = TimeSpan.FromMilliseconds(delayMs);
-
-                // Optional: log
-                //_logger.LogWarning(ex, "Chunk download failed (attempt {Attempt}/{Max}). Retrying in {Delay}.", attempt, MaxRetriesPerRange, delay);
 
                 await Task.Delay(delay, ct);
                 continue;
@@ -170,6 +167,8 @@ public class GoogleCloudStorageService(StorageClient storageClient, string bucke
         return remoteSize == localSize;
     }
 
+    public string PrependBaseDirectory(string objectName) => !string.IsNullOrWhiteSpace(baseDirectory) ? $"{baseDirectory}/{objectName}" : objectName;
+
     public async Task<string?> DiscoverReceiptLogFileAsync(CancellationToken ct = default)
     {
         var receiptLogFilePattern = PrependBaseDirectory(ServiceConstants.receiptLogFilePattern);
@@ -178,27 +177,16 @@ public class GoogleCloudStorageService(StorageClient storageClient, string bucke
         await foreach (var obj in storageClient.ListObjectsAsync(bucketName).WithCancellation(ct))
         {
             ct.ThrowIfCancellationRequested();
-            var receiptFileName = obj.Name;
-            if (!receiptFileName.StartsWith(receiptLogFilePattern, StringComparison.OrdinalIgnoreCase)) continue;
-            if (!receiptFileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)) continue;
-            // Format: WWRR_MOD_RECEIPT_FILES_YYYY_MM_DD_LOADID.csv (8 parts)
-            var parts = Path.GetFileName(receiptFileName).Split('_', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 8) continue;
-            if (int.TryParse(parts[4], out var y) && int.TryParse(parts[5], out var m) && int.TryParse(parts[6], out var d))
-            {
-                var loadIdPart = parts[7];
-                if (loadIdPart.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)) loadIdPart = loadIdPart[..^4];
-                if (!long.TryParse(loadIdPart, out var loadId)) continue;
 
-                var fileDate = new DateOnly(y, m, d);
-                matches.Add((Path.GetFileName(receiptFileName), fileDate, loadId));
+            if (TryParseReceiptLogMatch(obj.Name, receiptLogFilePattern, out var match))
+            {
+                matches.Add(match);
             }
         }
 
         if (matches.Count == 0)
             return null;
 
-        // Sort by filename date ascending (oldest first), then by LoadId ascending as tie-breaker
         var receiptByDateAndLoadId = matches
             .OrderBy(x => x.FileDate)
             .ThenBy(x => x.LoadId)
@@ -206,6 +194,66 @@ public class GoogleCloudStorageService(StorageClient storageClient, string bucke
 
         return receiptByDateAndLoadId.FileName;
     }
+    private bool TryParseReceiptLogMatch(
+        string receiptFileName,
+        string receiptLogFilePattern,
+        out (string FileName, DateOnly FileDate, long LoadId) match)
+    {
+        match = default;
 
-    public string PrependBaseDirectory(string objectName) => !string.IsNullOrWhiteSpace(baseDirectory) ? $"{baseDirectory}/{objectName}" : objectName;
+        if (!IsReceiptLogCandidate(receiptFileName, receiptLogFilePattern))
+            return false;
+
+        var fileName = Path.GetFileName(receiptFileName);
+        var parts = fileName.Split('_', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 8)
+            return false;
+
+        if (!TryParseFileDate(parts, out var fileDate))
+            return false;
+
+        if (!TryParseLoadId(parts[7], out var loadId))
+            return false;
+
+        match = (fileName, fileDate, loadId);
+        return true;
+    }
+
+    private bool IsReceiptLogCandidate(string receiptFileName, string receiptLogFilePattern)
+    {
+        return receiptFileName.StartsWith(receiptLogFilePattern, StringComparison.OrdinalIgnoreCase)
+            && receiptFileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool TryParseFileDate(string[] parts, out DateOnly fileDate)
+    {
+        fileDate = default;
+
+        if (!int.TryParse(parts[4], out var year)
+            || !int.TryParse(parts[5], out var month)
+            || !int.TryParse(parts[6], out var day))
+        {
+            return false;
+        }
+
+        if (year < 1 || year > 9999
+            || month < 1 || month > 12
+            || day < 1 || day > DateTime.DaysInMonth(year, month))
+        {
+            return false;
+        }
+
+        fileDate = new DateOnly(year, month, day);
+        return true;
+    }
+
+    private bool TryParseLoadId(string loadIdPart, out long loadId)
+    {
+        if (loadIdPart.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            loadIdPart = loadIdPart[..^4];
+        }
+
+        return long.TryParse(loadIdPart, out loadId);
+    }
 }
