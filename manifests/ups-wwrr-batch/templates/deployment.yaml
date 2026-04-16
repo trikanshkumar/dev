@@ -57,9 +57,6 @@ spec:
               value: {{ .Values.env.TRASTD_USE_BATCH_MERGE | quote }}
             - name: TSUBCHG_USE_BATCH_MERGE
               value: {{ .Values.env.TSUBCHG_USE_BATCH_MERGE | quote }}
-            - name: EnableIAMTokenAuth
-              value: {{ .Values.env.EnableIAMTokenAuth | quote }}
-
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
