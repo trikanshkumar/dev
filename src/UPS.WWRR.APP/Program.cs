@@ -109,8 +109,7 @@ class Program
                     if (!string.IsNullOrEmpty(pubSubProjectId) && !string.IsNullOrEmpty(pubSubTopicId))
                     {
                         var topicName = TopicName.FromProjectTopic(pubSubProjectId, pubSubTopicId);
-                        var publisherClient = PublisherClient.CreateAsync(topicName).GetAwaiter().GetResult();
-                        services.AddSingleton(publisherClient);
+                        services.AddSingleton(_ => PublisherClient.CreateAsync(topicName).GetAwaiter().GetResult());
                         services.AddSingleton<IGooglePubSubService, GooglePubSubService>();
                     }
                 })

@@ -1,7 +1,6 @@
 #nullable enable
-using Google.Events.Protobuf.Firebase.TestLab.V1;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using UPS.WWRR.Business.Common.Constants;
 using UPS.WWRR.Business.Common.Enum;
 using UPS.WWRR.Business.Common.Helper;
@@ -1563,8 +1562,8 @@ namespace UPS.WWRR.Business.Services
                     BatchSize = _batchLoadChunkSize
                 };
 
-                var messageJson = JsonConvert.SerializeObject(message);
-                await _pubSubService.PublishMessageAsync(messageJson);
+                var payload = JsonSerializer.Serialize(message);
+                await _pubSubService.PublishMessageAsync(payload);
             }
             catch (Exception ex)
             {
