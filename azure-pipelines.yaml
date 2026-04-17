@@ -342,9 +342,9 @@ stages:
             --set-string env.TRASTD_USE_BATCH_MERGE="$(TRASTD_USE_BATCH_MERGE)" \
             --set-string env.TSUBCHG_USE_BATCH_MERGE="$(TSUBCHG_USE_BATCH_MERGE)" \
             --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)" \
+            --set-string env.Enable_MQ="$(Enable_MQ)" \
             --set-string ALLOYDB_HOST_ALIAS_IP="$(ALLOYDB_HOST_ALIAS_IP)" \
             --set-string ALLOYDB_HOST_ALIAS_NAME="$(ALLOYDB_HOST_ALIAS_NAME)" \
-            --set-string Enable_MQ="$(Enable_MQ)" \
             --set-string ALLOYDB_INSTANCE="projects/$(GCP_PROJECT_ID)/locations/$(GCP_REGION)/clusters/wwrr-${{ parameters.environment }}-alloydb/instances/primary"
 
           echo "Helm deployment completed successfully"
