@@ -58,12 +58,6 @@ stages:
 
     - checkout: self
 
-    # - task: SonarQubePrepare@5
-    #   inputs:
-    #     SonarQube: '$(SonarQubeServiceConnection)'
-    #     scannerMode: 'MSBuild'
-    #     projectKey: '$(SonarQubeProjectKey)'
-
     - task: Bash@3
       displayName: Configure GCP
       inputs:
@@ -98,10 +92,6 @@ stages:
             --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
             --project=$(GCP_PROJECT_ID))
           export ALLOYDB_CONNECTION="$BASE_CONNECTION"
-          # IAM_TOKEN=$(gcloud auth print-access-token \
-          #   --impersonate-service-account=$ALLOYDB_ADMIN_EMAIL)
-
-          # export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
 
           dotnet ef migrations bundle \
             --project src/UPS.WWRR.Data \
@@ -227,7 +217,9 @@ stages:
                     - name: TRASTD_USE_BATCH_MERGE
                       value: "$(TRASTD_USE_BATCH_MERGE)"
                     - name: TSUBCHG_USE_BATCH_MERGE
-                      value: "$(TSUBCHG_USE_BATCH_MERGE)"  
+                      value: "$(TSUBCHG_USE_BATCH_MERGE)"
+                    - name: Enable_MQ
+                      value: "$(Enable_MQ)"   
         
 
                   command:
@@ -350,6 +342,7 @@ stages:
             --set-string env.TRASTD_USE_BATCH_MERGE="$(TRASTD_USE_BATCH_MERGE)" \
             --set-string env.TSUBCHG_USE_BATCH_MERGE="$(TSUBCHG_USE_BATCH_MERGE)" \
             --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)" \
+            --set-string env.Enable_MQ="$(Enable_MQ)" \
             --set-string ALLOYDB_HOST_ALIAS_IP="$(ALLOYDB_HOST_ALIAS_IP)" \
             --set-string ALLOYDB_HOST_ALIAS_NAME="$(ALLOYDB_HOST_ALIAS_NAME)" \
             --set-string ALLOYDB_INSTANCE="projects/$(GCP_PROJECT_ID)/locations/$(GCP_REGION)/clusters/wwrr-${{ parameters.environment }}-alloydb/instances/primary"
