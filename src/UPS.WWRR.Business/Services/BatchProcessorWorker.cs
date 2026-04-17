@@ -29,6 +29,7 @@ namespace UPS.WWRR.Business.Services
         private readonly bool _tvasylnUseBatchMerge;
         private readonly bool _trastdUseBatchMerge;
         private readonly bool _tsubchgUseBatchMerge;
+        private readonly bool _enableMQ;
         private readonly HashSet<string> _movedObjects = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
@@ -87,6 +88,7 @@ namespace UPS.WWRR.Business.Services
             _tvasylnUseBatchMerge = bool.TryParse(Environment.GetEnvironmentVariable("TVASYLN_USE_BATCH_MERGE"), out var tvasylnUseBatch) && tvasylnUseBatch;
             _trastdUseBatchMerge = bool.TryParse(Environment.GetEnvironmentVariable("TRASTD_USE_BATCH_MERGE"), out var trastdUseBatch) && trastdUseBatch;
             _tsubchgUseBatchMerge = bool.TryParse(Environment.GetEnvironmentVariable("TSUBCHG_USE_BATCH_MERGE"), out var tsubchgUseBatch) && tsubchgUseBatch;
+            _enableMQ = bool.TryParse(Environment.GetEnvironmentVariable("Enable_MQ"), out var enableMQ) && enableMQ;
         }
 
         /// <summary>
@@ -150,7 +152,10 @@ namespace UPS.WWRR.Business.Services
             finally
             {
                 LogCsvLoadSummary();
-                await PublishPubSubNotificationAsync();
+                if (_enableMQ)
+                {
+                    await PublishPubSubNotificationAsync();
+                }
             }
 
             _logger.LogInformation("BatchProcessorWorker ended at {Time}", DateTimeOffset.UtcNow);

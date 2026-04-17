@@ -95,6 +95,28 @@ public class PubSubNotificationTests : BatchProcessorTests
     }
 
     [Fact]
+    public async Task PublishPubSubNotificationAsync_WhenEnableMQIsFalse_DoesNotPublish()
+    {
+        Environment.SetEnvironmentVariable("Enable_MQ", "false");
+        try
+        {
+            var sut = CreateSut();
+
+            var processedVersions = sut.GetType()
+                .GetField("_processedLoadVersions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                .GetValue(sut) as List<string>;
+            processedVersions!.Add("2026_3_27_1");
+
+            await InvokeAsync<object>(sut, "PublishPubSubNotificationAsync");
+            _pubSub.Verify(p => p.PublishMessageAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("Enable_MQ", "true");
+        }
+    }
+
+    [Fact]
     public async Task PublishPubSubNotificationAsync_WhenPubSubServiceIsNull_DoesNotThrow()
     {
         // Create worker without Pub/Sub service

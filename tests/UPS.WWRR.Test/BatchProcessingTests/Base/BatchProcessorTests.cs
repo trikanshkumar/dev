@@ -23,7 +23,8 @@ public abstract class BatchProcessorTests
         {
             ["LOAD_INTERVAL_MINUTES"] = "1",
             ["GOOGLE_CLOUD_STORAGE_BUCKET_NAME"] = "test-bucket",
-            ["TABLE_NAME"] = "ALL"
+            ["TABLE_NAME"] = "ALL",
+            ["Enable_MQ"] = "true"
         };
 
         foreach (var kv in dict)
