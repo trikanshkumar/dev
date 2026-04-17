@@ -57,6 +57,8 @@ spec:
               value: {{ .Values.env.TRASTD_USE_BATCH_MERGE | quote }}
             - name: TSUBCHG_USE_BATCH_MERGE
               value: {{ .Values.env.TSUBCHG_USE_BATCH_MERGE | quote }}
+            - name: Enable_MQ
+              value: {{ .Values.env.Enable_MQ | quote }}  
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
