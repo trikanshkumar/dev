@@ -75,9 +75,9 @@ namespace UPS.WWRR.Business.Services
                 var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "is_completed_ir", "load_ref_te" };
                 // Matches timestamps like yyyy-MM-dd-HH.mm.ss.ffffff (date with dashes, time with dots, 1–6 fractional digits)
                 // Capturing groups: 1=date (yyyy-MM-dd), 2=HH, 3=mm, 4=ss, 5=fractional seconds
-                var tsRegex = new Regex(ServiceConstants.DashDotTimestampRegexPattern, RegexOptions.Compiled);
+                var tsRegex = new Regex(ServiceConstants.DashDotTimestampRegexPattern, RegexOptions.Compiled, TimeSpan.FromSeconds(1));
                 // Matches Oracle-style timestamps like dd-MMM-yy hh.mm.ss.ffffff AM/PM
-                var oracleTsRegex = new Regex(ServiceConstants.OracleTimestampRegexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                var oracleTsRegex = new Regex(ServiceConstants.OracleTimestampRegexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
                 // Determine if this table requires Oracle timestamp conversion
                 var useOracleTimestamp = ServiceConstants.OracleTimestampTables.Contains(configuration.TableName);
 
