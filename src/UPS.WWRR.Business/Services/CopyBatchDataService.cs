@@ -105,21 +105,7 @@ namespace UPS.WWRR.Business.Services
                     // Initialize COPY command with column list on first chunk
                     if (copySql == null)
                     {
-                        string headerLine = string.Empty;
-                        using (var sr = new StringReader(chunk))
-                            headerLine = sr.ReadLine() ?? string.Empty;
-                        // Normalize header columns to lowercase (schema now lowercase) and remove quotes
-                        var headerColsRaw = headerLine.Split(_delimiter, StringSplitOptions.TrimEntries | StringSplitOptions.None)
-                            .Select(c => c.Replace("\"", string.Empty).Trim())
-                            .Where(c => c.Length > 0)
-                            .ToList();
-                        var headerColsLower = headerColsRaw.Where(c => !excluded.Contains(c))
-                                                           .Select(c => c.ToLowerInvariant())
-                                                           .ToList();
-                        // Include load_ref_te in the COPY column list so it is populated during staging insert
-                        headerColsLower.Add("load_ref_te");
-                        copySql = SqlCommandHelper.BuildCopyCommand(configuration.TableName, headerColsLower, _delimiter, hasHeader: true);
-                        singleRowCopySql = SqlCommandHelper.BuildCopyCommand(configuration.TableName, headerColsLower, _delimiter, hasHeader: false); // no HEADER
+                        (copySql, singleRowCopySql) = BuildCopySqlFromHeader(chunk, configuration.TableName, excluded);
                     }
 
                     var attempted = CountLinesStreaming(chunk) - (_hasHeader ? 1 : 0);
@@ -143,17 +129,7 @@ namespace UPS.WWRR.Business.Services
                                 continue;
                             }
 
-                            // Normalize timestamps based on table type
-                            if (useOracleTimestamp)
-                            {
-                                // Normalize Oracle-style timestamps (dd-MMM-yy hh.mm.ss.ffffff AM/PM) to PostgreSQL format
-                                line = NormalizeOracleTimestampFields(line, oracleTsRegex);
-                            }
-                            else
-                            {
-                                // Normalize any timestamp formatted as yyyy-MM-dd-HH.mm.ss.ffffff within fields (quoted or not)
-                                line = NormalizeTimestampFields(line, tsRegex);
-                            }
+                            line = NormalizeLineTimestamp(line, tsRegex, oracleTsRegex, useOracleTimestamp);
                             // Append load_ref_te value to each data row
                             await writer.WriteLineAsync(line + _delimiter + loadRefValue);
                         }
@@ -211,6 +187,31 @@ namespace UPS.WWRR.Business.Services
         }
 
         /// <summary>
+        /// Builds the COPY SQL commands from the first chunk's header line.
+        /// </summary>
+        private (string CopySql, string SingleRowCopySql) BuildCopySqlFromHeader(string chunk, string tableName, HashSet<string> excluded)
+        {
+            string headerLine = string.Empty;
+            using (var sr = new StringReader(chunk))
+                headerLine = sr.ReadLine() ?? string.Empty;
+
+            var headerColsRaw = headerLine.Split(_delimiter, StringSplitOptions.TrimEntries | StringSplitOptions.None)
+                .Select(c => c.Replace("\"", string.Empty).Trim())
+                .Where(c => c.Length > 0)
+                .ToList();
+
+            var headerColsLower = headerColsRaw.Where(c => !excluded.Contains(c))
+                                               .Select(c => c.ToLowerInvariant())
+                                               .ToList();
+
+            headerColsLower.Add("load_ref_te");
+
+            var copySql = SqlCommandHelper.BuildCopyCommand(tableName, headerColsLower, _delimiter, hasHeader: true);
+            var singleRowCopySql = SqlCommandHelper.BuildCopyCommand(tableName, headerColsLower, _delimiter, hasHeader: false);
+            return (copySql, singleRowCopySql);
+        }
+
+        /// <summary>
         /// Retry COPY for each row individually in case of a batch failure.
         /// Returns the number of successfully loaded rows and a list of per-row error messages.
         /// </summary>
@@ -243,17 +244,7 @@ namespace UPS.WWRR.Business.Services
                     if (string.IsNullOrWhiteSpace(row)) continue;
                     try
                     {
-                        // Normalize timestamps based on table type
-                        if (useOracleTimestamp)
-                        {
-                            // Normalize Oracle-style timestamps (dd-MMM-yy hh.mm.ss.ffffff AM/PM) to PostgreSQL format
-                            row = NormalizeOracleTimestampFields(row, oracleTsRegex);
-                        }
-                        else
-                        {
-                            // Normalize any timestamp formatted as yyyy-MM-dd-HH.mm.ss.ffffff within fields (quoted or not)
-                            row = NormalizeTimestampFields(row, tsRegex);
-                        }
+                        row = NormalizeLineTimestamp(row, tsRegex, oracleTsRegex, useOracleTimestamp);
                         // Append load_ref_te value
                         row = row + _delimiter + loadRefValue;
 
@@ -292,6 +283,16 @@ namespace UPS.WWRR.Business.Services
             return count;
         }
 
+        /// <summary>
+        /// Applies the correct timestamp normalization (Oracle or standard) based on the table type.
+        /// </summary>
+        private string NormalizeLineTimestamp(string line, Regex tsRegex, Regex oracleTsRegex, bool useOracleTimestamp)
+        {
+            return useOracleTimestamp
+                ? NormalizeOracleTimestampFields(line, oracleTsRegex)
+                : NormalizeTimestampFields(line, tsRegex);
+        }
+
         // Normalizes any timestamp formatted as yyyy-MM-dd-HH.mm.ss.ffffff within fields (quoted or not)
         private string NormalizeTimestampFields(string line, Regex tsRegex)
         {
@@ -324,33 +325,40 @@ namespace UPS.WWRR.Business.Services
                 var match = oracleTsRegex.Match(inner);
                 if (match.Success)
                 {
-                    var day = int.Parse(match.Groups[1].Value);
-                    var monthStr = match.Groups[2].Value.ToUpperInvariant();
-                    var year = int.Parse(match.Groups[3].Value);
-                    var hour = int.Parse(match.Groups[4].Value);
-                    var minute = int.Parse(match.Groups[5].Value);
-                    var second = int.Parse(match.Groups[6].Value);
-                    var fraction = match.Groups[7].Value;
-                    var ampm = match.Groups[8].Value.ToUpperInvariant();
-
-                    // Convert 2-digit year to 4-digit (assume 2000s for years < 50, 1900s otherwise)
-                    var fullYear = year < 50 ? 2000 + year : 1900 + year;
-
-                    // Convert month abbreviation to month number
-                    var monthNum = DateTime.ParseExact(monthStr, "MMM", CultureInfo.InvariantCulture).Month;
-
-                    // Convert 12-hour to 24-hour format
-                    if (ampm == "PM" && hour != 12)
-                        hour += 12;
-                    else if (ampm == "AM" && hour == 12)
-                        hour = 0;
-
-                    // Format as PostgreSQL-compatible timestamp
-                    var normalized = $"{fullYear:D4}-{monthNum:D2}-{day:D2} {hour:D2}:{minute:D2}:{second:D2}.{fraction}";
+                    var normalized = ConvertOracleTimestampToPostgres(match);
                     tokens[t] = quoted ? $"\"{normalized}\"" : normalized;
                 }
             }
             return string.Join(_delimiter, tokens);
+        }
+
+        /// <summary>
+        /// Converts a single Oracle-style timestamp regex match to PostgreSQL format (yyyy-MM-dd HH:mm:ss.ffffff).
+        /// </summary>
+        private static string ConvertOracleTimestampToPostgres(Match match)
+        {
+            var day = int.Parse(match.Groups[1].Value);
+            var monthStr = match.Groups[2].Value.ToUpperInvariant();
+            var year = int.Parse(match.Groups[3].Value);
+            var hour = int.Parse(match.Groups[4].Value);
+            var minute = int.Parse(match.Groups[5].Value);
+            var second = int.Parse(match.Groups[6].Value);
+            var fraction = match.Groups[7].Value;
+            var ampm = match.Groups[8].Value.ToUpperInvariant();
+
+            // Convert 2-digit year to 4-digit (assume 2000s for years < 50, 1900s otherwise)
+            var fullYear = year < 50 ? 2000 + year : 1900 + year;
+
+            // Convert month abbreviation to month number
+            var monthNum = DateTime.ParseExact(monthStr, "MMM", CultureInfo.InvariantCulture).Month;
+
+            // Convert 12-hour to 24-hour format
+            if (ampm == "PM" && hour != 12)
+                hour += 12;
+            else if (ampm == "AM" && hour == 12)
+                hour = 0;
+
+            return $"{fullYear:D4}-{monthNum:D2}-{day:D2} {hour:D2}:{minute:D2}:{second:D2}.{fraction}";
         }
     }
 }

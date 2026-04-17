@@ -94,9 +94,9 @@ namespace UPS.WWRR.Business.Services
         /// <summary>
 		/// Processor execution loop
 		/// </summary>
-		/// <param name="stoppingToken"></param>
+		/// <param name="ct"></param>
 		/// <returns></returns>
-        public async Task ProcessAsync(CancellationToken stoppingToken)
+        public async Task ProcessAsync(CancellationToken ct)
         {
             _logger.LogInformation("BatchProcessorWorker started at {Time}", DateTimeOffset.UtcNow);
 
@@ -112,7 +112,7 @@ namespace UPS.WWRR.Business.Services
                 _processedLoadVersions.Clear();
 
                 // Discover and validate new loads (creates DataLoad entries)
-                var newLoads = await BuildLoadsAsync(stoppingToken);
+                var newLoads = await BuildLoadsAsync(ct);
                 if (newLoads.Count == 0)
                 {
                     _logger.LogInformation("No new loads discovered in this cycle.");
@@ -123,23 +123,23 @@ namespace UPS.WWRR.Business.Services
                     var tempFiles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
                     // Validate file contents with cache
-                    await ValidateLoadsAsync(newLoads, stoppingToken, tempFiles);
+                    await ValidateLoadsAsync(newLoads, ct, tempFiles);
 
                     // Copy batches to staging for ReadyToProcess loads
                     string loadBatch = newLoads.Select(lv => lv.LogFileLocation).FirstOrDefault() ?? string.Empty;
-                    var readyAfterValidation = await _loadRepository.GetLoadsByStatusAsync(LoadStatus.ReadyToProcess, loadBatch, stoppingToken);
+                    var readyAfterValidation = await _loadRepository.GetLoadsByStatusAsync(LoadStatus.ReadyToProcess, loadBatch, ct);
                     if (readyAfterValidation.Count > 0)
                     {
                         readyAfterValidation = FilterByTableName(readyAfterValidation);
-                        await CopyBatchLoadAsync(readyAfterValidation, stoppingToken, tempFiles);
+                        await CopyBatchLoadAsync(readyAfterValidation, ct, tempFiles);
                         tempFiles.Clear(); // Clear references after copy
 
                         //  main table for loads that are still Processing after copy
-                        var processingLoads = await _loadRepository.GetLoadsByStatusAsync(LoadStatus.Processing, loadBatch, stoppingToken);
+                        var processingLoads = await _loadRepository.GetLoadsByStatusAsync(LoadStatus.Processing, loadBatch, ct);
                         if (processingLoads.Count > 0)
                         {
                             processingLoads = FilterByTableName(processingLoads);
-                            await PerformMergeLoadAsync(processingLoads, stoppingToken);
+                            await PerformMergeLoadAsync(processingLoads, ct);
                         }
                     }
                 }
@@ -284,84 +284,19 @@ namespace UPS.WWRR.Business.Services
             var batchSizeEnv = int.TryParse(Environment.GetEnvironmentVariable("BATCH_SIZE"), out var bs) ? bs : _defaultChunkSize;
             foreach (var r in rows.Skip(1))
             {
-                if (r.Length <= fileExtractNameIndex) continue;
-                var fileExtractName = r[fileExtractNameIndex];
-
-                var destination = destinationNameIndex < 0 || r.Length <= destinationNameIndex || string.IsNullOrWhiteSpace(r[destinationNameIndex])
-                    ? ServiceConstants.defaultDestinationValue
-                    : r[destinationNameIndex].Trim();
-
-                if (string.IsNullOrWhiteSpace(fileExtractName)) continue;
-
-                allReceiptFileNames.Add(fileExtractName);
-
-                var parts = fileExtractName.Split('_', StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length < 5)
+                // Track every file referenced in the receipt for cleanup, regardless of whether a load is created
+                if (fileExtractNameIndex >= 0 && fileExtractNameIndex < r.Length)
                 {
-                    _logger.LogWarning("Cannot parse table/load id from {val}", fileExtractName);
-                    continue;
+                    var fileExtractName = r[fileExtractNameIndex];
+                    if (!string.IsNullOrWhiteSpace(fileExtractName))
+                        allReceiptFileNames.Add(fileExtractName);
                 }
 
-                var tableNamePart = parts[0];
-                var yearPart = parts[1];
-                var monthPart = parts[2];
-                var dayPart = parts[3];
-                var loadIdPart = parts[4];
+                var load = await TryParseReceiptRowAsync(r, fileExtractNameIndex, destinationNameIndex, dynamicReceiptName, processedInReceipt, ct);
+                if (load == null) continue;
 
-
-
-                int year, month, day;
-                long loadId;
-
-                try
-                {
-                    year = int.Parse(yearPart);
-                    month = int.Parse(monthPart);
-                    day = int.Parse(dayPart);
-
-                    // get just the digits to remove the ".csv" portion
-                    var loadIdDigits = new string(loadIdPart.Where(char.IsDigit).ToArray());
-
-                    loadId = long.Parse(loadIdDigits);
-                }
-                catch
-                {
-                    _logger.LogWarning("Date/LoadId has invalid value(s) in file {fileExtractName}", fileExtractName);
-                    continue;
-                }
-
-                var loadVersion = $"{year}_{month}_{day}_{loadId}";
-
-                if (await _loadRepository.ExistsAsync(tableNamePart, loadVersion, ct))
-                {
-                    _logger.LogInformation("DataLoad already exists for {tbl} version {ver}. Skipping insert.", tableNamePart, loadVersion);
-                    continue;
-                }
-
-                // Check if this table/version combination is already in the current receipt
-                var loadKey = $"{tableNamePart}|{loadVersion}";
-                if (processedInReceipt.Contains(loadKey))
-                {
-                    _logger.LogWarning("Duplicate entry found in receipt file for {tbl} version {ver}. Skipping duplicate.", tableNamePart, loadVersion);
-                    continue;
-                }
-
-                newLoads.Add(new DataLoad
-                {
-                    LoadTableName = tableNamePart,
-                    LoadVersionNumber = loadId,
-                    LoadVersion = loadVersion,
-                    LoadStatusCode = LoadStatus.ReadyForValidation.ToString(),
-                    FileLocation = $"gs://{_gcpBucketName}/{_storageService.PrependBaseDirectory(fileExtractName)}",
-                    CreatedOn = DateTime.UtcNow,
-                    LogFileLocation = $"gs://{_gcpBucketName}/{_storageService.PrependBaseDirectory(dynamicReceiptName)}",
-                    TotalBatchNumber = 0,
-                    BatchSize = _batchLoadChunkSize,
-                    DataSource = destination[..Math.Min(destination.Length, 25)]
-                });
-
-                // Mark this table/version as processed in this receipt
-                processedInReceipt.Add(loadKey);
+                newLoads.Add(load);
+                processedInReceipt.Add($"{load.LoadTableName}|{load.LoadVersion}");
             }
 
             if (newLoads.Count > 0)
@@ -389,6 +324,95 @@ namespace UPS.WWRR.Business.Services
             }
 
             return newLoads;
+        }
+
+        /// <summary>
+        /// Parses a single receipt CSV row and returns a DataLoad if valid, or null to skip.
+        /// </summary>
+        private async Task<DataLoad?> TryParseReceiptRowAsync(
+            string[] row, int fileExtractNameIndex, int destinationNameIndex,
+            string dynamicReceiptName, HashSet<string> processedInReceipt, CancellationToken ct)
+        {
+            if (row.Length <= fileExtractNameIndex) return null;
+            var fileExtractName = row[fileExtractNameIndex];
+            if (string.IsNullOrWhiteSpace(fileExtractName)) return null;
+
+            var destination = destinationNameIndex < 0 || row.Length <= destinationNameIndex || string.IsNullOrWhiteSpace(row[destinationNameIndex])
+                ? ServiceConstants.defaultDestinationValue
+                : row[destinationNameIndex].Trim();
+
+            var parts = fileExtractName.Split('_', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 5)
+            {
+                _logger.LogWarning("Cannot parse table/load id from {val}", fileExtractName);
+                return null;
+            }
+
+            if (!TryParseFileNameParts(parts, out var tableNamePart, out var loadVersion, out var loadId))
+            {
+                _logger.LogWarning("Date/LoadId has invalid value(s) in file {fileExtractName}", fileExtractName);
+                return null;
+            }
+
+            if (await _loadRepository.ExistsAsync(tableNamePart, loadVersion, ct))
+            {
+                _logger.LogInformation("DataLoad already exists for {tbl} version {ver}. Skipping insert.", tableNamePart, loadVersion);
+                return null;
+            }
+
+            var loadKey = $"{tableNamePart}|{loadVersion}";
+            if (processedInReceipt.Contains(loadKey))
+            {
+                _logger.LogWarning("Duplicate entry found in receipt file for {tbl} version {ver}. Skipping duplicate.", tableNamePart, loadVersion);
+                return null;
+            }
+
+            return new DataLoad
+            {
+                LoadTableName = tableNamePart,
+                LoadVersionNumber = loadId,
+                LoadVersion = loadVersion,
+                LoadStatusCode = LoadStatus.ReadyForValidation.ToString(),
+                FileLocation = $"gs://{_gcpBucketName}/{_storageService.PrependBaseDirectory(fileExtractName)}",
+                CreatedOn = DateTime.UtcNow,
+                LogFileLocation = $"gs://{_gcpBucketName}/{_storageService.PrependBaseDirectory(dynamicReceiptName)}",
+                TotalBatchNumber = 0,
+                BatchSize = _batchLoadChunkSize,
+                DataSource = destination[..Math.Min(destination.Length, 25)]
+            };
+        }
+
+        /// <summary>
+        /// Parses table name, load version, and load id from filename parts.
+        /// </summary>
+        private static bool TryParseFileNameParts(string[] parts, out string tableNamePart, out string loadVersion, out long loadId)
+        {
+            tableNamePart = string.Empty;
+            loadVersion = string.Empty;
+            loadId = 0;
+
+            if (parts.Length < 5)
+            {
+                return false;
+            }
+
+            tableNamePart = parts[0];
+
+            if (!int.TryParse(parts[1], out var year) ||
+                !int.TryParse(parts[2], out var month) ||
+                !int.TryParse(parts[3], out var day))
+            {
+                return false;
+            }
+
+            var loadIdDigits = new string(parts[4].Where(char.IsDigit).ToArray());
+            if (!long.TryParse(loadIdDigits, out loadId))
+            {
+                return false;
+            }
+
+            loadVersion = $"{year}_{month}_{day}_{loadId}";
+            return true;
         }
 
         /// <summary>
@@ -498,71 +522,9 @@ namespace UPS.WWRR.Business.Services
                 try
                 {
                     if (descriptor.RequiresStagingNormalization)
-                    {
                         await HandleStagingNormalizationLoadAsync(load, descriptor, sw, ct);
-                    }
                     else
-                    {
-                        // For batch merge, get staging count before merge for validation
-                        long stagingRowCount = 0;
-                        if ((_tvasylnUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TVASYLN), StringComparison.OrdinalIgnoreCase)) ||
-                            (_trastdUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TRASTD), StringComparison.OrdinalIgnoreCase)) ||
-                            (_tsubchgUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TSUBCHG), StringComparison.OrdinalIgnoreCase)))
-                        {
-                            stagingRowCount = await _loadRepository.GetStagingTableRowCountAsync(descriptor.StagingTableName, ct);
-                            _logger.LogInformation("{loadTableName} batch merge: Staging table row count = {stagingCount}", load.LoadTableName.ToUpper(), stagingRowCount);
-                        }
-
-                        var (mergeResult, mergeDetail) = await PerformMergeAsync(load, descriptor, sw, ct);
-                        bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
-
-                        // Validate batch merge results
-                        if (!hasError &&
-                            ((_tvasylnUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TVASYLN), StringComparison.OrdinalIgnoreCase)) ||
-                            (_trastdUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TRASTD), StringComparison.OrdinalIgnoreCase)) ||
-                            (_tsubchgUseBatchMerge && load.LoadTableName.Equals(nameof(TableEnum.TSUBCHG), StringComparison.OrdinalIgnoreCase))))
-                        {
-                            var totalProcessed = mergeResult.Inserted + mergeResult.Updated;
-                            if (totalProcessed != stagingRowCount)
-                            {
-                                _logger.LogWarning(
-                                    "{loadTableName} batch merge record count MISMATCH: Staging={stagingCount}, Processed (Insert+Update)={processedCount}, Inserted={inserted}, Updated={updated}, Deleted={deleted}",
-                                    load.LoadTableName.ToUpper(), stagingRowCount, totalProcessed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
-                            }
-                            else
-                            {
-                                _logger.LogInformation(
-                                    "{loadTableName} batch merge record count VERIFIED: Staging={stagingCount}, Processed={processedCount}, Inserted={inserted}, Updated={updated}, Deleted={deleted}",
-                                    load.LoadTableName.ToUpper(), stagingRowCount, totalProcessed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
-                            }
-                        }
-
-                        if (hasError)
-                        {
-                            int errorCode = 0;
-                            if (!string.IsNullOrWhiteSpace(mergeResult.ErrorNumber) && int.TryParse(mergeResult.ErrorNumber, out var parsed)) errorCode = parsed;
-                            var error = new DataLoadError
-                            {
-                                DataLoadDetailId = mergeDetail.Id,
-                                ErrorCode = errorCode,
-                                ErrorStoredProcedureName = mergeResult.ErrorProcedure,
-                                ErrorMessage = mergeResult.ErrorMessage,
-                                CreatedOn = DateTime.UtcNow
-                            };
-                        await _loadRepository.AddErrorsAsync(new[] { error }, ct);
-                            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
-                            BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted, mergeResult.ErrorMessage);
-                        }
-                        else
-                        {
-                        await _loadRepository.MarkStagingCompletedAsync(descriptor.StagingTableName, ct);
-                                _logger.LogInformation("Staging table {stg} marked as completed for load {id}", descriptor.StagingTableName, load.Id);
-                                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
-                                _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
-                                BuildCsvLoadLog(load, ServiceConstants.LoadStatusSuccess, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
-                                _processedLoadVersions.Add(load.LoadVersion);
-                        }
-                    }
+                        await HandleStandardMergeLoadAsync(load, descriptor, sw, ct);
                 }
                 catch (Exception ex)
                 {
@@ -587,7 +549,6 @@ namespace UPS.WWRR.Business.Services
                     try
                     {
                         await MoveObjectToProcessedAsync(gcsFileName);
-                        // Move the associated receipt log file as well, if available, only once per cycle
                         var logObject = ExtractObjectName(Path.GetFileName(load.LogFileLocation) ?? string.Empty);
                         await MoveObjectToProcessedAsync(logObject);
                     }
@@ -596,6 +557,79 @@ namespace UPS.WWRR.Business.Services
                         _logger.LogWarning(moveEx, "Failed to move processed file {file}", gcsFileName);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles merge for standard (non-normalization) tables including batch merge validation.
+        /// </summary>
+        private async Task HandleStandardMergeLoadAsync(DataLoad load, LoadTableDescriptor descriptor, System.Diagnostics.Stopwatch sw, CancellationToken ct)
+        {
+            long stagingRowCount = 0;
+            if (IsBatchMergeTable(load.LoadTableName))
+            {
+                stagingRowCount = await _loadRepository.GetStagingTableRowCountAsync(descriptor.StagingTableName, ct);
+                _logger.LogInformation("{loadTableName} batch merge: Staging table row count = {stagingCount}", load.LoadTableName.ToUpper(), stagingRowCount);
+            }
+
+            var (mergeResult, mergeDetail) = await PerformMergeAsync(load, descriptor, sw, ct);
+            bool hasError = !string.IsNullOrWhiteSpace(mergeResult.ErrorMessage);
+
+            if (!hasError && IsBatchMergeTable(load.LoadTableName))
+                LogBatchMergeValidation(load.LoadTableName, stagingRowCount, mergeResult);
+
+            if (hasError)
+            {
+                int errorCode = 0;
+                if (!string.IsNullOrWhiteSpace(mergeResult.ErrorNumber) && int.TryParse(mergeResult.ErrorNumber, out var parsed)) errorCode = parsed;
+                var error = new DataLoadError
+                {
+                    DataLoadDetailId = mergeDetail.Id,
+                    ErrorCode = errorCode,
+                    ErrorStoredProcedureName = mergeResult.ErrorProcedure,
+                    ErrorMessage = mergeResult.ErrorMessage,
+                    CreatedOn = DateTime.UtcNow
+                };
+                await _loadRepository.AddErrorsAsync(new[] { error }, ct);
+                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Failed, DateTime.UtcNow, ct);
+                BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted, mergeResult.ErrorMessage);
+            }
+            else
+            {
+                await _loadRepository.MarkStagingCompletedAsync(descriptor.StagingTableName, ct);
+                _logger.LogInformation("Staging table {stg} marked as completed for load {id}", descriptor.StagingTableName, load.Id);
+                await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.Processed, DateTime.UtcNow, ct);
+                _logger.LogInformation("Load Process Completed for table {tbl} load {id}", load.LoadTableName, load.Id);
+                BuildCsvLoadLog(load, ServiceConstants.LoadStatusSuccess, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
+                _processedLoadVersions.Add(load.LoadVersion);
+            }
+        }
+
+        /// <summary>
+        /// Determines whether this table uses batch merge and requires staging row count validation.
+        /// </summary>
+        private bool IsBatchMergeTable(string tableName) =>
+            (_tvasylnUseBatchMerge && tableName.Equals(nameof(TableEnum.TVASYLN), StringComparison.OrdinalIgnoreCase)) ||
+            (_trastdUseBatchMerge && tableName.Equals(nameof(TableEnum.TRASTD), StringComparison.OrdinalIgnoreCase)) ||
+            (_tsubchgUseBatchMerge && tableName.Equals(nameof(TableEnum.TSUBCHG), StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>
+        /// Logs batch merge record count validation (match or mismatch).
+        /// </summary>
+        private void LogBatchMergeValidation(string tableName, long stagingRowCount, MergeResult mergeResult)
+        {
+            var totalProcessed = mergeResult.Inserted + mergeResult.Updated;
+            if (totalProcessed != stagingRowCount)
+            {
+                _logger.LogWarning(
+                    "{loadTableName} batch merge record count MISMATCH: Staging={stagingCount}, Processed (Insert+Update)={processedCount}, Inserted={inserted}, Updated={updated}, Deleted={deleted}",
+                    tableName.ToUpper(), stagingRowCount, totalProcessed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "{loadTableName} batch merge record count VERIFIED: Staging={stagingCount}, Processed={processedCount}, Inserted={inserted}, Updated={updated}, Deleted={deleted}",
+                    tableName.ToUpper(), stagingRowCount, totalProcessed, mergeResult.Inserted, mergeResult.Updated, mergeResult.Deleted);
             }
         }
 
@@ -957,141 +991,33 @@ namespace UPS.WWRR.Business.Services
                     await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
                     _logger.LogWarning("Validation unsupported for table {tbl}", load.LoadTableName);
                     BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Unsupported table {load.LoadTableName}");
-                    
-                    // Move unsupported file to processed folder
                     var unsupportedFileName = Path.GetFileName(load.FileLocation);
                     await MoveObjectToProcessedAsync(unsupportedFileName);
                     continue;
                 }
-                
+
                 string? tempFile = null;
                 try
                 {
-                    // Download once and keep for copy
                     tempFile = Path.GetTempFileName();
                     var gcsFileName = Path.GetFileName(load.FileLocation);
 
-                    // Check if file exists before attempting to download
-                    if (!await _storageService.FileExistsAsync(gcsFileName, ct))
-                    {
-                        // See if the filename was correct but the casing is wrong.
-                        var actualName = _storageService.GetFilenameCaseInsensitive(gcsFileName);
-                        if (actualName is not null)
-                        {
-                            // Still skip processing and log this as an error, but with a special FilenameCaseMismatch status
-                            var errorMessage = $"Filename has incorrect casing in receipt file. Searched for {gcsFileName} but found {actualName}. Bucket: {_gcpBucketName}, FileLocation: {load.FileLocation}";
-                            _logger.LogError(errorMessage);
-                            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
-
-                            DataLoadDetail detail = await CreateDataLoadDetailForError(load, ct);
-                            var exception = new DataLoadException
-                            {
-                                DataLoadDetailId = detail.Id,
-                                TableName = descriptor.TableName,
-                                TableKey = $"LOAD:{load.Id}",
-                                ErrorFieldName = ServiceConstants.filenameCaseMismatchError,
-                                ErrorFieldValue = errorMessage.Length > 100 ? errorMessage[..100] : errorMessage,
-                                CreatedOn = DateTime.UtcNow
-                            };
-
-                            await _loadRepository.AddExceptionsAsync([exception], ct);
-                            
-                            // Move the file with actual name to processed folder
-                            await MoveObjectToProcessedAsync(actualName);
-                            BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: errorMessage);
-
-                            // Clean up temp file
-                            if (tempFile != null)
-                            {
-                                try { File.Delete(tempFile); } catch { }
-                            }
-                            continue;
-                        }
-                        
-                        _logger.LogError("File not found in GCS bucket. Bucket: {bucket}, Object: {object}, FileLocation: {fileLocation}",
-                            _gcpBucketName, gcsFileName, load.FileLocation);
-                        await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
-                        
-                        DataLoadDetail fileNotFoundDetail = await CreateDataLoadDetailForError(load, ct);
-                        var fileNotFoundMessage = $"File not found: {load.FileLocation}";
-                        var fileNotFoundException = new DataLoadException
-                        {
-                            DataLoadDetailId = fileNotFoundDetail.Id,
-                            TableName = descriptor.TableName,
-                            TableKey = $"LOAD:{load.Id}",
-                            ErrorFieldName = ServiceConstants.fileNotFoundError,
-                            ErrorFieldValue = fileNotFoundMessage.Length > 100 ? fileNotFoundMessage[..100] : fileNotFoundMessage,
-                            CreatedOn = DateTime.UtcNow
-                        };
-
-                        await _loadRepository.AddExceptionsAsync([fileNotFoundException], ct);
-
-                        await _loadRepository.UpdateFileLocation(load.Id, "", ct);
-                        BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: fileNotFoundMessage);
-
-                        // Clean up temp file (even though download didn't happen, the temp file was created)
-                        if (tempFile != null)
-                        {
-                            try { File.Delete(tempFile); } catch { }
-                        }
+                    if (!await TryResolveGcsFileAsync(load, descriptor, gcsFileName, tempFile, ct))
                         continue;
-                    }
+
                     await _storageService.DownloadFile(gcsFileName, tempFile, ct);
 
-                    // Verify downloaded file size matches remote file size
                     if (!await _storageService.VerifyFileSizeAsync(gcsFileName, tempFile, ct))
                     {
-                        _logger.LogError("Downloaded file size mismatch. Remote file: {remoteFile}, Local file: {localFile}. Skipping load.",
-                            gcsFileName, tempFile);
+                        _logger.LogError("Downloaded file size mismatch. Remote file: {remoteFile}, Local file: {localFile}. Skipping load.", gcsFileName, tempFile);
                         await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
                         BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Download file size mismatch for {gcsFileName}");
-                        
-                        // Clean up temp file
                         try { File.Delete(tempFile); } catch { }
-                        
-                        // Move mismatched file to processed folder
                         await MoveObjectToProcessedAsync(gcsFileName);
                         continue;
                     }
 
-                    var validation = await descriptor.ValidateAsync(tempFile);
-                    bool valid = validation.Success;
-                    // Keep the temp file in cache for copy step if valid
-                    if (valid)
-                    {
-                        var key = ExtractObjectName(load.FileLocation);
-                        tempFiles[key] = tempFile;
-                    }
-                    else
-                    {
-                        // Record validation errors
-                        if (validation.ValidationErrors?.Count > 0)
-                        {
-                            DataLoadDetail detail = await CreateDataLoadDetailForError(load, ct);
-
-                            var exceptions = validation.ValidationErrors.Select((msg, idx) => new DataLoadException
-                            {
-                                DataLoadDetailId = detail.Id,
-                                TableName = descriptor.TableName,
-                                TableKey = $"LOAD:{load.Id}",
-                                ErrorFieldName = ServiceConstants.csvValidationError,
-                                ErrorFieldValue = msg,
-                                CreatedOn = DateTime.UtcNow
-                            });
-                            await _loadRepository.AddExceptionsAsync(exceptions, ct);
-                        }
-                        // Move invalid file to processed folder
-                        await MoveObjectToProcessedAsync(gcsFileName);
-                        // Delete temp
-                        try { File.Delete(tempFile); } catch { }
-                    }
-
-                    await _loadRepository.UpdateStatusAsync(load.Id, valid ? LoadStatus.ReadyToProcess : LoadStatus.FailedValidation, valid ? null : DateTime.UtcNow, ct);
-                    _logger.LogInformation("Validation {result} for table {tbl} load {id}", valid ? "passed" : "failed", load.LoadTableName, load.Id);
-                    if (!valid)
-                    {
-                        BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"CSV validation failed: {string.Join("; ", validation.ValidationErrors ?? new List<string>())}");
-                    }
+                    await ProcessValidationResultAsync(load, descriptor, tempFile, tempFiles, ct);
                 }
                 catch (Exception ex)
                 {
@@ -1109,19 +1035,130 @@ namespace UPS.WWRR.Business.Services
                         ErrorFieldValue = ex.Message.Length > 100 ? ex.Message[..100] : ex.Message,
                         CreatedOn = DateTime.UtcNow
                     };
-
                     await _loadRepository.AddExceptionsAsync([dataLoadException], ct);
 
-                    // Clean up temp file if it was created
                     if (tempFile != null)
                     {
                         try { File.Delete(tempFile); } catch { }
                     }
-                    
-                    // Move the file to processed folder even on error
                     var errorFileName = Path.GetFileName(load.FileLocation);
                     await MoveObjectToProcessedAsync(errorFileName);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Resolves the GCS file, handling case-mismatch and file-not-found scenarios.
+        /// Returns true if the file exists and processing should continue, false to skip this load.
+        /// </summary>
+        private async Task<bool> TryResolveGcsFileAsync(DataLoad load, LoadTableDescriptor descriptor, string gcsFileName, string tempFilePath, CancellationToken ct)
+        {
+            if (await _storageService.FileExistsAsync(gcsFileName, ct))
+                return true;
+
+            var actualName = _storageService.GetFilenameCaseInsensitive(gcsFileName);
+            if (actualName is not null)
+            {
+                await HandleFilenameCaseMismatchAsync(load, descriptor, gcsFileName, actualName, tempFilePath, ct);
+                return false;
+            }
+
+            await HandleFileNotFoundAsync(load, descriptor, tempFilePath, ct);
+            return false;
+        }
+
+        /// <summary>
+        /// Records a filename case mismatch error and cleans up.
+        /// </summary>
+        private async Task HandleFilenameCaseMismatchAsync(DataLoad load, LoadTableDescriptor descriptor, string gcsFileName, string actualName, string tempFilePath, CancellationToken ct)
+        {
+            var errorMessage = $"Filename has incorrect casing in receipt file. Searched for {gcsFileName} but found {actualName}. Bucket: {_gcpBucketName}, FileLocation: {load.FileLocation}";
+            _logger.LogError(errorMessage);
+            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
+
+            DataLoadDetail detail = await CreateDataLoadDetailForError(load, ct);
+            var exception = new DataLoadException
+            {
+                DataLoadDetailId = detail.Id,
+                TableName = descriptor.TableName,
+                TableKey = $"LOAD:{load.Id}",
+                ErrorFieldName = ServiceConstants.filenameCaseMismatchError,
+                ErrorFieldValue = errorMessage.Length > 100 ? errorMessage[..100] : errorMessage,
+                CreatedOn = DateTime.UtcNow
+            };
+            await _loadRepository.AddExceptionsAsync([exception], ct);
+
+            await MoveObjectToProcessedAsync(actualName);
+            BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: errorMessage);
+            try { File.Delete(tempFilePath); } catch { }
+        }
+
+        /// <summary>
+        /// Records a file-not-found error and cleans up.
+        /// </summary>
+        private async Task HandleFileNotFoundAsync(DataLoad load, LoadTableDescriptor descriptor, string tempFilePath, CancellationToken ct)
+        {
+            _logger.LogError("File not found in GCS bucket. Bucket: {bucket}, Object: {object}, FileLocation: {fileLocation}",
+                _gcpBucketName, Path.GetFileName(load.FileLocation), load.FileLocation);
+            await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
+
+            DataLoadDetail fileNotFoundDetail = await CreateDataLoadDetailForError(load, ct);
+            var fileNotFoundMessage = $"File not found: {load.FileLocation}";
+            var fileNotFoundException = new DataLoadException
+            {
+                DataLoadDetailId = fileNotFoundDetail.Id,
+                TableName = descriptor.TableName,
+                TableKey = $"LOAD:{load.Id}",
+                ErrorFieldName = ServiceConstants.fileNotFoundError,
+                ErrorFieldValue = fileNotFoundMessage.Length > 100 ? fileNotFoundMessage[..100] : fileNotFoundMessage,
+                CreatedOn = DateTime.UtcNow
+            };
+            await _loadRepository.AddExceptionsAsync([fileNotFoundException], ct);
+
+            await _loadRepository.UpdateFileLocation(load.Id, "", ct);
+            BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: fileNotFoundMessage);
+            try { File.Delete(tempFilePath); } catch { }
+        }
+
+        /// <summary>
+        /// Runs CSV validation and handles the result (caching valid files or recording errors).
+        /// </summary>
+        private async Task ProcessValidationResultAsync(DataLoad load, LoadTableDescriptor descriptor, string tempFile, Dictionary<string, string> tempFiles, CancellationToken ct)
+        {
+            var gcsFileName = Path.GetFileName(load.FileLocation);
+            var validation = await descriptor.ValidateAsync(tempFile);
+            bool valid = validation.Success;
+
+            if (valid)
+            {
+                var key = ExtractObjectName(load.FileLocation);
+                tempFiles[key] = tempFile;
+            }
+            else
+            {
+                if (validation.ValidationErrors?.Count > 0)
+                {
+                    DataLoadDetail detail = await CreateDataLoadDetailForError(load, ct);
+                    var exceptions = validation.ValidationErrors.Select(msg => new DataLoadException
+                    {
+                        DataLoadDetailId = detail.Id,
+                        TableName = descriptor.TableName,
+                        TableKey = $"LOAD:{load.Id}",
+                        ErrorFieldName = ServiceConstants.csvValidationError,
+                        ErrorFieldValue = msg,
+                        CreatedOn = DateTime.UtcNow
+                    });
+                    await _loadRepository.AddExceptionsAsync(exceptions, ct);
+                }
+                await MoveObjectToProcessedAsync(gcsFileName);
+                try { File.Delete(tempFile); } catch { }
+            }
+
+            await _loadRepository.UpdateStatusAsync(load.Id, valid ? LoadStatus.ReadyToProcess : LoadStatus.FailedValidation, valid ? null : DateTime.UtcNow, ct);
+            _logger.LogInformation("Validation {result} for table {tbl} load {id}", valid ? "passed" : "failed", load.LoadTableName, load.Id);
+            if (!valid)
+            {
+                BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"CSV validation failed: {string.Join("; ", validation.ValidationErrors ?? new List<string>())}");
             }
         }
 
