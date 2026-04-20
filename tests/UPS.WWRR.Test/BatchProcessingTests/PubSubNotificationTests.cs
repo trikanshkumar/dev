@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using UPS.WWRR.Business.Common.Enum;
 using UPS.WWRR.Business.DTO.Models.Response;
 using UPS.WWRR.Business.Interfaces;
+using UPS.WWRR.Business.Services;
 using UPS.WWRR.Data.Models;
 using UPS.WWRR.UnitTests.BatchProcessing.Base;
 
@@ -100,7 +101,13 @@ public class PubSubNotificationTests : BatchProcessorTests
         Environment.SetEnvironmentVariable("Enable_MQ", "false");
         try
         {
-            var sut = CreateSut();
+            var sut = new BatchProcessorWorker(
+                    _logger.Object,
+                    _storage.Object,
+                    _validator.Object,
+                    _copy.Object,
+                    _repo.Object,
+                    null!);
 
             var processedVersions = sut.GetType()
                 .GetField("_processedLoadVersions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!

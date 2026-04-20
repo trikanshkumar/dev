@@ -76,11 +76,16 @@ class Program
         {
             // Local dev: use the full connection string with Username/Password
             // e.g., Host=localhost;Port=5432;Database=mydb;Username=myuser;Password=mypwd;
-            dataSource = PgDataSourceFactory.Create(
+            dataSource = await PgDataSourceFactory.Create(
                 localConnectionString: connectionString,  // includes user & password
-                requireSsl: false)
-                .GetAwaiter()
-                .GetResult();
+                requireSsl: false);
+        }
+
+        PublisherClient publisherClient = null;
+        if (!string.IsNullOrEmpty(pubSubProjectId) && !string.IsNullOrEmpty(pubSubTopicId))
+        {
+            var topicName = TopicName.FromProjectTopic(pubSubProjectId, pubSubTopicId);
+            publisherClient = await PublisherClient.CreateAsync(topicName);
         }
 
         var host = Host.CreateDefaultBuilder(args)
@@ -91,7 +96,7 @@ class Program
                     services.AddDbContext<DataContext>(options =>
                         options.UseNpgsql(dataSource, npgSqlOptions =>
                             npgSqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", DataConstants.defaultSchema)));
-     
+
                     services.AddScoped<INpgsqlConnectionHelper, NpgsqlConnectionHelper>();
                     services.AddScoped<ICsvSplitterService, CsvSplitterService>();
                     services.AddScoped<ICopyBatchDataService, CopyBatchDataService>();
@@ -106,10 +111,9 @@ class Program
                     services.AddSingleton<IStorageService>(_ => new GoogleCloudStorageService(storageClient, bucket, bucketSubName, gcsDownloadChunkSize));
                     services.AddSingleton(new LocalRuntimeSettings(connectionString, tableName, batchSize, chunkSize, delimiter, hasHeader, bucket));
 
-                    if (!string.IsNullOrEmpty(pubSubProjectId) && !string.IsNullOrEmpty(pubSubTopicId))
+                    if (publisherClient != null)
                     {
-                        var topicName = TopicName.FromProjectTopic(pubSubProjectId, pubSubTopicId);
-                        services.AddSingleton(_ => PublisherClient.CreateAsync(topicName).GetAwaiter().GetResult());
+                        services.AddSingleton(publisherClient);
                         services.AddSingleton<IGooglePubSubService, GooglePubSubService>();
                     }
                 })
