@@ -10,6 +10,7 @@ using System.Reflection;
 using UPS.WWRR.Business.Common.Enum;
 using UPS.WWRR.Business.Repositories;
 using UPS.WWRR.Data.Models;
+using UPS.WWRR.Business.Common.Constants;
 
 namespace UPS.WWRR.UnitTests
 {
@@ -851,13 +852,14 @@ namespace UPS.WWRR.UnitTests
             await connection.OpenAsync();
             await using var ctx = CreateSqliteContext(connection);
             var repo = CreateRepo(ctx);
+            var procName = StoredProcConstant.AccessorialExceptionMerge;
 
-            var result = await repo.ExecuteMergeStoredProcedureAsync("sp_test_merge");
+            var result = await repo.ExecuteMergeStoredProcedureAsync(procName);
 
             Assert.Equal(0, result.Inserted);
             Assert.Equal(0, result.Updated);
             Assert.Equal(0, result.Deleted);
-            Assert.Equal("sp_test_merge", result.ErrorProcedure);
+            Assert.Equal(procName.ToLower(), result.ErrorProcedure);
             Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
         }
 
@@ -1087,8 +1089,10 @@ namespace UPS.WWRR.UnitTests
 
             var repo = new LoadRepository(ctx);
 
+            var procName = StoredProcConstant.AlternateCurrencyMerge;
+
             // Act
-            var result = await repo.ExecuteMergeStoredProcedureAsync("sp_test");
+            var result = await repo.ExecuteMergeStoredProcedureAsync(procName);
 
             // Assert
             Assert.Equal(0, result.Inserted);
@@ -1096,7 +1100,7 @@ namespace UPS.WWRR.UnitTests
             Assert.Equal(0, result.Deleted);
             Assert.Equal("42883", result.ErrorNumber);
             Assert.Equal("42883", result.ErrorState);
-            Assert.Equal("sp_test", result.ErrorProcedure);
+            Assert.Equal(procName, result.ErrorProcedure);
             Assert.Contains("Procedure not found", result.ErrorMessage);
         }
 
@@ -1171,14 +1175,29 @@ namespace UPS.WWRR.UnitTests
             // The generic catch sets ErrorMessage = ex.Message, which is non-null.
             var repo = CreateRepo(ctx);
 
-            var result = await repo.ExecuteMergeStoredProcedureAsync("sp_nonexistent");
+            var procName = StoredProcConstant.AlternateCurrencyMerge;
+
+            var result = await repo.ExecuteMergeStoredProcedureAsync(procName);
 
             // The generic Exception catch path should be hit (SQLite doesn't support CALL)
             Assert.Equal(0, result.Inserted);
             Assert.Equal(0, result.Updated);
             Assert.Equal(0, result.Deleted);
             Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
-            Assert.Equal("sp_nonexistent", result.ErrorProcedure);
+            Assert.Equal(procName, result.ErrorProcedure);
+        }
+
+        [Fact]
+        public async Task ExecuteMergeStoredProcedureAsync_ThrowsArgumentException_WhenProvidedInvalidProcedureName()
+        {
+            await using var connection = new SqliteConnection("DataSource=:memory:");
+            await connection.OpenAsync();
+            await using var ctx = CreateSqliteContext(connection);
+            var repo = CreateRepo(ctx);
+
+            var badSprocName = "sp_BadBadBadSprocName";
+
+            await Assert.ThrowsAsync<ArgumentException>(async () => await repo.ExecuteMergeStoredProcedureAsync(badSprocName));
         }
 
         #endregion

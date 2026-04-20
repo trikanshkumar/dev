@@ -1,11 +1,14 @@
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using System.Collections.Immutable;
 using System.Data;
 using System.Data.Common;
 using UPS.WWRR.Business.Common.Enum;
 using UPS.WWRR.Business.Extensions;
 using UPS.WWRR.Data.Models;
+
+using static UPS.WWRR.Business.Common.Constants.StoredProcConstant;
 
 namespace UPS.WWRR.Business.Repositories
 {
@@ -99,6 +102,12 @@ namespace UPS.WWRR.Business.Repositories
         public async Task<MergeResult> ExecuteMergeStoredProcedureAsync(string storedProcedureName, CancellationToken ct = default)
         {
             string procLower = storedProcedureName.ToLowerInvariant();
+
+            if (!AllowedProcedures.Contains(procLower))
+            {
+                throw new ArgumentException($"Procedure name not in list of allowed procedure names: {procLower}", nameof(storedProcedureName));
+            }
+
             string callSql = $"CALL {procLower}(InsertCount := NULL, UpdateCount := NULL, DeleteCount := NULL, ErrorNumber := NULL, ErrorState := NULL, ErrorProcedure := NULL, ErrorLine := NULL, ErrorMessage := NULL)";
 
             int ins = 0, upd = 0, del = 0;
@@ -233,5 +242,26 @@ namespace UPS.WWRR.Business.Repositories
             var result = await cmd.ExecuteScalarAsync(ct);
             return result != null ? Convert.ToInt64(result) : 0;
         }
+
+        private static readonly ImmutableHashSet<string> AllowedProcedures = ImmutableHashSet.Create(StringComparer.OrdinalIgnoreCase,
+        [
+            AlternateCurrencyMerge, AccessorialExceptionMerge, AccessorialMinMaxCriteriaMerge,
+            AccessorialThresholdMerge, DestinationZipSvcAsyValidationMerge, DeficitWeightThresholdMerge,
+            BmaCapAmountMerge, ThresholdSimpleRatesMerge, CzmSystemRulesMerge, AuditHistoryMerge,
+            AccessorialRatingRulesMerge, CountryBillTypeMerge, ServiceDowngradeValidAccessorialRulesMerge,
+            ServiceDowngradeRulesMerge, ServiceDefaultRulesMerge, ImportServiceValidationMerge,
+            InformationalAccessorialThresholdMerge, PostalExceptionMerge, InformationalAccessorialChargeMerge,
+            InsuranceCriteriaMerge, InformationalAccessorialRateMerge, MinimumCriteriaMerge,
+            InternationalRatingCurrencyMerge, LimitValuesBasedOnCriteriaMerge, SimpleRateVolumeRangeMerge,
+            ValidDestinationBillTermMerge, FreightRatingRulesMerge, DestinationServiceFeatureTypeMerge,
+            SameDayRateMerge, TemplateAccessorialRulesMerge, ValidOriginBillTermMerge, ValidLaneServiceMerge,
+            OriginServiceFeatureTypeMerge, PublishedLetterThresholdMerge, ValidAcquisitionMethodMerge,
+            ColumnDecodeMerge, ValidOriginServicePackageMerge, DecodeValuesMerge, FuelSurchargeMerge,
+            FuelSurchargeBatchMerge, ValidAccessorialLaneMerge, ValidAccessorialLaneBatchMerge,
+            FreightRatesMerge, FreightRatesBatchMarge, AreaClassificationHeaderNormalizeStaging,
+            AreaClassificationHeaderMerge, DomesticZoneNormalizeStaging, DomesticZoneMerge,
+            FuelSurchargeIndexMerge, FuelSurchargeCategoryMapMerge, RateChartAccessorialRatesNormalizeStaging,
+            RateChartAccessorialRatesMerge, InternationalZoneNormalizeStaging, InternationalZoneMerge
+        ]);
     }
 }
