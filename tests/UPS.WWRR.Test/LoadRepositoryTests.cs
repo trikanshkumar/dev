@@ -919,15 +919,15 @@ namespace UPS.WWRR.UnitTests
             await connection.OpenAsync();
             await using var setupCmd = connection.CreateCommand();
             setupCmd.CommandText = @"
-                CREATE TABLE count_test_stg (id INTEGER);
-                INSERT INTO count_test_stg(id) VALUES (1), (2), (3), (4);
+                CREATE TABLE tinscri_stg (id INTEGER);
+                INSERT INTO tinscri_stg(id) VALUES (1), (2), (3), (4);
             ";
             await setupCmd.ExecuteNonQueryAsync();
 
             await using var ctx = CreateSqliteContext(connection);
             var repo = CreateRepo(ctx);
 
-            var count = await repo.GetStagingTableRowCountAsync("count_test_stg");
+            var count = await repo.GetStagingTableRowCountAsync("tinscri_stg");
 
             Assert.Equal(4, count);
         }
@@ -939,15 +939,15 @@ namespace UPS.WWRR.UnitTests
             await connection.OpenAsync();
             await using var setupCmd = connection.CreateCommand();
             setupCmd.CommandText = @"
-                CREATE TABLE open_conn_test_stg (id INTEGER);
-                INSERT INTO open_conn_test_stg(id) VALUES (1), (2);
+                CREATE TABLE tinscri_stg (id INTEGER);
+                INSERT INTO tinscri_stg(id) VALUES (1), (2);
             ";
             await setupCmd.ExecuteNonQueryAsync();
 
             await using var ctx = CreateSqliteContext(connection);
             var repo = CreateRepo(ctx);
 
-            var count = await repo.GetStagingTableRowCountAsync("open_conn_test_stg");
+            var count = await repo.GetStagingTableRowCountAsync("tinscri_stg");
 
             Assert.Equal(2, count);
         }
@@ -1232,13 +1232,13 @@ namespace UPS.WWRR.UnitTests
             await using var connection = new SqliteConnection("DataSource=:memory:");
             await connection.OpenAsync();
             await using var setupCmd = connection.CreateCommand();
-            setupCmd.CommandText = "CREATE TABLE empty_stg (id INTEGER);";
+            setupCmd.CommandText = "CREATE TABLE tinscri_stg (id INTEGER);";
             await setupCmd.ExecuteNonQueryAsync();
 
             await using var ctx = CreateSqliteContext(connection);
             var repo = CreateRepo(ctx);
 
-            var count = await repo.GetStagingTableRowCountAsync("empty_stg");
+            var count = await repo.GetStagingTableRowCountAsync("tinscri_stg");
 
             Assert.Equal(0, count);
         }
@@ -1250,8 +1250,8 @@ namespace UPS.WWRR.UnitTests
             await connection.OpenAsync();
             await using var setupCmd = connection.CreateCommand();
             setupCmd.CommandText = @"
-                CREATE TABLE closed_conn_stg (id INTEGER);
-                INSERT INTO closed_conn_stg(id) VALUES (1), (2), (3);
+                CREATE TABLE tinscri_stg (id INTEGER);
+                INSERT INTO tinscri_stg(id) VALUES (1), (2), (3);
             ";
             await setupCmd.ExecuteNonQueryAsync();
 
@@ -1260,9 +1260,27 @@ namespace UPS.WWRR.UnitTests
             await using var ctx = CreateSqliteContext(connection);
             var repo = CreateRepo(ctx);
 
-            var count = await repo.GetStagingTableRowCountAsync("closed_conn_stg");
+            var count = await repo.GetStagingTableRowCountAsync("tinscri_stg");
 
             Assert.Equal(3, count);
+        }
+
+        [Fact]
+        public async Task GetStagingTableRowCountAsync_InvalidTableName_ThrowsArgumentException()
+        {
+            await using var connection = new SqliteConnection("DataSource=:memory:");
+            await connection.OpenAsync();
+            await using var setupCmd = connection.CreateCommand();
+            setupCmd.CommandText = @"
+                CREATE TABLE tinscri_stg (id INTEGER);
+                INSERT INTO tinscri_stg(id) VALUES (1), (2), (3);
+            ";
+            await setupCmd.ExecuteNonQueryAsync();
+
+            await using var ctx = CreateSqliteContext(connection);
+            var repo = CreateRepo(ctx);
+
+            await Assert.ThrowsAsync<ArgumentException>(async () => await repo.GetStagingTableRowCountAsync("invalid_table_name_abc123"));
         }
 
         #endregion
