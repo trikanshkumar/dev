@@ -1,4 +1,5 @@
-﻿using Google.Cloud.Storage.V1;
+﻿using Google.Cloud.PubSub.V1;
+using Google.Cloud.Storage.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -49,6 +50,8 @@ class Program
         var bucket = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_NAME") ?? string.Empty;
         var bucketSubName = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_SUB_NAME") ?? string.Empty;
         var enableIAMTokenAuth = bool.TryParse(Environment.GetEnvironmentVariable("EnableIAMTokenAuth"), out var iam_tok) ? iam_tok : true;
+        var pubSubProjectId = Environment.GetEnvironmentVariable("GCP_PROJECT_ID") ?? string.Empty;
+        var pubSubTopicId = Environment.GetEnvironmentVariable("PUBSUB_TOPIC_ID") ?? string.Empty;
 
 
         // GCS download chunk size (separate from CSV batch processing)
@@ -73,11 +76,16 @@ class Program
         {
             // Local dev: use the full connection string with Username/Password
             // e.g., Host=localhost;Port=5432;Database=mydb;Username=myuser;Password=mypwd;
-            dataSource = PgDataSourceFactory.Create(
+            dataSource = await PgDataSourceFactory.Create(
                 localConnectionString: connectionString,  // includes user & password
-                requireSsl: false)
-                .GetAwaiter()
-                .GetResult();
+                requireSsl: false);
+        }
+
+        PublisherClient publisherClient = null;
+        if (!string.IsNullOrEmpty(pubSubProjectId) && !string.IsNullOrEmpty(pubSubTopicId))
+        {
+            var topicName = TopicName.FromProjectTopic(pubSubProjectId, pubSubTopicId);
+            publisherClient = await PublisherClient.CreateAsync(topicName);
         }
 
         var host = Host.CreateDefaultBuilder(args)
@@ -88,7 +96,7 @@ class Program
                     services.AddDbContext<DataContext>(options =>
                         options.UseNpgsql(dataSource, npgSqlOptions =>
                             npgSqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", DataConstants.defaultSchema)));
-     
+
                     services.AddScoped<INpgsqlConnectionHelper, NpgsqlConnectionHelper>();
                     services.AddScoped<ICsvSplitterService, CsvSplitterService>();
                     services.AddScoped<ICopyBatchDataService, CopyBatchDataService>();
@@ -102,6 +110,12 @@ class Program
                     var storageClient = StorageClient.Create();
                     services.AddSingleton<IStorageService>(_ => new GoogleCloudStorageService(storageClient, bucket, bucketSubName, gcsDownloadChunkSize));
                     services.AddSingleton(new LocalRuntimeSettings(connectionString, tableName, batchSize, chunkSize, delimiter, hasHeader, bucket));
+
+                    if (publisherClient != null)
+                    {
+                        services.AddSingleton(publisherClient);
+                        services.AddSingleton<IGooglePubSubService, GooglePubSubService>();
+                    }
                 })
                 .UseSerilog()
                 .Build();
