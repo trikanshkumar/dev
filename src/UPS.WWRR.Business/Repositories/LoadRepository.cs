@@ -165,10 +165,10 @@ namespace UPS.WWRR.Business.Repositories
             cmd.Parameters.Add(p1);
 
             int affected = 0;
-            await cmd.ExecuteStoredProcedureAsync(async reader =>
+            await cmd.ExecuteStoredProcedureAsync(reader =>
             {
                 affected = 0;
-                return true;
+                return Task.FromResult(true);
             }, ct);
 
             return affected;

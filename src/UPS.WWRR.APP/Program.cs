@@ -18,7 +18,7 @@ using UPS.WWRR.Data.Models;
 namespace UPS.WWRR.App;
 
 [ExcludeFromCodeCoverage]
-class Program
+static class Program
 {
     static async Task Main(string[] args)
     {
@@ -72,9 +72,8 @@ class Program
         else
         {
             // Local dev: use the full connection string with Username/Password
-            // e.g., Host=localhost;Port=5432;Database=mydb;Username=myuser;Password=mypwd;
             dataSource = PgDataSourceFactory.Create(
-                localConnectionString: connectionString,  // includes user & password
+                localConnectionString: connectionString,
                 requireSsl: false)
                 .GetAwaiter()
                 .GetResult();
@@ -110,4 +109,5 @@ class Program
     }
 }
 
+[ExcludeFromCodeCoverage]
 public record LocalRuntimeSettings(string ConnectionString, string TableName, int BatchSize, int ChunkSize, string Delimiter, bool HasHeader, string BucketName);

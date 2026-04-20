@@ -1,3 +1,4 @@
+#nullable enable
 namespace UPS.WWRR.Business.DTO.Models.Response
 {
     /// <summary>

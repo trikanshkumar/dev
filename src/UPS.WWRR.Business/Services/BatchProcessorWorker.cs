@@ -994,7 +994,7 @@ namespace UPS.WWRR.Business.Services
                         _logger.LogError("Downloaded file size mismatch. Remote file: {remoteFile}, Local file: {localFile}. Skipping load.", gcsFileName, tempFile);
                         await _loadRepository.UpdateStatusAsync(load.Id, LoadStatus.FailedValidation, DateTime.UtcNow, ct);
                         BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Download file size mismatch for {gcsFileName}");
-                        try { File.Delete(tempFile); } catch { }
+                        try { File.Delete(tempFile); } catch (Exception cleanupEx) { _logger.LogWarning(cleanupEx, "Failed to delete temp file {tempFile}", tempFile); }
                         await MoveObjectToProcessedAsync(gcsFileName);
                         continue;
                     }
@@ -1021,7 +1021,7 @@ namespace UPS.WWRR.Business.Services
 
                     if (tempFile != null)
                     {
-                        try { File.Delete(tempFile); } catch { }
+                        try { File.Delete(tempFile); } catch (Exception cleanupEx) { _logger.LogWarning(cleanupEx, "Failed to delete temp file {tempFile}", tempFile); }
                     }
                     var errorFileName = Path.GetFileName(load.FileLocation);
                     await MoveObjectToProcessedAsync(errorFileName);
@@ -1072,7 +1072,7 @@ namespace UPS.WWRR.Business.Services
 
             await MoveObjectToProcessedAsync(actualName);
             BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: errorMessage);
-            try { File.Delete(tempFilePath); } catch { }
+            try { File.Delete(tempFilePath); } catch (Exception cleanupEx) { _logger.LogWarning(cleanupEx, "Failed to delete temp file {tempFilePath}", tempFilePath); }
         }
 
         /// <summary>
@@ -1099,7 +1099,7 @@ namespace UPS.WWRR.Business.Services
 
             await _loadRepository.UpdateFileLocation(load.Id, "", ct);
             BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: fileNotFoundMessage);
-            try { File.Delete(tempFilePath); } catch { }
+            try { File.Delete(tempFilePath); } catch (Exception cleanupEx) { _logger.LogWarning(cleanupEx, "Failed to delete temp file {tempFilePath}", tempFilePath); }
         }
 
         /// <summary>
@@ -1133,7 +1133,7 @@ namespace UPS.WWRR.Business.Services
                     await _loadRepository.AddExceptionsAsync(exceptions, ct);
                 }
                 await MoveObjectToProcessedAsync(gcsFileName);
-                try { File.Delete(tempFile); } catch { }
+                try { File.Delete(tempFile); } catch (Exception cleanupEx) { _logger.LogWarning(cleanupEx, "Failed to delete temp file {tempFile}", tempFile); }
             }
 
             await _loadRepository.UpdateStatusAsync(load.Id, valid ? LoadStatus.ReadyToProcess : LoadStatus.FailedValidation, valid ? null : DateTime.UtcNow, ct);

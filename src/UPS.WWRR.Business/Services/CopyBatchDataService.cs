@@ -139,7 +139,7 @@ namespace UPS.WWRR.Business.Services
                     {
                         _logger.LogError(ex, $"COPY failed for chunk {chunkIndex}. Attempting per-row fallback.");
                         // Batch failed: retry each row individually
-                        var (fallbackLoaded, rowErrors) = await FallbackCopyRowsAsync(chunk, singleRowCopySql!, conn, chunkIndex, attempted, tsRegex, oracleTsRegex, loadRefValue, useOracleTimestamp, cancellationToken);
+        var (fallbackLoaded, rowErrors) = await FallbackCopyRowsAsync(chunk, singleRowCopySql!, conn, chunkIndex, tsRegex, oracleTsRegex, loadRefValue, useOracleTimestamp, cancellationToken);
                         loaded = fallbackLoaded;
                         // Propagate per-row errors to result and batch tracking
                         result.Errors.AddRange(rowErrors);
@@ -219,14 +219,13 @@ namespace UPS.WWRR.Business.Services
         /// <param name="singleRowCopySql"></param>
         /// <param name="conn"></param>
         /// <param name="chunkIndex"></param>
-        /// <param name="attempted"></param>
         /// <param name="tsRegex"></param>
         /// <param name="oracleTsRegex"></param>
         /// <param name="loadRefValue"></param>
         /// <param name="useOracleTimestamp"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>A tuple of (loaded row count, list of per-row error messages)</returns>
-        private async Task<(int Loaded, List<string> RowErrors)> FallbackCopyRowsAsync(string chunk, string singleRowCopySql, NpgsqlConnection conn, int chunkIndex, int attempted, Regex tsRegex, Regex oracleTsRegex, string loadRefValue, bool useOracleTimestamp, CancellationToken cancellationToken)
+        private async Task<(int Loaded, List<string> RowErrors)> FallbackCopyRowsAsync(string chunk, string singleRowCopySql, NpgsqlConnection conn, int chunkIndex, Regex tsRegex, Regex oracleTsRegex, string loadRefValue, bool useOracleTimestamp, CancellationToken cancellationToken)
         {
             var rowErrors = new List<string>();
             try
