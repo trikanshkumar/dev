@@ -20,6 +20,7 @@ namespace UPS.WWRR.Business.Common.Constants
         public const string performMergeLoadError ="PerformMergeLoad_Failed";
         public const string LoadStatusSuccess = "Success";
         public const string LoadStatusFailed = "Failed";
+        public const bool IsLocal = false;
         // Regex pattern that matches timestamps like yyyy-MM-dd-HH.mm.ss.ffffff (date with dashes, time with dots, 1–6 fractional digits)
         public const string DashDotTimestampRegexPattern = @"(\d{4}-\d{2}-\d{2})-(\d{2})\.(\d{2})\.(\d{2})\.(\d{1,6})";
 
