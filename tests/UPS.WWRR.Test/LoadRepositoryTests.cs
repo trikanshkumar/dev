@@ -10,6 +10,7 @@ using System.Reflection;
 using UPS.WWRR.Business.Common.Enum;
 using UPS.WWRR.Business.Repositories;
 using UPS.WWRR.Data.Models;
+using UPS.WWRR.Business.Common.Constants;
 
 namespace UPS.WWRR.UnitTests
 {
@@ -851,13 +852,14 @@ namespace UPS.WWRR.UnitTests
             await connection.OpenAsync();
             await using var ctx = CreateSqliteContext(connection);
             var repo = CreateRepo(ctx);
+            var procName = StoredProcConstant.AccessorialExceptionMerge;
 
-            var result = await repo.ExecuteMergeStoredProcedureAsync("sp_test_merge");
+            var result = await repo.ExecuteMergeStoredProcedureAsync(procName);
 
             Assert.Equal(0, result.Inserted);
             Assert.Equal(0, result.Updated);
             Assert.Equal(0, result.Deleted);
-            Assert.Equal("sp_test_merge", result.ErrorProcedure);
+            Assert.Equal(procName.ToLower(), result.ErrorProcedure);
             Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
         }
 
@@ -917,15 +919,15 @@ namespace UPS.WWRR.UnitTests
             await connection.OpenAsync();
             await using var setupCmd = connection.CreateCommand();
             setupCmd.CommandText = @"
-                CREATE TABLE count_test_stg (id INTEGER);
-                INSERT INTO count_test_stg(id) VALUES (1), (2), (3), (4);
+                CREATE TABLE tinscri_stg (id INTEGER);
+                INSERT INTO tinscri_stg(id) VALUES (1), (2), (3), (4);
             ";
             await setupCmd.ExecuteNonQueryAsync();
 
             await using var ctx = CreateSqliteContext(connection);
             var repo = CreateRepo(ctx);
 
-            var count = await repo.GetStagingTableRowCountAsync("count_test_stg");
+            var count = await repo.GetStagingTableRowCountAsync("tinscri_stg");
 
             Assert.Equal(4, count);
         }
@@ -937,15 +939,15 @@ namespace UPS.WWRR.UnitTests
             await connection.OpenAsync();
             await using var setupCmd = connection.CreateCommand();
             setupCmd.CommandText = @"
-                CREATE TABLE open_conn_test_stg (id INTEGER);
-                INSERT INTO open_conn_test_stg(id) VALUES (1), (2);
+                CREATE TABLE tinscri_stg (id INTEGER);
+                INSERT INTO tinscri_stg(id) VALUES (1), (2);
             ";
             await setupCmd.ExecuteNonQueryAsync();
 
             await using var ctx = CreateSqliteContext(connection);
             var repo = CreateRepo(ctx);
 
-            var count = await repo.GetStagingTableRowCountAsync("open_conn_test_stg");
+            var count = await repo.GetStagingTableRowCountAsync("tinscri_stg");
 
             Assert.Equal(2, count);
         }
@@ -1087,8 +1089,10 @@ namespace UPS.WWRR.UnitTests
 
             var repo = new LoadRepository(ctx);
 
+            var procName = StoredProcConstant.AlternateCurrencyMerge;
+
             // Act
-            var result = await repo.ExecuteMergeStoredProcedureAsync("sp_test");
+            var result = await repo.ExecuteMergeStoredProcedureAsync(procName);
 
             // Assert
             Assert.Equal(0, result.Inserted);
@@ -1096,7 +1100,7 @@ namespace UPS.WWRR.UnitTests
             Assert.Equal(0, result.Deleted);
             Assert.Equal("42883", result.ErrorNumber);
             Assert.Equal("42883", result.ErrorState);
-            Assert.Equal("sp_test", result.ErrorProcedure);
+            Assert.Equal(procName, result.ErrorProcedure);
             Assert.Contains("Procedure not found", result.ErrorMessage);
         }
 
@@ -1171,14 +1175,29 @@ namespace UPS.WWRR.UnitTests
             // The generic catch sets ErrorMessage = ex.Message, which is non-null.
             var repo = CreateRepo(ctx);
 
-            var result = await repo.ExecuteMergeStoredProcedureAsync("sp_nonexistent");
+            var procName = StoredProcConstant.AlternateCurrencyMerge;
+
+            var result = await repo.ExecuteMergeStoredProcedureAsync(procName);
 
             // The generic Exception catch path should be hit (SQLite doesn't support CALL)
             Assert.Equal(0, result.Inserted);
             Assert.Equal(0, result.Updated);
             Assert.Equal(0, result.Deleted);
             Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
-            Assert.Equal("sp_nonexistent", result.ErrorProcedure);
+            Assert.Equal(procName, result.ErrorProcedure);
+        }
+
+        [Fact]
+        public async Task ExecuteMergeStoredProcedureAsync_ThrowsArgumentException_WhenProvidedInvalidProcedureName()
+        {
+            await using var connection = new SqliteConnection("DataSource=:memory:");
+            await connection.OpenAsync();
+            await using var ctx = CreateSqliteContext(connection);
+            var repo = CreateRepo(ctx);
+
+            var badSprocName = "sp_BadBadBadSprocName";
+
+            await Assert.ThrowsAsync<ArgumentException>(async () => await repo.ExecuteMergeStoredProcedureAsync(badSprocName));
         }
 
         #endregion
@@ -1213,13 +1232,13 @@ namespace UPS.WWRR.UnitTests
             await using var connection = new SqliteConnection("DataSource=:memory:");
             await connection.OpenAsync();
             await using var setupCmd = connection.CreateCommand();
-            setupCmd.CommandText = "CREATE TABLE empty_stg (id INTEGER);";
+            setupCmd.CommandText = "CREATE TABLE tinscri_stg (id INTEGER);";
             await setupCmd.ExecuteNonQueryAsync();
 
             await using var ctx = CreateSqliteContext(connection);
             var repo = CreateRepo(ctx);
 
-            var count = await repo.GetStagingTableRowCountAsync("empty_stg");
+            var count = await repo.GetStagingTableRowCountAsync("tinscri_stg");
 
             Assert.Equal(0, count);
         }
@@ -1231,8 +1250,8 @@ namespace UPS.WWRR.UnitTests
             await connection.OpenAsync();
             await using var setupCmd = connection.CreateCommand();
             setupCmd.CommandText = @"
-                CREATE TABLE closed_conn_stg (id INTEGER);
-                INSERT INTO closed_conn_stg(id) VALUES (1), (2), (3);
+                CREATE TABLE tinscri_stg (id INTEGER);
+                INSERT INTO tinscri_stg(id) VALUES (1), (2), (3);
             ";
             await setupCmd.ExecuteNonQueryAsync();
 
@@ -1241,9 +1260,27 @@ namespace UPS.WWRR.UnitTests
             await using var ctx = CreateSqliteContext(connection);
             var repo = CreateRepo(ctx);
 
-            var count = await repo.GetStagingTableRowCountAsync("closed_conn_stg");
+            var count = await repo.GetStagingTableRowCountAsync("tinscri_stg");
 
             Assert.Equal(3, count);
+        }
+
+        [Fact]
+        public async Task GetStagingTableRowCountAsync_InvalidTableName_ThrowsArgumentException()
+        {
+            await using var connection = new SqliteConnection("DataSource=:memory:");
+            await connection.OpenAsync();
+            await using var setupCmd = connection.CreateCommand();
+            setupCmd.CommandText = @"
+                CREATE TABLE tinscri_stg (id INTEGER);
+                INSERT INTO tinscri_stg(id) VALUES (1), (2), (3);
+            ";
+            await setupCmd.ExecuteNonQueryAsync();
+
+            await using var ctx = CreateSqliteContext(connection);
+            var repo = CreateRepo(ctx);
+
+            await Assert.ThrowsAsync<ArgumentException>(async () => await repo.GetStagingTableRowCountAsync("invalid_table_name_abc123"));
         }
 
         #endregion

@@ -1,8 +1,10 @@
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using System.Collections.Immutable;
 using System.Data;
 using System.Data.Common;
+using UPS.WWRR.Business.Common.Constants;
 using UPS.WWRR.Business.Common.Enum;
 using UPS.WWRR.Business.Extensions;
 using UPS.WWRR.Data.Models;
@@ -99,6 +101,12 @@ namespace UPS.WWRR.Business.Repositories
         public async Task<MergeResult> ExecuteMergeStoredProcedureAsync(string storedProcedureName, CancellationToken ct = default)
         {
             string procLower = storedProcedureName.ToLowerInvariant();
+
+            if (!StoredProcConstant.IsValidProcedureName(procLower))
+            {
+                throw new ArgumentException($"Procedure name not in list of allowed procedure names: {procLower}", nameof(storedProcedureName));
+            }
+
             string callSql = $"CALL {procLower}(InsertCount := NULL, UpdateCount := NULL, DeleteCount := NULL, ErrorNumber := NULL, ErrorState := NULL, ErrorProcedure := NULL, ErrorLine := NULL, ErrorMessage := NULL)";
 
             int ins = 0, upd = 0, del = 0;
@@ -151,8 +159,7 @@ namespace UPS.WWRR.Business.Repositories
 
         public async Task<int> MarkStagingCompletedAsync(string stagingTableName, CancellationToken ct = default)
         {
-            string proc = "sp_update_load_ref";
-            string callSql = $"CALL {proc}(p_staging_table := @p_staging_table, ErrorNumber := NULL, ErrorState := NULL, ErrorProcedure := NULL, ErrorLine := NULL, ErrorMessage := NULL)";
+            string callSql = $"CALL sp_update_load_ref(p_staging_table := @p_staging_table, ErrorNumber := NULL, ErrorState := NULL, ErrorProcedure := NULL, ErrorLine := NULL, ErrorMessage := NULL)";
 
             DbCommand cmd = _db.Database.GetDbConnection().CreateCommand();
             cmd.CommandText = callSql;
@@ -221,6 +228,12 @@ namespace UPS.WWRR.Business.Repositories
 
         public async Task<long> GetStagingTableRowCountAsync(string stagingTableName, CancellationToken ct = default)
         {
+            var allowedTableNames = Enum.GetNames(typeof(TableName)).Select(t => $"{t}_stg");
+            if (!allowedTableNames.Contains(stagingTableName, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Invalid staging table: {stagingTableName}", nameof(stagingTableName));
+            }
+
             var conn = _db.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open)
                 await conn.OpenAsync(ct);
