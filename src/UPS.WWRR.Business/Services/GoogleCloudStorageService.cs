@@ -106,7 +106,7 @@ public class GoogleCloudStorageService(StorageClient storageClient, string bucke
                 // Always respect cancellation
                 throw;
             }
-            catch (Exception ex) when (attempt < maxRetriesPerRange)
+            catch (Exception) when (attempt < maxRetriesPerRange)
             {
                 attempt++;
 

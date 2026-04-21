@@ -9,7 +9,6 @@ namespace UPS.WWRR.Business.Common.Helper
 {
     public static class ParseCsvWithValidationHelper
     {
-        // Call like: var rows = ParseCsvWithValidation(csvText);
         public static List<string[]> ParseCsvWithValidation(string content)
         {
             if (string.IsNullOrWhiteSpace(content))

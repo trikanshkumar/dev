@@ -36,9 +36,8 @@ namespace UPS.WWRR.API.DbContextFactory
             else
             {
                 // Local dev: use the full connection string with Username/Password
-                // e.g., Host=localhost;Port=5432;Database=mydb;Username=myuser;Password=mypwd;
                 dataSource = PgDataSourceFactory.Create(
-                    localConnectionString: connectionString,  // includes user & password
+                    localConnectionString: connectionString,
                     requireSsl: false)
                     .GetAwaiter()
                     .GetResult();
