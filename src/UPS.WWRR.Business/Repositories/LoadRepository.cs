@@ -9,8 +9,6 @@ using UPS.WWRR.Business.Common.Enum;
 using UPS.WWRR.Business.Extensions;
 using UPS.WWRR.Data.Models;
 
-using static UPS.WWRR.Business.Common.Constants.StoredProcConstant;
-
 namespace UPS.WWRR.Business.Repositories
 {
     /// <summary>
@@ -104,7 +102,7 @@ namespace UPS.WWRR.Business.Repositories
         {
             string procLower = storedProcedureName.ToLowerInvariant();
 
-            if (!AllowedProcedures.Contains(procLower))
+            if (!StoredProcConstant.IsValidProcedureName(procLower))
             {
                 throw new ArgumentException($"Procedure name not in list of allowed procedure names: {procLower}", nameof(storedProcedureName));
             }
@@ -248,26 +246,5 @@ namespace UPS.WWRR.Business.Repositories
             var result = await cmd.ExecuteScalarAsync(ct);
             return result != null ? Convert.ToInt64(result) : 0;
         }
-
-        private static readonly ImmutableHashSet<string> AllowedProcedures = ImmutableHashSet.Create(StringComparer.OrdinalIgnoreCase,
-        [
-            AlternateCurrencyMerge, AccessorialExceptionMerge, AccessorialMinMaxCriteriaMerge,
-            AccessorialThresholdMerge, DestinationZipSvcAsyValidationMerge, DeficitWeightThresholdMerge,
-            BmaCapAmountMerge, ThresholdSimpleRatesMerge, CzmSystemRulesMerge, AuditHistoryMerge,
-            AccessorialRatingRulesMerge, CountryBillTypeMerge, ServiceDowngradeValidAccessorialRulesMerge,
-            ServiceDowngradeRulesMerge, ServiceDefaultRulesMerge, ImportServiceValidationMerge,
-            InformationalAccessorialThresholdMerge, PostalExceptionMerge, InformationalAccessorialChargeMerge,
-            InsuranceCriteriaMerge, InformationalAccessorialRateMerge, MinimumCriteriaMerge,
-            InternationalRatingCurrencyMerge, LimitValuesBasedOnCriteriaMerge, SimpleRateVolumeRangeMerge,
-            ValidDestinationBillTermMerge, FreightRatingRulesMerge, DestinationServiceFeatureTypeMerge,
-            SameDayRateMerge, TemplateAccessorialRulesMerge, ValidOriginBillTermMerge, ValidLaneServiceMerge,
-            OriginServiceFeatureTypeMerge, PublishedLetterThresholdMerge, ValidAcquisitionMethodMerge,
-            ColumnDecodeMerge, ValidOriginServicePackageMerge, DecodeValuesMerge, FuelSurchargeMerge,
-            FuelSurchargeBatchMerge, ValidAccessorialLaneMerge, ValidAccessorialLaneBatchMerge,
-            FreightRatesMerge, FreightRatesBatchMarge, AreaClassificationHeaderNormalizeStaging,
-            AreaClassificationHeaderMerge, DomesticZoneNormalizeStaging, DomesticZoneMerge,
-            FuelSurchargeIndexMerge, FuelSurchargeCategoryMapMerge, RateChartAccessorialRatesNormalizeStaging,
-            RateChartAccessorialRatesMerge, InternationalZoneNormalizeStaging, InternationalZoneMerge
-        ]);
     }
 }

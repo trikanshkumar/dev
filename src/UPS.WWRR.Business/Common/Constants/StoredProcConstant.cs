@@ -1,4 +1,6 @@
-﻿namespace UPS.WWRR.Business.Common.Constants
+﻿using System.Collections.Immutable;
+
+namespace UPS.WWRR.Business.Common.Constants
 {
     public static class StoredProcConstant
     {
@@ -56,5 +58,31 @@
         public const string RateChartAccessorialRatesMerge = "sp_ratechart_accessorialrates_merge_proc";
         public const string InternationalZoneNormalizeStaging = "sp_internationalzone_stagingdataset_proc";
         public const string InternationalZoneMerge = "sp_internationalzone_merge_proc";
+
+        public static bool IsValidProcedureName(string procedureName)
+        {
+            return AllowedProcedures.Contains(procedureName);
+        }
+
+        private static readonly ImmutableHashSet<string> AllowedProcedures = ImmutableHashSet.Create(StringComparer.OrdinalIgnoreCase,
+        [
+            AlternateCurrencyMerge, AccessorialExceptionMerge, AccessorialMinMaxCriteriaMerge,
+            AccessorialThresholdMerge, DestinationZipSvcAsyValidationMerge, DeficitWeightThresholdMerge,
+            BmaCapAmountMerge, ThresholdSimpleRatesMerge, CzmSystemRulesMerge, AuditHistoryMerge,
+            AccessorialRatingRulesMerge, CountryBillTypeMerge, ServiceDowngradeValidAccessorialRulesMerge,
+            ServiceDowngradeRulesMerge, ServiceDefaultRulesMerge, ImportServiceValidationMerge,
+            InformationalAccessorialThresholdMerge, PostalExceptionMerge, InformationalAccessorialChargeMerge,
+            InsuranceCriteriaMerge, InformationalAccessorialRateMerge, MinimumCriteriaMerge,
+            InternationalRatingCurrencyMerge, LimitValuesBasedOnCriteriaMerge, SimpleRateVolumeRangeMerge,
+            ValidDestinationBillTermMerge, FreightRatingRulesMerge, DestinationServiceFeatureTypeMerge,
+            SameDayRateMerge, TemplateAccessorialRulesMerge, ValidOriginBillTermMerge, ValidLaneServiceMerge,
+            OriginServiceFeatureTypeMerge, PublishedLetterThresholdMerge, ValidAcquisitionMethodMerge,
+            ColumnDecodeMerge, ValidOriginServicePackageMerge, DecodeValuesMerge, FuelSurchargeMerge,
+            FuelSurchargeBatchMerge, ValidAccessorialLaneMerge, ValidAccessorialLaneBatchMerge,
+            FreightRatesMerge, FreightRatesBatchMarge, AreaClassificationHeaderNormalizeStaging,
+            AreaClassificationHeaderMerge, DomesticZoneNormalizeStaging, DomesticZoneMerge,
+            FuelSurchargeIndexMerge, FuelSurchargeCategoryMapMerge, RateChartAccessorialRatesNormalizeStaging,
+            RateChartAccessorialRatesMerge, InternationalZoneNormalizeStaging, InternationalZoneMerge
+        ]);
     }
 }
