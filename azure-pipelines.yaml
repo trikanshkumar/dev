@@ -1,5 +1,5 @@
 trigger:
-  - main
+  - dev
 
 parameters:
   - name: environment
@@ -13,13 +13,6 @@ parameters:
 
 variables:
   - group: wwrr-${{ parameters.environment }}-pipeline-password
-
-  # - name: SonarQubeProjectKey
-  #   value: P4AG_MARKETING_APPS_wwrr-mod-app-data-load_283c95c3-74f2-49e6-aa5a-fb36cc97a13b
-
-  # - name: SonarQubeServiceConnection
-  #   value: wwrr-mod-sq
-
   - name: agentName
     ${{ if eq(parameters.environment, 'dev') }}:
       value: 'wwrr-dev-agent'
@@ -65,12 +58,6 @@ stages:
 
     - checkout: self
 
-    # - task: SonarQubePrepare@5
-    #   inputs:
-    #     SonarQube: '$(SonarQubeServiceConnection)'
-    #     scannerMode: 'MSBuild'
-    #     projectKey: '$(SonarQubeProjectKey)'
-
     - task: Bash@3
       displayName: Configure GCP
       inputs:
@@ -105,10 +92,6 @@ stages:
             --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
             --project=$(GCP_PROJECT_ID))
           export ALLOYDB_CONNECTION="$BASE_CONNECTION"
-          # IAM_TOKEN=$(gcloud auth print-access-token \
-          #   --impersonate-service-account=$ALLOYDB_ADMIN_EMAIL)
-
-          # export ALLOYDB_CONNECTION="${BASE_CONNECTION};Password=${IAM_TOKEN}"
 
           dotnet ef migrations bundle \
             --project src/UPS.WWRR.Data \
@@ -181,14 +164,18 @@ stages:
           metadata:
             name: efbundle-migration-${{ parameters.environment }}-$(Build.BuildId)
             namespace: wwrr-${{ parameters.environment }}
+            annotations:
+              sidecar.istio.io/inject: "false" 
 
           spec:
             ttlSecondsAfterFinished: 300
             backoffLimit: 0
 
             template:
+              metadata:
+                annotations:
+                  sidecar.istio.io/inject: "false"
               spec:
-
                 restartPolicy: Never
                 serviceAccountName: ups-wwrr-batch
                 shareProcessNamespace: true
@@ -230,7 +217,9 @@ stages:
                     - name: TRASTD_USE_BATCH_MERGE
                       value: "$(TRASTD_USE_BATCH_MERGE)"
                     - name: TSUBCHG_USE_BATCH_MERGE
-                      value: "$(TSUBCHG_USE_BATCH_MERGE)"  
+                      value: "$(TSUBCHG_USE_BATCH_MERGE)"
+                    - name: Enable_MQ
+                      value: "$(Enable_MQ)"   
         
 
                   command:
@@ -298,39 +287,67 @@ stages:
       inputs:
         targetType: inline
         script: |
+          set -e
+
+          RELEASE=ups-wwrr-batch
+          NAMESPACE=wwrr-${{ parameters.environment }}
+
           IMAGE_REPOSITORY=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/$(IMAGE_NAME)
+
           echo "Checking helm release status..."
-          STATUS=$(helm status ups-wwrr-batch -n wwrr-${{ parameters.environment }} -o json 2>/dev/null | jq -r '.info.status' || echo "notfound")
+
+          STATUS=$(helm status $RELEASE -n $NAMESPACE -o json 2>/dev/null | jq -r '.info.status' || echo "notfound")
+
           echo "Helm status: $STATUS"
+
+          # Handle stuck state
           if [[ "$STATUS" == "pending-install" || "$STATUS" == "pending-upgrade" || "$STATUS" == "pending-rollback" ]]; then
-            echo "Helm release stuck. Cleaning..."
-            helm uninstall ups-wwrr-batch -n wwrr-${{ parameters.environment }}
+            echo "Helm release is stuck. Rolling back to last stable version..."
+            sleep 5 
+            if helm status $RELEASE -n $NAMESPACE > /dev/null 2>&1; then
+              LAST_REVISION=$(helm history $RELEASE -n $NAMESPACE -o json | jq 'map(select(.status=="deployed")) | last(.[]).revision')
+            else
+              LAST_REVISION=""
+            fi
+
+            if [[ "$LAST_REVISION" != "null" && "$LAST_REVISION" != "" ]]; then
+              echo "Rolling back to revision $LAST_REVISION"
+              helm rollback $RELEASE $LAST_REVISION -n $NAMESPACE
+            else
+              echo "No stable revision found. Skipping rollback..."
+            fi
           fi
-          helm upgrade --install ups-wwrr-batch ./manifests/ups-wwrr-batch \
-          --namespace wwrr-${{ parameters.environment }} \
-          --wait \
-          --timeout 600s \
-          --force \
-          --set image.repository="$IMAGE_REPOSITORY" \
-          --set image.tag="$(Build.BuildId)" \
-          --set serviceAccount.annotations."iam\.gke\.io/gcp-service-account"="$(ALLOYDB_ADMIN_EMAIL)" \
-          --set-string env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME="$(GOOGLE_CLOUD_STORAGE_BUCKET_NAME)" \
-          --set-string env.LOAD_INTERVAL_MINUTES="$(LOAD_INTERVAL_MINUTES)" \
-          --set-string env.TABLE_NAME="$(TABLE_NAME)" \
-          --set-string env.BATCH_SIZE="$(BATCH_SIZE)" \
-          --set-string env.ASPNETCORE_ENVIRONMENT="$(ASPNETCORE_ENVIRONMENT)" \
-          --set-string env.ALLOYDB_CONNECTION="$(ALLOYDB_CONNECTION)" \
-          --set-string env.EnableIAMTokenAuth="$(EnableIAMTokenAuth)" \
-          --set-string env.BatchLoad_ChunkSize="$(BatchLoad_ChunkSize)" \
-          --set-string env.BatchLoad_Delimiter="$(BatchLoad_Delimiter)" \
-          --set-string env.GCS_DOWNLOAD_CHUNK_SIZE="$(GCS_DOWNLOAD_CHUNK_SIZE)" \
-          --set-string env.TVASYLN_USE_BATCH_MERGE="$(TVASYLN_USE_BATCH_MERGE)" \
-          --set-string env.TRASTD_USE_BATCH_MERGE="$(TRASTD_USE_BATCH_MERGE)" \
-          --set-string env.TSUBCHG_USE_BATCH_MERGE="$(TSUBCHG_USE_BATCH_MERGE)" \
-          --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)" \
-          --set-string ALLOYDB_HOST_ALIAS_IP="$(ALLOYDB_HOST_ALIAS_IP)" \
-          --set-string ALLOYDB_HOST_ALIAS_NAME="$(ALLOYDB_HOST_ALIAS_NAME)" \
-          --set-string ALLOYDB_INSTANCE="projects/$(GCP_PROJECT_ID)/locations/$(GCP_REGION)/clusters/wwrr-${{ parameters.environment }}-alloydb/instances/primary"     
+
+          echo "Starting Helm upgrade..."
+
+          helm upgrade --install $RELEASE ./manifests/ups-wwrr-batch \
+            --namespace $NAMESPACE \
+            --wait \
+            --timeout 600s \
+            --atomic \
+            --set image.repository="$IMAGE_REPOSITORY" \
+            --set image.tag="$(Build.BuildId)" \
+            --set serviceAccount.annotations."iam\.gke\.io/gcp-service-account"="$(ALLOYDB_ADMIN_EMAIL)" \
+            --set-string env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME="$(GOOGLE_CLOUD_STORAGE_BUCKET_NAME)" \
+            --set-string env.LOAD_INTERVAL_MINUTES="$(LOAD_INTERVAL_MINUTES)" \
+            --set-string env.TABLE_NAME="$(TABLE_NAME)" \
+            --set-string env.BATCH_SIZE="$(BATCH_SIZE)" \
+            --set-string env.ASPNETCORE_ENVIRONMENT="$(ASPNETCORE_ENVIRONMENT)" \
+            --set-string env.ALLOYDB_CONNECTION="$(ALLOYDB_CONNECTION)" \
+            --set-string env.EnableIAMTokenAuth="$(EnableIAMTokenAuth)" \
+            --set-string env.BatchLoad_ChunkSize="$(BatchLoad_ChunkSize)" \
+            --set-string env.BatchLoad_Delimiter="$(BatchLoad_Delimiter)" \
+            --set-string env.GCS_DOWNLOAD_CHUNK_SIZE="$(GCS_DOWNLOAD_CHUNK_SIZE)" \
+            --set-string env.TVASYLN_USE_BATCH_MERGE="$(TVASYLN_USE_BATCH_MERGE)" \
+            --set-string env.TRASTD_USE_BATCH_MERGE="$(TRASTD_USE_BATCH_MERGE)" \
+            --set-string env.TSUBCHG_USE_BATCH_MERGE="$(TSUBCHG_USE_BATCH_MERGE)" \
+            --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)" \
+            --set-string env.Enable_MQ="$(Enable_MQ)" \
+            --set-string ALLOYDB_HOST_ALIAS_IP="$(ALLOYDB_HOST_ALIAS_IP)" \
+            --set-string ALLOYDB_HOST_ALIAS_NAME="$(ALLOYDB_HOST_ALIAS_NAME)" \
+            --set-string ALLOYDB_INSTANCE="projects/$(GCP_PROJECT_ID)/locations/$(GCP_REGION)/clusters/wwrr-${{ parameters.environment }}-alloydb/instances/primary"
+
+          echo "Helm deployment completed successfully"
 
     - task: Bash@3
       displayName: Cleanup
