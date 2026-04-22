@@ -1,5 +1,5 @@
 trigger:
-  - docker-security-fix
+  - main
 
 parameters:
   - name: environment
