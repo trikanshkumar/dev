@@ -1,15 +1,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# copy only required files
+# copy only required source
 COPY src/ ./src/
 
-# restore + publish only app project
+# restore + publish
 RUN dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj && \
     dotnet publish src/UPS.WWRR.APP/UPS.WWRR.App.csproj \
     -c Release \
     -o /app/publish \
-    --runtime linux-x64 \
     --no-restore
 
 # runtime image
