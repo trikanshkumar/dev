@@ -13,16 +13,14 @@
   <ItemGroup>
     <PackageReference Include="CsvHelper" />
     <PackageReference Include="Google.Cloud.Storage.V1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
 	<PackageReference Include="Google.Cloud.Functions.Hosting" />
 	<PackageReference Include="Google.Cloud.PubSub.V1" />
-	<PackageReference Include="Google.Cloud.Storage.V1" />
   </ItemGroup>
 
   <ItemGroup>
-      <ProjectReference Include="..\UPS.WWRR.Data\UPS.WWRR.Data.csproj" />
+    <ProjectReference Include="..\UPS.WWRR.Data\UPS.WWRR.Data.csproj" />
   </ItemGroup>
 
 </Project>
