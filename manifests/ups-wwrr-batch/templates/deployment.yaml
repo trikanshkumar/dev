@@ -58,7 +58,11 @@ spec:
             - name: TSUBCHG_USE_BATCH_MERGE
               value: {{ .Values.env.TSUBCHG_USE_BATCH_MERGE | quote }}
             - name: Enable_MQ
-              value: {{ .Values.env.Enable_MQ | quote }}  
+              value: {{ .Values.env.Enable_MQ | quote }}
+            - name: GCP_PROJECT_ID
+              value: {{ .Values.env.GCP_PROJECT_ID | quote }}
+            - name: PUBSUB_TOPIC_ID
+              value: {{ .Values.env.PUBSUB_TOPIC_ID | quote }}  
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 

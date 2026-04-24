@@ -343,6 +343,8 @@ stages:
             --set-string env.TSUBCHG_USE_BATCH_MERGE="$(TSUBCHG_USE_BATCH_MERGE)" \
             --set-string env.BatchLoad_HasHeader="$(BatchLoad_HasHeader)" \
             --set-string env.Enable_MQ="$(Enable_MQ)" \
+            --set-string env.GCP_PROJECT_ID="$(GCP_PROJECT_ID)" \
+            --set-string env.PUBSUB_TOPIC_ID="$(PUBSUB_TOPIC_ID)" \
             --set-string ALLOYDB_HOST_ALIAS_IP="$(ALLOYDB_HOST_ALIAS_IP)" \
             --set-string ALLOYDB_HOST_ALIAS_NAME="$(ALLOYDB_HOST_ALIAS_NAME)" \
             --set-string ALLOYDB_INSTANCE="projects/$(GCP_PROJECT_ID)/locations/$(GCP_REGION)/clusters/wwrr-${{ parameters.environment }}-alloydb/instances/primary"
