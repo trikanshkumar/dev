@@ -49,7 +49,7 @@ static class Program
         var hasHeader = bool.TryParse(Environment.GetEnvironmentVariable("BatchLoad_HasHeader"), out var hh) ? hh : true;
         var bucket = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_NAME") ?? string.Empty;
         var bucketSubName = Environment.GetEnvironmentVariable("GOOGLE_CLOUD_STORAGE_BUCKET_SUB_NAME") ?? string.Empty;
-        var enableIAMTokenAuth = bool.TryParse(Environment.GetEnvironmentVariable("EnableIAMTokenAuth"), out var iam_tok) ? iam_tok : true;
+        var enableIAMTokenAuth = bool.TryParse(Environment.GetEnvironmentVariable("EnableIAMTokenAuth"), out var iam_tok) ? iam_tok : false;
         var pubSubProjectId = Environment.GetEnvironmentVariable("GCP_PROJECT_ID") ?? string.Empty;
         var pubSubTopicId = Environment.GetEnvironmentVariable("PUBSUB_TOPIC_ID") ?? string.Empty;
 
