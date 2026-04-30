@@ -106,7 +106,6 @@ namespace UPS.WWRR.Business.Repositories
             {
                 throw new ArgumentException($"Procedure name not in list of allowed procedure names: {procLower}", nameof(storedProcedureName));
             }
-
             string callSql = $"CALL {procLower}(InsertCount := NULL, UpdateCount := NULL, DeleteCount := NULL, ErrorNumber := NULL, ErrorState := NULL, ErrorProcedure := NULL, ErrorLine := NULL, ErrorMessage := NULL)";
 
             int ins = 0, upd = 0, del = 0;
@@ -233,7 +232,6 @@ namespace UPS.WWRR.Business.Repositories
             {
                 throw new ArgumentException($"Invalid staging table: {stagingTableName}", nameof(stagingTableName));
             }
-
             var conn = _db.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open)
                 await conn.OpenAsync(ct);

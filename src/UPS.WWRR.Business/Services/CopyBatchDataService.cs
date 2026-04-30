@@ -17,6 +17,8 @@ namespace UPS.WWRR.Business.Services
 {
     public class CopyBatchDataService : ICopyBatchDataService
     {
+        private sealed record TimestampContext(Regex TsRegex, Regex OracleTsRegex, bool UseOracleTimestamp);
+
         private readonly ICsvSplitterService _csvSplitter;
         private readonly ILogger<CopyBatchDataService> _logger;
         private readonly INpgsqlConnectionHelper _connectionHelper;
@@ -80,27 +82,12 @@ namespace UPS.WWRR.Business.Services
                 var oracleTsRegex = new Regex(ServiceConstants.OracleTimestampRegexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
                 // Determine if this table requires Oracle timestamp conversion
                 var useOracleTimestamp = ServiceConstants.OracleTimestampTables.Contains(configuration.TableName);
+                var tsContext = new TimestampContext(tsRegex, oracleTsRegex, useOracleTimestamp);
 
                 await foreach (var chunk in _csvSplitter.SplitAsync(csvFilePath, _chunkSize, _hasHeader, cancellationToken))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     chunkIndex++;
-
-                    // Create a per-chunk DataLoadDetail so each chunk gets its own load_ref_te = "data_load_seq_nr|seq_nr"
-                    var chunkDetail = new DataLoadDetail
-                    {
-                        DataLoadId = configuration.DataLoadId,
-                        DataLoadType = "STG",
-                        ErrorIndicator = 0,
-                        TimeProcessValue = 0,
-                        TimePeriodTypeCode = "SECONDS",
-                        RecordsInserted = 0,
-                        RecordsUpdated = 0,
-                        RecordsDeleted = 0,
-                        BatchNumber = chunkIndex
-                    };
-                    await _loadRepository.AddDetailAsync(chunkDetail, cancellationToken);
-                    var loadRefValue = $"{configuration.DataLoadId}|{chunkDetail.Id}";
 
                     // Initialize COPY command with column list on first chunk
                     if (copySql == null)
@@ -108,69 +95,10 @@ namespace UPS.WWRR.Business.Services
                         (copySql, singleRowCopySql) = BuildCopySqlFromHeader(chunk, configuration.TableName, excluded);
                     }
 
-                    var attempted = CountLinesStreaming(chunk) - (_hasHeader ? 1 : 0);
-                    var batchSw = Stopwatch.StartNew();
-                    int loaded = 0;
-                    var batchErrors = new List<string>();
-                    try
-                    {
-                        await using var writer = await _connectionHelper.BeginTextImportAsync(conn, copySql, cancellationToken);
-                        using var reader = new StringReader(chunk);
-                        string? line;
-                        bool first = true;
-                        while ((line = await reader.ReadLineAsync()) != null)
-                        {
-                            cancellationToken.ThrowIfCancellationRequested();
-                            if (first && _hasHeader)
-                            {
-                                // Append load_ref_te header column
-                                await writer.WriteLineAsync(line + _delimiter + "load_ref_te");
-                                first = false;
-                                continue;
-                            }
-
-                            line = NormalizeLineTimestamp(line, tsRegex, oracleTsRegex, useOracleTimestamp);
-                            // Append load_ref_te value to each data row
-                            await writer.WriteLineAsync(line + _delimiter + loadRefValue);
-                        }
-                        loaded = attempted;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"COPY failed for chunk {chunkIndex}. Attempting per-row fallback.");
-                        // Batch failed: retry each row individually
-        var (fallbackLoaded, rowErrors) = await FallbackCopyRowsAsync(chunk, singleRowCopySql!, conn, chunkIndex, tsRegex, oracleTsRegex, loadRefValue, useOracleTimestamp, cancellationToken);
-                        loaded = fallbackLoaded;
-                        // Propagate per-row errors to result and batch tracking
-                        result.Errors.AddRange(rowErrors);
-                        batchErrors.AddRange(rowErrors);
-                        if (fallbackLoaded < attempted && rowErrors.Count == 0)
-                            batchErrors.Add($"Chunk {chunkIndex}: {ex.Message}");
-                    }
-                    batchSw.Stop();
-                    result.TotalRowsAttempted += attempted;
-                    result.RowsLoaded += loaded;
-
-                    if (batchErrors.Count > 0)
-                    {
-                        // Record each error as a DataLoadException
-                        var exceptions = batchErrors.Select((msg, idx) => new DataLoadException
-                        {
-                            DataLoadDetailId = chunkDetail.Id,
-                            TableName = configuration.TableName,
-                            TableKey = $"BATCH:{chunkIndex}",
-                            ErrorFieldName = "ROW",
-                            ErrorFieldValue = msg.Length > 100 ? msg[..100] : msg,
-                            CreatedOn = DateTime.UtcNow
-                        });
-                        await _loadRepository.AddExceptionsAsync(exceptions, cancellationToken);
-                    }
-
-                    // Update the per-chunk DataLoadDetail with chunk metrics
-                    chunkDetail.ErrorIndicator = (short)(batchErrors.Count > 0 ? 1 : 0);
-                    chunkDetail.TimeProcessValue = (int)batchSw.Elapsed.TotalSeconds;
-                    chunkDetail.RecordsInserted = loaded;
-                    await _loadRepository.UpdateDetailAsync(chunkDetail, cancellationToken);
+                    var chunkResult = await ProcessChunkAsync(chunk, copySql, singleRowCopySql!, conn, chunkIndex, configuration, tsContext, cancellationToken);
+                    result.TotalRowsAttempted += chunkResult.Attempted;
+                    result.RowsLoaded += chunkResult.Loaded;
+                    result.Errors.AddRange(chunkResult.Errors);
                 }
                 await _loadRepository.UpdateTotalBatchNumber(configuration.DataLoadId, chunkIndex, cancellationToken);
                 totalSw.Stop();
@@ -212,6 +140,99 @@ namespace UPS.WWRR.Business.Services
         }
 
         /// <summary>
+        /// Processes a single chunk: creates a DataLoadDetail, attempts bulk COPY, falls back to per-row on failure, and records metrics/errors.
+        /// </summary>
+        private async Task<(int Attempted, int Loaded, List<string> Errors)> ProcessChunkAsync(
+            string chunk, string copySql, string singleRowCopySql, NpgsqlConnection conn, int chunkIndex,
+            TableConfigurationRequest configuration, TimestampContext tsContext,
+            CancellationToken cancellationToken)
+        {
+            var chunkDetail = new DataLoadDetail
+            {
+                DataLoadId = configuration.DataLoadId,
+                DataLoadType = "STG",
+                ErrorIndicator = 0,
+                TimeProcessValue = 0,
+                TimePeriodTypeCode = "SECONDS",
+                RecordsInserted = 0,
+                RecordsUpdated = 0,
+                RecordsDeleted = 0,
+                BatchNumber = chunkIndex
+            };
+            await _loadRepository.AddDetailAsync(chunkDetail, cancellationToken);
+            var loadRefValue = $"{configuration.DataLoadId}|{chunkDetail.Id}";
+
+            var attempted = CountLinesStreaming(chunk) - (_hasHeader ? 1 : 0);
+            var batchSw = Stopwatch.StartNew();
+            int loaded = 0;
+            var batchErrors = new List<string>();
+
+            try
+            {
+                await WriteCopyDataAsync(conn, copySql, chunk, tsContext, loadRefValue, cancellationToken);
+                loaded = attempted;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "COPY failed for chunk {ChunkIndex}. Attempting per-row fallback.", chunkIndex);
+                var (fallbackLoaded, rowErrors) = await FallbackCopyRowsAsync(chunk, singleRowCopySql, conn, chunkIndex, tsContext, loadRefValue, cancellationToken);
+                loaded = fallbackLoaded;
+                batchErrors.AddRange(rowErrors);
+                if (fallbackLoaded < attempted && rowErrors.Count == 0)
+                    batchErrors.Add($"Chunk {chunkIndex}: {ex.Message}");
+            }
+
+            batchSw.Stop();
+
+            if (batchErrors.Count > 0)
+            {
+                var exceptions = batchErrors.Select((msg, idx) => new DataLoadException
+                {
+                    DataLoadDetailId = chunkDetail.Id,
+                    TableName = configuration.TableName,
+                    TableKey = $"BATCH:{chunkIndex}",
+                    ErrorFieldName = "ROW",
+                    ErrorFieldValue = msg.Length > 100 ? msg[..100] : msg,
+                    CreatedOn = DateTime.UtcNow
+                });
+                await _loadRepository.AddExceptionsAsync(exceptions, cancellationToken);
+            }
+
+            chunkDetail.ErrorIndicator = (short)(batchErrors.Count > 0 ? 1 : 0);
+            chunkDetail.TimeProcessValue = (int)batchSw.Elapsed.TotalSeconds;
+            chunkDetail.RecordsInserted = loaded;
+            await _loadRepository.UpdateDetailAsync(chunkDetail, cancellationToken);
+
+            return (attempted, loaded, batchErrors);
+        }
+
+        /// <summary>
+        /// Writes all lines from a chunk into the COPY stream.
+        /// </summary>
+        private async Task WriteCopyDataAsync(
+            NpgsqlConnection conn, string copySql, string chunk,
+            TimestampContext tsContext, string loadRefValue, CancellationToken cancellationToken)
+        {
+            await using var writer = await _connectionHelper.BeginTextImportAsync(conn, copySql, cancellationToken);
+            using var reader = new StringReader(chunk);
+            string? line;
+            bool first = true;
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (first && _hasHeader)
+                {
+                    await writer.WriteLineAsync(line + _delimiter + "load_ref_te");
+                    first = false;
+                    continue;
+                }
+
+                line = NormalizeLineTimestamp(line, tsContext.TsRegex, tsContext.OracleTsRegex, tsContext.UseOracleTimestamp);
+                await writer.WriteLineAsync(line + _delimiter + loadRefValue);
+            }
+        }
+
+        /// <summary>
         /// Retry COPY for each row individually in case of a batch failure.
         /// Returns the number of successfully loaded rows and a list of per-row error messages.
         /// </summary>
@@ -219,13 +240,11 @@ namespace UPS.WWRR.Business.Services
         /// <param name="singleRowCopySql"></param>
         /// <param name="conn"></param>
         /// <param name="chunkIndex"></param>
-        /// <param name="tsRegex"></param>
-        /// <param name="oracleTsRegex"></param>
+        /// <param name="tsContext"></param>
         /// <param name="loadRefValue"></param>
-        /// <param name="useOracleTimestamp"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>A tuple of (loaded row count, list of per-row error messages)</returns>
-        private async Task<(int Loaded, List<string> RowErrors)> FallbackCopyRowsAsync(string chunk, string singleRowCopySql, NpgsqlConnection conn, int chunkIndex, Regex tsRegex, Regex oracleTsRegex, string loadRefValue, bool useOracleTimestamp, CancellationToken cancellationToken)
+        private async Task<(int Loaded, List<string> RowErrors)> FallbackCopyRowsAsync(string chunk, string singleRowCopySql, NpgsqlConnection conn, int chunkIndex, TimestampContext tsContext, string loadRefValue, CancellationToken cancellationToken)
         {
             var rowErrors = new List<string>();
             try
@@ -243,7 +262,7 @@ namespace UPS.WWRR.Business.Services
                     if (string.IsNullOrWhiteSpace(row)) continue;
                     try
                     {
-                        row = NormalizeLineTimestamp(row, tsRegex, oracleTsRegex, useOracleTimestamp);
+                        row = NormalizeLineTimestamp(row, tsContext.TsRegex, tsContext.OracleTsRegex, tsContext.UseOracleTimestamp);
                         // Append load_ref_te value
                         row = row + _delimiter + loadRefValue;
 
