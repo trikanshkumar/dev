@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: monitoring-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - {{ .Values.grafana.host }}
+    - {{ .Values.kiali.host }}
+    tls:
+      mode: SIMPLE
+      credentialName: {{ .Values.tls.secretName }}

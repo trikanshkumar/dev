@@ -1,0 +1,8 @@
+grafana:
+  host: ""
+
+kiali:
+  host: ""
+
+tls:
+  secretName: ""

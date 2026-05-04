@@ -409,6 +409,7 @@ stages:
             --create-namespace \
             --wait \
             --timeout 600s \
+            --set global.imageRegistry=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO) \
             --set prometheusOperator.image.repository=prometheus-operator/prometheus-operator \
             --set prometheusOperator.image.tag=v0.85.0 \
             --set prometheusOperator.admissionWebhooks.create.image.repository=jkroepke/kube-webhook-certgen \
@@ -441,7 +442,7 @@ stages:
             --timeout 300s \
             --set auth.strategy=anonymous \
             --set external_services.prometheus.url="http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090" \
-            --set deployment.image_name="$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/kiali" \
+            --set deployment.image_name="$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/kiali/kiali" \
             --set deployment.image_version="v2.24.0" 
 
           echo "Installing Grafana Ingress..."
@@ -451,9 +452,7 @@ stages:
             --timeout 300s \
             --set grafana.host=$(GRAFANA_HOST) \
             --set kiali.host=$(KIALI_HOST) \
-            --set tls.secretName=$(TLS_SECRET_NAME) \
-            --set tls.crt=$(TLS_CERT_BASE64) \
-            --set tls.key=$(TLS_KEY_BASE64)
+            --set tls.secretName=$(TLS_SECRET_NAME)
 
     - task: Bash@3
       displayName: Cleanup
