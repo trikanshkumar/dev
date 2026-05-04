@@ -30,6 +30,6 @@ spec:
           exact: {{ .Values.kiali.host }}
     route:
     - destination:
-        host: kiali-server.istio-system.svc.cluster.local
+        host:  kiali.istio-system.svc.cluster.local
         port:
           number: 20001
