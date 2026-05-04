@@ -1,5 +1,5 @@
 trigger:
-  - dev
+  - grafana-testing
 
 parameters:
   - name: environment
@@ -317,7 +317,7 @@ stages:
               IMAGE_PATH=$(echo $IMAGE | cut -d: -f1)
             fi
 
-            IMAGE_NAME=$(echo $IMAGE_PATH | cut -d: -f1)
+            IMAGE_NAME="monitoring/$(basename $(echo $IMAGE_PATH | cut -d: -f1))"
             IMAGE_TAG=$(echo $IMAGE | awk -F: '{print $2}')
 
             TARGET="$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/${IMAGE_NAME}:${IMAGE_TAG}"
