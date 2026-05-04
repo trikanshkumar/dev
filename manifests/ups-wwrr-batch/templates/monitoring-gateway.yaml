@@ -13,8 +13,7 @@ spec:
       protocol: HTTPS
     tls:
       mode: SIMPLE
-      credentialName: monitoring-cert-{{ .Values.global.environment }}
+      credentialName: {{ .Values.monitoring.tlsSecret }}
     hosts:
-    - grafana-wwrr-{{ .Values.global.environment }}.ams1907.com
-    - kiali-wwrr-{{ .Values.global.environment }}.ams1907.com
-    - prometheus-wwrr-{{ .Values.global.environment }}.ams1907.com
+    - {{ .Values.monitoring.grafanaHost }}
+    - {{ .Values.monitoring.kialiHost }}
