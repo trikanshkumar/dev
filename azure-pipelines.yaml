@@ -1,5 +1,5 @@
 trigger:
-  - grafana-testing
+  - dev
 
 parameters:
   - name: environment
