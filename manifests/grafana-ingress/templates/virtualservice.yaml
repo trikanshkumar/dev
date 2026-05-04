@@ -12,24 +12,20 @@ spec:
 
   http:
 
-  # Grafana
   - match:
-    - headers:
-        host:
-          exact: {{ .Values.grafana.host }}
+    - uri:
+        prefix: /
     route:
     - destination:
         host: monitoring-grafana.monitoring.svc.cluster.local
         port:
           number: 80
 
-  # Kiali
   - match:
-    - headers:
-        host:
-          exact: {{ .Values.kiali.host }}
+    - uri:
+        prefix: /
     route:
     - destination:
-        host:  kiali.istio-system.svc.cluster.local
+        host: kiali.istio-system.svc.cluster.local
         port:
           number: 20001
