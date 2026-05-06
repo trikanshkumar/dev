@@ -12,8 +12,7 @@ spec:
       name: https
       protocol: HTTPS
     hosts:
-    - {{ .Values.grafana.host }}
-    - {{ .Values.kiali.host }}
+    - "*"
     tls:
       mode: SIMPLE
       credentialName: {{ .Values.tls.secretName }}
