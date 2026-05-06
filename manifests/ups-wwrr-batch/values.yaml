@@ -29,6 +29,13 @@ env:
   GCP_PROJECT_ID: ""
   PUBSUB_TOPIC_ID: ""
 
+monitoring:
+  grafanaHost: ""
+  kialiHost: ""
+  tlsSecret: ""
+  tlsCrt: ""
+  tlsKey: ""  
+
 ALLOYDB_INSTANCE: ""
 ALLOYDB_HOST_ALIAS_IP: ""
 ALLOYDB_HOST_ALIAS_NAME: ""

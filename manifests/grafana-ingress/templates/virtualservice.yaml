@@ -1,0 +1,31 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: monitoring-vs
+  namespace: istio-system
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - monitoring-gateway
+
+  http:
+  - match:
+    - headers:
+        host:
+          exact: {{ .Values.grafana.host }}
+    route:
+    - destination:
+        host: monitoring-grafana.monitoring.svc.cluster.local
+        port:
+          number: 80
+
+  - match:
+    - headers:
+        host:
+          exact: {{ .Values.kiali.host }}
+    route:
+    - destination:
+        host: kiali.istio-system.svc.cluster.local
+        port:
+          number: 20001
