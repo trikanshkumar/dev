@@ -13,5 +13,7 @@ namespace UPS.WWRR.Business.Common.Enum
         Processed = 5,
         MissingRequiredPair = 6,
         FailedMissingData = 7,
+        PairFailedValidation = 8,
+        PairFailedProcessing = 9
     }
 }
