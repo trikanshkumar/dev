@@ -142,7 +142,7 @@ namespace UPS.WWRR.Business.Services
                         var processingLoads = await _loadRepository.GetLoadsByStatusAsync(LoadStatus.Processing, loadBatch, ct);
 
                         // Filter out any paired tables whose pair failed to load to the staging table
-                        processingLoads = await UpdateAndFilterLoadsWithMissingPairs(readyAfterValidation, LoadStatus.PairFailedProcessing, ct);
+                        processingLoads = await UpdateAndFilterLoadsWithMissingPairs(processingLoads, LoadStatus.PairFailedProcessing, ct);
 
                         if (processingLoads.Count > 0)
                         {
