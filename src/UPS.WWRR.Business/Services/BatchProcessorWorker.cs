@@ -128,6 +128,10 @@ namespace UPS.WWRR.Business.Services
                     // Copy batches to staging for ReadyToProcess loads
                     string loadBatch = newLoads.Select(lv => lv.LogFileLocation).FirstOrDefault() ?? string.Empty;
                     var readyAfterValidation = await _loadRepository.GetLoadsByStatusAsync(LoadStatus.ReadyToProcess, loadBatch, ct);
+
+                    // Filter out any paired tables whose pair failed validation
+                    readyAfterValidation = await UpdateAndFilterLoadsWithMissingPairs(readyAfterValidation, LoadStatus.PairFailedValidation, ct);
+
                     if (readyAfterValidation.Count > 0)
                     {
                         readyAfterValidation = FilterByTableName(readyAfterValidation);
@@ -136,6 +140,10 @@ namespace UPS.WWRR.Business.Services
 
                         //  main table for loads that are still Processing after copy
                         var processingLoads = await _loadRepository.GetLoadsByStatusAsync(LoadStatus.Processing, loadBatch, ct);
+
+                        // Filter out any paired tables whose pair failed to load to the staging table
+                        processingLoads = await UpdateAndFilterLoadsWithMissingPairs(processingLoads, LoadStatus.PairFailedProcessing, ct);
+
                         if (processingLoads.Count > 0)
                         {
                             processingLoads = FilterByTableName(processingLoads);
@@ -165,21 +173,13 @@ namespace UPS.WWRR.Business.Services
         ? loads
         : loads.Where(l => string.Equals(l.LoadTableName, _tableNameFilter, StringComparison.OrdinalIgnoreCase)).ToList();
 
-        /// <summary>
-        /// Validates that all tables in paired groups are present together.
-        /// If a group has some but not all tables present, those tables are removed and a warning is logged.
-        /// </summary>
-        /// <param name="loads">The list of loads to validate</param>
-        /// <returns>Filtered list with incomplete paired groups removed</returns>
-        private async Task<List<DataLoad>> ValidateAndFilterPairedTableGroups(List<DataLoad> loads)
+        private HashSet<string> GetTablesWithMissingPairs(List<DataLoad> loads)
         {
-            if (loads.Count == 0) return loads;
-
             var tableNamesInLoads = new HashSet<string>(
                 loads.Select(l => l.LoadTableName),
                 StringComparer.OrdinalIgnoreCase);
 
-            var tablesToRemove = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var tablesWithMissingPairs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var group in _pairedTableGroups)
             {
@@ -197,10 +197,55 @@ namespace UPS.WWRR.Business.Services
 
                     foreach (var table in presentTables)
                     {
-                        tablesToRemove.Add(table);
+                        tablesWithMissingPairs.Add(table);
                     }
                 }
             }
+
+            return tablesWithMissingPairs;
+        }
+
+        /// <summary>
+        /// Validates that all tables in paired groups are present together and removes tables with missing pairs.
+        /// If a group has some but not all tables present, those tables are removed, a warning is logged, and
+        /// the existing loads in the database are updated for the tables that are removed with a MissingRequiredPair status.
+        /// </summary>
+        /// <param name="loads">The list of loads to validate</param>
+        /// <param name="failureStatusCode">Status code to update the failed loads to</param>
+        private async Task<List<DataLoad>> UpdateAndFilterLoadsWithMissingPairs(List<DataLoad> loads, LoadStatus failureStatusCode, CancellationToken ct)
+        {
+            if (loads.Count == 0) return loads;
+
+            var tablesToRemove = GetTablesWithMissingPairs(loads);
+
+            if (tablesToRemove.Count == 0)
+            {
+                return loads;
+            }
+
+            var loadsToRemove = loads.Where(l => tablesToRemove.Contains(l.LoadTableName)).ToList();
+            foreach (var load in loadsToRemove)
+            {
+                BuildCsvLoadLog(load, ServiceConstants.LoadStatusFailed, errorDetails: $"Paired table(s) of {load.LoadTableName} failed to {(failureStatusCode == LoadStatus.PairFailedValidation ? "validate" : "process")}.");
+                await _loadRepository.UpdateStatusAsync(load.Id, failureStatusCode, DateTime.UtcNow, ct);
+                var fileName = Path.GetFileName(load.FileLocation);
+                await MoveObjectToProcessedAsync(fileName);
+            }
+
+            return loads.Except(loadsToRemove).ToList();
+        }
+        
+        /// <summary>
+        /// Validates that all tables in paired groups are present together and removes tables with missing pairs.
+        /// If a group has some but not all tables present, those tables are removed, a warning is logged, and
+        /// a new load is added to the database for the tables that are removed with a MissingRequiredPair status.
+        /// </summary>
+        /// <param name="loads">The list of loads to validate</param>
+        /// <returns>Filtered list with incomplete paired groups removed</returns>
+        private async Task<List<DataLoad>> AddAndFilterLoadsWithMissingPairs(List<DataLoad> loads)
+        {
+            if (loads.Count == 0) return loads;
+            HashSet<string> tablesToRemove = GetTablesWithMissingPairs(loads);
 
             if (tablesToRemove.Count > 0)
             {
@@ -304,7 +349,7 @@ namespace UPS.WWRR.Business.Services
                 newLoads = FilterByTableName(newLoads);
                 
                 // Validate paired table groups - all tables in a group must be present together
-                newLoads = await ValidateAndFilterPairedTableGroups(newLoads);
+                newLoads = await AddAndFilterLoadsWithMissingPairs(newLoads);
                 
                 if (newLoads.Count > 0)
                     await _loadRepository.AddLoadsAsync(newLoads, ct);
@@ -1145,7 +1190,7 @@ namespace UPS.WWRR.Business.Services
                         TableName = descriptor.TableName,
                         TableKey = $"LOAD:{load.Id}",
                         ErrorFieldName = ServiceConstants.csvValidationError,
-                        ErrorFieldValue = msg,
+                        ErrorFieldValue = msg.Length > 100 ? msg[..100] : msg,
                         CreatedOn = DateTime.UtcNow
                     });
                     await _loadRepository.AddExceptionsAsync(exceptions, ct);

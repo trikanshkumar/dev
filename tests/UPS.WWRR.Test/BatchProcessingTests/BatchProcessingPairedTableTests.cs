@@ -638,11 +638,11 @@ public class BatchProcessingPairedTableTests : BatchProcessorTests
 
     #endregion
 
-    #region ValidateAndFilterPairedTableGroups Tests for Paired Table
+    #region AddAndFilterLoadsWithMissingPairs Tests for Paired Table
 
     [Theory]
     [MemberData(nameof(TablePairs))]
-    public async Task ValidateAndFilterPairedTableGroups_CompletePair_ReturnsAll(string baseTableName, string pairedTableName)
+    public async Task AddAndFilterLoadsWithMissingPairs_CompletePair_ReturnsAll(string baseTableName, string pairedTableName)
     {
         var loads = new List<DataLoad>
         {
@@ -651,7 +651,7 @@ public class BatchProcessingPairedTableTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "AddAndFilterLoadsWithMissingPairs", loads);
 
         Assert.Equal(2, result.Count);
         Assert.Contains(result, l => l.LoadTableName == baseTableName.ToUpper());
@@ -660,7 +660,7 @@ public class BatchProcessingPairedTableTests : BatchProcessorTests
 
     [Theory]
     [MemberData(nameof(Tables))]
-    public async Task ValidateAndFilterPairedTableGroups_IncompletePair_PairedTable_Only_RemovesIt(string tableName)
+    public async Task AddAndFilterLoadsWithMissingPairs_IncompletePair_PairedTable_Only_RemovesIt(string tableName)
     {
         var loads = new List<DataLoad>
         {
@@ -669,14 +669,14 @@ public class BatchProcessingPairedTableTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "AddAndFilterLoadsWithMissingPairs", loads);
 
         Assert.Single(result);
         Assert.Equal(exampleStandardTables[0].ToUpper(), result[0].LoadTableName);
     }
 
     [Fact]
-    public async Task ValidateAndFilterPairedTableGroups_MultiplePairedGroups_AllComplete_ReturnsAll()
+    public async Task AddAndFilterLoadsWithMissingPairs_MultiplePairedGroups_AllComplete_ReturnsAll()
     {
         var tablePairs = TablePairs.Take(2).ToArray();
         var firstPair = tablePairs[0];
@@ -702,13 +702,13 @@ public class BatchProcessingPairedTableTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "AddAndFilterLoadsWithMissingPairs", loads);
 
         Assert.Equal(5, result.Count);
     }
 
     [Fact]
-    public async Task ValidateAndFilterPairedTableGroups_MultiplePairedGroups_OneIncomplete_RemovesIncomplete()
+    public async Task AddAndFilterLoadsWithMissingPairs_MultiplePairedGroups_OneIncomplete_RemovesIncomplete()
     {
         var tablePairs = TablePairs.Take(2).ToArray();
         var firstPair = tablePairs[0];
@@ -731,13 +731,128 @@ public class BatchProcessingPairedTableTests : BatchProcessorTests
         };
 
         var sut = CreateSut();
-        var result = await InvokeAsync<List<DataLoad>>(sut, "ValidateAndFilterPairedTableGroups", loads);
+        var result = await InvokeAsync<List<DataLoad>>(sut, "AddAndFilterLoadsWithMissingPairs", loads);
 
         Assert.Equal(3, result.Count);
         Assert.Contains(result, l => l.LoadTableName == firstPairBaseTable.ToUpper());
         Assert.Contains(result, l => l.LoadTableName == firstPairPairTable.ToUpper());
         Assert.Contains(result, l => l.LoadTableName == exampleStandardTables[0].ToUpper());
         Assert.DoesNotContain(result, l => l.LoadTableName == secondPairBaseTable.ToUpper());
+    }
+
+    #endregion
+
+    #region UpdateAndFilterLoadsWithMissingPairs
+
+    [Theory]
+    [MemberData(nameof(TablePairs))]
+    public async Task UpdateAndFilterLoadsWithMissingPairs_CompletePair_ReturnsAll(string baseTableName, string pairedTableName)
+    {
+        var loads = new List<DataLoad>
+        {
+            new() { LoadTableName = baseTableName.ToUpper() },
+            new() { LoadTableName = pairedTableName.ToUpper() }
+        };
+
+        var sut = CreateSut();
+        var result = await InvokeAsync<List<DataLoad>>(sut, "UpdateAndFilterLoadsWithMissingPairs", loads, LoadStatus.PairFailedValidation, CancellationToken.None);
+
+        Assert.Equal(2, result.Count);
+        Assert.Contains(result, l => l.LoadTableName == baseTableName.ToUpper());
+        Assert.Contains(result, l => l.LoadTableName == pairedTableName.ToUpper());
+    }
+
+    [Theory]
+    [MemberData(nameof(Tables))]
+    public async Task UpdateAndFilterLoadsWithMissingPairs_IncompletePair_PairedTable_Only_RemovesIt(string tableName)
+    {
+        var loads = new List<DataLoad>
+        {
+            new() { LoadTableName = tableName.ToUpper() },
+            new() { LoadTableName = exampleStandardTables[0].ToUpper() }
+        };
+
+        var sut = CreateSut();
+        var result = await InvokeAsync<List<DataLoad>>(sut, "UpdateAndFilterLoadsWithMissingPairs", loads, LoadStatus.PairFailedValidation, CancellationToken.None);
+
+        Assert.Single(result);
+        Assert.Equal(exampleStandardTables[0].ToUpper(), result[0].LoadTableName);
+    }
+
+    [Fact]
+    public async Task UpdateAndFilterLoadsWithMissingPairs_MultiplePairedGroups_AllComplete_ReturnsAll()
+    {
+        var tablePairs = TablePairs.Take(2).ToArray();
+        var firstPair = tablePairs[0];
+        var secondPair = tablePairs[1];
+
+        var firstPairBaseTable = firstPair[0].ToString();
+        var firstPairPairTable = firstPair[1].ToString();
+        var secondPairBaseTable = secondPair[0].ToString();
+        var secondPairPairTable = secondPair[1].ToString();
+
+        Assert.NotNull(firstPairBaseTable);
+        Assert.NotNull(firstPairPairTable);
+        Assert.NotNull(secondPairBaseTable);
+        Assert.NotNull(secondPairPairTable);
+
+        var loads = new List<DataLoad>
+        {
+            new() { LoadTableName = firstPairBaseTable.ToUpper()},
+            new() { LoadTableName = firstPairPairTable.ToUpper()},
+            new() { LoadTableName = secondPairBaseTable.ToUpper()},
+            new() { LoadTableName = secondPairPairTable.ToUpper()},
+            new() { LoadTableName = exampleStandardTables[0].ToUpper()}
+        };
+
+        var sut = CreateSut();
+        var result = await InvokeAsync<List<DataLoad>>(sut, "UpdateAndFilterLoadsWithMissingPairs", loads, LoadStatus.PairFailedValidation, CancellationToken.None);
+
+        Assert.Equal(5, result.Count);
+    }
+
+    [Fact]
+    public async Task UpdateAndFilterLoadsWithMissingPairs_MultiplePairedGroups_OneIncomplete_RemovesIncomplete()
+    {
+        var tablePairs = TablePairs.Take(2).ToArray();
+        var firstPair = tablePairs[0];
+        var secondPair = tablePairs[1];
+
+        var firstPairBaseTable = firstPair[0].ToString();
+        var firstPairPairTable = firstPair[1].ToString();
+        var secondPairBaseTable = secondPair[0].ToString();
+
+        Assert.NotNull(firstPairBaseTable);
+        Assert.NotNull(firstPairPairTable);
+        Assert.NotNull(secondPairBaseTable);
+
+        var loads = new List<DataLoad>
+        {
+            new() { LoadTableName = firstPairBaseTable.ToUpper()},
+            new() { LoadTableName = firstPairPairTable.ToUpper()},
+            new() { LoadTableName = secondPairBaseTable.ToUpper()}, // missing pair
+            new() { LoadTableName = exampleStandardTables[0].ToUpper()}
+        };
+
+        var sut = CreateSut();
+        var result = await InvokeAsync<List<DataLoad>>(sut, "UpdateAndFilterLoadsWithMissingPairs", loads, LoadStatus.PairFailedValidation, CancellationToken.None);
+
+        Assert.Equal(3, result.Count);
+        Assert.Contains(result, l => l.LoadTableName == firstPairBaseTable.ToUpper());
+        Assert.Contains(result, l => l.LoadTableName == firstPairPairTable.ToUpper());
+        Assert.Contains(result, l => l.LoadTableName == exampleStandardTables[0].ToUpper());
+        Assert.DoesNotContain(result, l => l.LoadTableName == secondPairBaseTable.ToUpper());
+    }
+
+    [Fact]
+    public async Task UpdateAndFilterLoadsWithMissingPairs_NoLoads_ReturnsEmptyList()
+    {
+        var loads = new List<DataLoad>();
+
+        var sut = CreateSut();
+        var result = await InvokeAsync<List<DataLoad>>(sut, "UpdateAndFilterLoadsWithMissingPairs", loads, LoadStatus.PairFailedProcessing, CancellationToken.None);
+
+        Assert.Empty(result);
     }
 
     #endregion
