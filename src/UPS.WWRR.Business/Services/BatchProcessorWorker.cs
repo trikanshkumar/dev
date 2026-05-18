@@ -478,7 +478,7 @@ namespace UPS.WWRR.Business.Services
                 string tempFile;
                 if (!tempFiles.TryGetValue(key, out tempFile!))
                 {
-                    tempFile = Path.GetTempFileName();
+                    tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                     await _storageService.DownloadFile(gcsFileName, tempFile, ct);
                 }
 
@@ -1044,7 +1044,7 @@ namespace UPS.WWRR.Business.Services
                 string? tempFile = null;
                 try
                 {
-                    tempFile = Path.GetTempFileName();
+                    tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                     var gcsFileName = Path.GetFileName(load.FileLocation);
 
                     if (!await TryResolveGcsFileAsync(load, descriptor, gcsFileName, tempFile, ct))
