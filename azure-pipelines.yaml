@@ -71,15 +71,9 @@ stages:
       inputs:
         targetType: inline
         script: |
-          cat <<EOF > Dockerfile.sonar
-          FROM mcr.microsoft.com/dotnet/sdk:8.0
-          RUN apt-get update && apt-get install -y curl openjdk-17-jre
-          RUN dotnet tool install --global dotnet-sonarscanner
-          ENV PATH="$PATH:/root/.dotnet/tools"
-          EOF
           SONAR_IMAGE=us-east4-docker.pkg.dev/gcp-cti-wwrr-prod/wwrr-prod-docker-repo/dotnet-sonar:$(Build.BuildId)
           docker build -f Dockerfile.sonar -t $SONAR_IMAGE .
-          docker push $SONAR_IMAGE      
+          docker push $SONAR_IMAGE     
 
     - task: Bash@3
       displayName: Run Sonar in K8s Job
