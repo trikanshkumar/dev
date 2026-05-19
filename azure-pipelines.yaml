@@ -42,10 +42,153 @@ pool:
 
 stages:
 
-- stage: Build_And_Deploy
-  displayName: Build Deploy And Run EF Migration
+- stage: Sonar_Analysis
+  displayName: Run SonarQube in Kubernetes
 
   jobs:
+  - job: SonarAnalysis
+    displayName: Run SonarQube Analysis
+    pool:
+      name: WWRR Mod Custom Agent Pool
+      demands:
+        - Agent.Name -equals wwrr-prod-agent
+
+    steps:
+    - checkout: self
+      persistCredentials: true
+
+    - task: Bash@3
+      displayName: Configure GCP
+      inputs:
+        targetType: inline
+        script: |
+          set -e
+          gcloud config set project gcp-cti-wwrr-prod
+          gcloud container clusters get-credentials wwrr-prod-gke-cluster --region $(GCP_REGION) --project gcp-cti-wwrr-prod
+
+    - task: Bash@3
+      displayName: Build Sonar Image
+      inputs:
+        targetType: inline
+        script: |
+          cat <<EOF > Dockerfile.sonar
+          FROM mcr.microsoft.com/dotnet/sdk:8.0
+          RUN apt-get update && apt-get install -y curl openjdk-17-jre
+          RUN dotnet tool install --global dotnet-sonarscanner
+          ENV PATH="$PATH:/root/.dotnet/tools"
+          EOF
+          SONAR_IMAGE=us-east4-docker.pkg.dev/gcp-cti-wwrr-prod/wwrr-prod-docker-repo/dotnet-sonar:$(Build.BuildId)
+          docker build -f Dockerfile.sonar -t $SONAR_IMAGE .
+          docker push $SONAR_IMAGE      
+
+    - task: Bash@3
+      displayName: Run Sonar in K8s Job
+      inputs:
+        targetType: inline
+        script: |
+          set -e
+
+          echo "Packing source code..."
+          tar --exclude=app.tar.gz -czf app.tar.gz . || true
+
+          kubectl create namespace wwrr-prod --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl delete job sonar-analysis-$(Build.BuildId) -n wwrr-prod --ignore-not-found
+
+          cat <<EOF | kubectl apply -f -
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: sonar-analysis-$(Build.BuildId)
+            namespace: wwrr-prod
+          spec:
+            backoffLimit: 0
+            ttlSecondsAfterFinished: 300
+            template:
+              metadata:
+                annotations:
+                  sidecar.istio.io/inject: "false"
+              spec:
+                restartPolicy: Never
+                hostAliases:
+                - ip: "$(SONAR_IP_1)"
+                  hostnames:
+                  - "sonar.ups.com"
+                - ip: "$(SONAR_IP_2)"
+                  hostnames:
+                  - "sonar.ups.com"
+                containers:
+                - name: sonar
+                  image: us-east4-docker.pkg.dev/gcp-cti-wwrr-prod/wwrr-prod-docker-repo/dotnet-sonar:$(Build.BuildId)
+                  env:
+                  - name: SONAR_TOKEN
+                    value: "$(SONAR_TOKEN)"
+                  command: ["/bin/sh","-c"]
+                  args:
+                  - |
+                    echo "Container started..."
+                    echo "Waiting for file..."
+                    for i in \$(seq 1 60); do
+                      if [ -f /tmp/app.tar.gz ]; then
+                        SIZE1=\$(stat -c%s /tmp/app.tar.gz)
+                        sleep 2
+                        SIZE2=\$(stat -c%s /tmp/app.tar.gz)
+                        if [ "\$SIZE1" = "\$SIZE2" ]; then
+                          echo "File copy completed"
+                          break
+                        fi
+                      fi
+                      echo "Waiting for stable file..."
+                      sleep 2    
+                    done
+
+                    mkdir -p /app
+                    tar -xzf /tmp/app.tar.gz -C /app
+                    cd /app
+
+                    echo "Testing connectivity..."
+                    curl -I https://sonar.ups.com || true
+                    curl -I https://api.nuget.org || true
+
+                    echo "Starting Sonar..."
+                    java -version
+                    dotnet --info
+                    dotnet sonarscanner begin /k:"DCT_wwrr-mod-app-data-load_283c95c3-74f2-49e6-aa5a-fb36cc97a13b" /d:sonar.host.url="https://sonar.ups.com/" /d:sonar.token="$SONAR_TOKEN" /d:sonar.branch.name="${{ parameters.environment }}" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" /d:sonar.scanner.scanAll=true
+
+                    echo "Configuring JFrog..."
+                    dotnet nuget add source https://lucius.ups.com/artifactory/api/nuget/v3/wwrr-mod-app-nuget-dev-virtual \
+                      --name jfrog \
+                      --username "$(JFROG_USERNAME)" \
+                      --password "$(JFROG_ACCESS_TOKEN)" \
+                      --store-password-in-clear-text
+
+                    echo "Running restore..."
+                    dotnet restore
+                    echo "Running build..."
+                    dotnet build --no-incremental || exit 1
+                    echo "Running tests..."
+                    dotnet test --no-build --collect:"XPlat Code Coverage;Format=opencover"
+                    dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+          EOF
+
+          echo "Waiting for pod..."
+          sleep 20
+          kubectl wait --for=condition=Ready pod -l job-name=sonar-analysis-$(Build.BuildId) -n wwrr-prod --timeout=180s
+          POD_NAME=$(kubectl get pods -n wwrr-prod -l job-name=sonar-analysis-$(Build.BuildId) -o jsonpath="{.items[0].metadata.name}")
+          echo "Pod ready: $POD_NAME"
+
+          echo "Copying code..."
+          kubectl cp app.tar.gz wwrr-prod/$POD_NAME:/tmp/app.tar.gz
+
+          echo "Streaming logs..."
+          kubectl logs -f $POD_NAME -n wwrr-prod -c sonar
+
+          echo "Waiting for completion..."
+          kubectl wait --for=condition=complete job/sonar-analysis-$(Build.BuildId) -n wwrr-prod --timeout=1200s
+
+          kubectl logs $POD_NAME -n wwrr-prod -c sonar
+
+  # ================= BUILD & DEPLOY =================
 
   - job: BuildDeploy
     displayName: Build Image Deploy Run Migration
@@ -55,7 +198,6 @@ stages:
         - Agent.Name -equals $(agentName)
 
     steps:
-
     - checkout: self
 
     - task: Bash@3
@@ -65,9 +207,7 @@ stages:
         script: |
 
           set -e
-
           gcloud config set project $(GCP_PROJECT_ID)
-
           echo "Using VM service account identity"
           gcloud config set account wwrr-${{ parameters.environment }}-vm-sa@gcp-cti-wwrr-${{ parameters.environment }}.iam.gserviceaccount.com
 
@@ -301,7 +441,7 @@ stages:
 
             "quay.io/prometheus/prometheus:v2.52.0"
             "quay.io/prometheus/alertmanager:v0.27.0"
-            "quay.io/prometheus/node-exporter:v1.8.1"
+            "quay.io/prometheus/node-exporter:v1.11.1-distroless"
 
             "grafana/grafana:10.4.2"
             "quay.io/kiali/kiali:v2.24.0"
@@ -428,7 +568,7 @@ stages:
             --set kube-state-metrics.image.repository=monitoring/kube-state-metrics \
             --set kube-state-metrics.image.tag=v2.10.1 \
             --set prometheus-node-exporter.image.repository=monitoring/node-exporter \
-            --set prometheus-node-exporter.image.tag=v1.8.1 \
+            --set prometheus-node-exporter.image.tag=v1.11.1 \
             --set prometheusOperator.prometheusConfigReloader.image.repository=monitoring/prometheus-config-reloader \
             --set prometheusOperator.prometheusConfigReloader.image.tag=v0.85.0 \
             --set grafana.grafana\\.ini.server.root_url=https://$(GRAFANA_HOST) \
