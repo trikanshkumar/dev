@@ -44,7 +44,7 @@ stages:
 
 - stage: Sonar_Analysis
   displayName: Run SonarQube in Kubernetes
-
+  
   jobs:
   - job: SonarAnalysis
     displayName: Run SonarQube Analysis
