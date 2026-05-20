@@ -6,10 +6,12 @@ COPY src/ ./src/
 
 ARG JFROG_NUGET_URL
 ARG JFROG_USERNAME
-ARG JFROG_ACCESS_TOKEN
+
 
 # restore + publish
-RUN dotnet nuget add source $JFROG_NUGET_URL --name jfrog --username $JFROG_USERNAME --password $JFROG_ACCESS_TOKEN --store-password-in-clear-text && \
+RUN --mount=type=secret,id=jfrog_token \
+    JFROG_ACCESS_TOKEN=$(cat /run/secrets/jfrog_token) && \
+    dotnet nuget add source $JFROG_NUGET_URL --name jfrog --username $JFROG_USERNAME --password $JFROG_ACCESS_TOKEN --store-password-in-clear-text && \
     dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj --source $JFROG_NUGET_URL && \
     dotnet publish src/UPS.WWRR.APP/UPS.WWRR.App.csproj -c Release -o /app/publish --no-restore
 
