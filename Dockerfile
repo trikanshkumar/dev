@@ -4,12 +4,14 @@ WORKDIR /src
 # copy only required source
 COPY src/ ./src/
 
+ARG JFROG_NUGET_URL
+ARG JFROG_USERNAME
+ARG JFROG_ACCESS_TOKEN
+
 # restore + publish
-RUN dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj && \
-    dotnet publish src/UPS.WWRR.APP/UPS.WWRR.App.csproj \
-    -c Release \
-    -o /app/publish \
-    --no-restore
+RUN dotnet nuget add source $JFROG_NUGET_URL --name jfrog --username $JFROG_USERNAME --password $JFROG_ACCESS_TOKEN --store-password-in-clear-text && \
+    dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj --source $JFROG_NUGET_URL && \
+    dotnet publish src/UPS.WWRR.APP/UPS.WWRR.App.csproj -c Release -o /app/publish --no-restore
 
 # runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
