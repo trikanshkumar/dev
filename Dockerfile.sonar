@@ -6,7 +6,7 @@ RUN addgroup --system appgroup && \
     chown -R appuser:appgroup /home/appuser
 
 RUN apt-get update && \
-    apt-get install -y curl openjdk-17-jre && \
+    apt-get install -y --no-install-recommends curl openjdk-17-jre && \
     rm -rf /var/lib/apt/lists/*
 
 USER appuser
