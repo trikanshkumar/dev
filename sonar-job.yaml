@@ -13,10 +13,10 @@ spec:
     spec:
       restartPolicy: Never
       hostAliases:
-      - ip: "$(SONAR_IP_1)"
+      - ip: "${SONAR_IP_1}"
         hostnames:
         - "sonar.ups.com"
-      - ip: "$(SONAR_IP_2)"
+      - ip: "${SONAR_IP_2}"
         hostnames:
         - "sonar.ups.com"
       containers:
