@@ -50,7 +50,6 @@ spec:
 
             echo "Testing connectivity..."
             curl -I https://sonar.ups.com || true
-            curl -I https://api.nuget.org || true
 
             echo "Starting Sonar..."
             java -version
