@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: sonar-analysis-$(Build.BuildId)
+  name: sonar-analysis-${BUILD_BUILDID}
   namespace: wwrr-prod
 spec:
   backoffLimit: 0
@@ -21,7 +21,7 @@ spec:
         - "sonar.ups.com"
       containers:
       - name: sonar
-        image: us-east4-docker.pkg.dev/gcp-cti-wwrr-prod/wwrr-prod-docker-repo/dotnet-sonar:$(Build.BuildId)
+        image: us-east4-docker.pkg.dev/gcp-cti-wwrr-prod/wwrr-prod-docker-repo/dotnet-sonar:${BUILD_BUILDID}
         env:
         - name: SONAR_TOKEN
           value: "$(SONAR_TOKEN)"
