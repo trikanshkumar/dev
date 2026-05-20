@@ -1,7 +1,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0
 
 RUN addgroup --system appgroup && \
-    adduser --system appuser --ingroup appgroup
+    adduser --system --ingroup appgroup --home /home/appuser appuser && \
+    mkdir -p /home/appuser/.dotnet/tools && \
+    chown -R appuser:appgroup /home/appuser
 
 RUN apt-get update && \
     apt-get install -y curl openjdk-17-jre && \
