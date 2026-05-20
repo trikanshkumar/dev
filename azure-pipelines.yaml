@@ -1,5 +1,5 @@
 trigger:
-  - jfrog1
+  - jfrog
 
 parameters:
   - name: environment
@@ -96,7 +96,7 @@ stages:
           export SONAR_TOKEN=$(SONAR_TOKEN)
           export JFROG_USERNAME=$(JFROG_USERNAME)
           export JFROG_ACCESS_TOKEN=$(JFROG_ACCESS_TOKEN)
-          
+
           envsubst < sonar-job.yaml | kubectl apply -f -
 
           echo "Waiting for pod..."
