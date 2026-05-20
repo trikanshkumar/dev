@@ -30,12 +30,12 @@ spec:
         - |
             echo "Container started..."
             echo "Waiting for file..."
-            for i in \$(seq 1 60); do
+            for i in $(seq 1 60); do
               if [ -f /tmp/app.tar.gz ]; then
-                SIZE1=\$(stat -c%s /tmp/app.tar.gz)
+                SIZE1=$(stat -c%s /tmp/app.tar.gz)
                 sleep 2
-                SIZE2=\$(stat -c%s /tmp/app.tar.gz)
-                if [ "\$SIZE1" = "\$SIZE2" ]; then
+                SIZE2=$(stat -c%s /tmp/app.tar.gz)
+                if [ "$SIZE1" = "$SIZE2" ]; then
                   echo "File copy completed"
                   break
                 fi
