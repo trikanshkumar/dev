@@ -1,5 +1,5 @@
 trigger:
-  - dev
+  - jfrog
 
 parameters:
   - name: environment
