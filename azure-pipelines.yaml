@@ -1,5 +1,5 @@
 trigger:
-  - jfrog1
+  - jfrog
 
 parameters:
   - name: environment
@@ -72,7 +72,7 @@ stages:
         targetType: inline
         script: |
           SONAR_IMAGE=us-east4-docker.pkg.dev/gcp-cti-wwrr-prod/wwrr-prod-docker-repo/dotnet-sonar:$(Build.BuildId)
-          docker build -f Dockerfile.sonar -t $SONAR_IMAGE .
+          DOCKER_BUILDKIT=1 docker build -f Dockerfile.sonar -t $SONAR_IMAGE .
           docker push $SONAR_IMAGE     
 
     - task: Bash@3
