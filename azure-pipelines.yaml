@@ -92,6 +92,9 @@ stages:
           export BUILD_BUILDID=$(Build.BuildId)
           export SONAR_IP_1=$(SONAR_IP_1)
           export SONAR_IP_2=$(SONAR_IP_2)
+          export SONAR_TOKEN=$(SONAR_TOKEN)
+          export JFROG_USERNAME=$(JFROG_USERNAME)
+          export JFROG_ACCESS_TOKEN=$(JFROG_ACCESS_TOKEN)
           envsubst < sonar-job.yaml | kubectl apply -f -
 
           echo "Waiting for pod..."
@@ -354,7 +357,11 @@ stages:
           IMAGE_URI=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/$(IMAGE_NAME)
           IMAGE_TAG=$(Build.BuildId)
 
-          docker build -t $IMAGE_URI:$IMAGE_TAG .
+          docker build \
+            --build-arg JFROG_NUGET_URL=$(JFROG_NUGET_URL) \
+            --build-arg JFROG_USERNAME=$(JFROG_USERNAME) \
+            --build-arg JFROG_ACCESS_TOKEN=$(JFROG_ACCESS_TOKEN) \
+            -t $IMAGE_URI:$IMAGE_TAG .
           docker push $IMAGE_URI:$IMAGE_TAG
 
           docker image prune -f
