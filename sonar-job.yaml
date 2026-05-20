@@ -24,7 +24,7 @@ spec:
         image: us-east4-docker.pkg.dev/gcp-cti-wwrr-prod/wwrr-prod-docker-repo/dotnet-sonar:${BUILD_BUILDID}
         env:
         - name: SONAR_TOKEN
-          value: "$(SONAR_TOKEN)"
+          value: "${SONAR_TOKEN}"
         command: ["/bin/sh","-c"]
         args:
         - |
@@ -55,13 +55,13 @@ spec:
             echo "Starting Sonar..."
             java -version
             dotnet --info
-            dotnet sonarscanner begin /k:"DCT_wwrr-mod-app-data-load_283c95c3-74f2-49e6-aa5a-fb36cc97a13b" /d:sonar.host.url="https://sonar.ups.com/" /d:sonar.token="$SONAR_TOKEN" /d:sonar.branch.name="${{ parameters.environment }}" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" /d:sonar.scanner.scanAll=true
+            dotnet sonarscanner begin /k:"DCT_wwrr-mod-app-data-load_283c95c3-74f2-49e6-aa5a-fb36cc97a13b" /d:sonar.host.url="https://sonar.ups.com/" /d:sonar.token="$SONAR_TOKEN" /d:sonar.branch.name="${ENVIRONMENT}" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" /d:sonar.scanner.scanAll=true
 
             echo "Configuring JFrog..."
             dotnet nuget add source https://lucius.ups.com/artifactory/api/nuget/v3/wwrr-mod-app-nuget-dev-virtual \
             --name jfrog \
-            --username "$(JFROG_USERNAME)" \
-            --password "$(JFROG_ACCESS_TOKEN)" \
+            --username "${JFROG_USERNAME}" \
+            --password "${JFROG_ACCESS_TOKEN}" \
             --store-password-in-clear-text
 
             echo "Running restore..."
