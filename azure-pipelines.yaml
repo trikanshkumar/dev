@@ -90,6 +90,8 @@ stages:
           kubectl delete job sonar-analysis-$(Build.BuildId) -n wwrr-prod --ignore-not-found
 
           export BUILD_BUILDID=$(Build.BuildId)
+          export SONAR_IP_1=$(SONAR_IP_1)
+          export SONAR_IP_2=$(SONAR_IP_2)
           envsubst < sonar-job.yaml | kubectl apply -f -
 
           echo "Waiting for pod..."
