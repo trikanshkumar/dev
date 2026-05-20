@@ -7,10 +7,10 @@ RUN apt-get update && \
     apt-get install -y curl openjdk-17-jre && \
     rm -rf /var/lib/apt/lists/*
 
+USER appuser
+
 RUN dotnet tool install --global dotnet-sonarscanner
 
 ENV PATH="/home/appuser/.dotnet/tools:/usr/local/bin:/usr/bin:/bin"
-
-USER appuser
 
 WORKDIR /app
