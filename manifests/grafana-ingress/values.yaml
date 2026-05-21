@@ -1,8 +1,14 @@
 grafana:
   host: ""
+  clientId: ""
+  clientSecret: ""
+  tenantId: ""
 
 kiali:
   host: ""
+  clientId: ""
+  clientSecret: ""
+  tenantId: ""
 
 tls:
   secretName: ""
