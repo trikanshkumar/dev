@@ -1,7 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# copy only required source
+COPY Directory.Packages.props ./
+COPY nuget.config ./
 COPY src/ ./src/
 
 ARG JFROG_NUGET_URL
