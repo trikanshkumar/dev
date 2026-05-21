@@ -67,14 +67,6 @@ stages:
           gcloud container clusters get-credentials wwrr-prod-gke-cluster --region $(GCP_REGION) --project gcp-cti-wwrr-prod
 
     - task: Bash@3
-      displayName: Clear NuGet caches
-      inputs:
-        targetType: inline
-        script: |
-          dotnet nuget locals all --clear
-          dotnet nuget list source --configfile nuget.config      
-
-    - task: Bash@3
       displayName: Build Sonar Image
       inputs:
         targetType: inline
