@@ -485,92 +485,92 @@ stages:
 
           echo "Helm deployment completed successfully"
 
-          echo "Installing kube-prometheus-stack..."
+          # echo "Installing kube-prometheus-stack..."
 
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
-          helm repo update
+          # helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
+          # helm repo update
 
-          helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
-            --namespace monitoring \
-            --create-namespace \
-            --wait \
-            --timeout 600s \
-            --set global.imageRegistry=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO) \
-            --set prometheusOperator.image.repository=monitoring/prometheus-operator \
-            --set prometheusOperator.image.tag=v0.85.0 \
-            --set prometheusOperator.admissionWebhooks.create.image.repository=monitoring/kube-webhook-certgen \
-            --set prometheusOperator.admissionWebhooks.patch.image.repository=monitoring/kube-webhook-certgen \
-            --set prometheusOperator.admissionWebhooks.create.image.tag=1.8.0 \
-            --set prometheusOperator.admissionWebhooks.patch.image.tag=1.8.0 \
-            --set prometheusOperator.admissionWebhooks.enabled=true \
-            --set prometheus.prometheusSpec.image.repository=monitoring/prometheus \
-            --set prometheus.prometheusSpec.image.tag=v2.52.0 \
-            --set alertmanager.alertmanagerSpec.image.repository=monitoring/alertmanager \
-            --set alertmanager.alertmanagerSpec.image.tag=v0.27.0 \
-            --set grafana.image.repository=monitoring/grafana \
-            --set grafana.image.tag=10.4.2 \
-            --set grafana.sidecar.image.repository=monitoring/k8s-sidecar \
-            --set grafana.sidecar.image.tag=2.6.0 \
-            --set kube-state-metrics.image.repository=monitoring/kube-state-metrics \
-            --set kube-state-metrics.image.tag=v2.10.1 \
-            --set prometheus-node-exporter.image.repository=monitoring/node-exporter \
-            --set prometheus-node-exporter.image.tag=v1.8.1 \
-            --set prometheusOperator.prometheusConfigReloader.image.repository=monitoring/prometheus-config-reloader \
-            --set prometheusOperator.prometheusConfigReloader.image.tag=v0.85.0 \
-            --set grafana.grafana\\.ini.server.root_url=https://$(GRAFANA_HOST) \
-            --set grafana.grafana\\.ini.server.domain=$(GRAFANA_HOST) \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_ENABLED=true \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_NAME="Azure AD" \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP=true \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_CLIENT_ID="$(GRAFANA_CLIENT_ID)" \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET="$(GRAFANA_CLIENT_SECRET)" \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_SCOPES="openid email profile" \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_AUTH_URL="https://login.microsoftonline.com/$(AAD_TENANT_ID)/oauth2/v2.0/authorize" \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_TOKEN_URL="https://login.microsoftonline.com/$(AAD_TENANT_ID)/oauth2/v2.0/token" \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_API_URL="https://graph.microsoft.com/oidc/userinfo" \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_NAME=email \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH=email \
-            --set grafana.env.GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH=name
+          # helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+          #   --namespace monitoring \
+          #   --create-namespace \
+          #   --wait \
+          #   --timeout 600s \
+          #   --set global.imageRegistry=$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO) \
+          #   --set prometheusOperator.image.repository=monitoring/prometheus-operator \
+          #   --set prometheusOperator.image.tag=v0.85.0 \
+          #   --set prometheusOperator.admissionWebhooks.create.image.repository=monitoring/kube-webhook-certgen \
+          #   --set prometheusOperator.admissionWebhooks.patch.image.repository=monitoring/kube-webhook-certgen \
+          #   --set prometheusOperator.admissionWebhooks.create.image.tag=1.8.0 \
+          #   --set prometheusOperator.admissionWebhooks.patch.image.tag=1.8.0 \
+          #   --set prometheusOperator.admissionWebhooks.enabled=true \
+          #   --set prometheus.prometheusSpec.image.repository=monitoring/prometheus \
+          #   --set prometheus.prometheusSpec.image.tag=v2.52.0 \
+          #   --set alertmanager.alertmanagerSpec.image.repository=monitoring/alertmanager \
+          #   --set alertmanager.alertmanagerSpec.image.tag=v0.27.0 \
+          #   --set grafana.image.repository=monitoring/grafana \
+          #   --set grafana.image.tag=10.4.2 \
+          #   --set grafana.sidecar.image.repository=monitoring/k8s-sidecar \
+          #   --set grafana.sidecar.image.tag=2.6.0 \
+          #   --set kube-state-metrics.image.repository=monitoring/kube-state-metrics \
+          #   --set kube-state-metrics.image.tag=v2.10.1 \
+          #   --set prometheus-node-exporter.image.repository=monitoring/node-exporter \
+          #   --set prometheus-node-exporter.image.tag=v1.8.1 \
+          #   --set prometheusOperator.prometheusConfigReloader.image.repository=monitoring/prometheus-config-reloader \
+          #   --set prometheusOperator.prometheusConfigReloader.image.tag=v0.85.0 \
+          #   --set grafana.grafana\\.ini.server.root_url=https://$(GRAFANA_HOST) \
+          #   --set grafana.grafana\\.ini.server.domain=$(GRAFANA_HOST) \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_ENABLED=true \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_NAME="Azure AD" \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP=true \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_CLIENT_ID="$(GRAFANA_CLIENT_ID)" \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET="$(GRAFANA_CLIENT_SECRET)" \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_SCOPES="openid email profile" \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_AUTH_URL="https://login.microsoftonline.com/$(AAD_TENANT_ID)/oauth2/v2.0/authorize" \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_TOKEN_URL="https://login.microsoftonline.com/$(AAD_TENANT_ID)/oauth2/v2.0/token" \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_API_URL="https://graph.microsoft.com/oidc/userinfo" \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_NAME=email \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH=email \
+          #   --set grafana.env.GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH=name
 
 
 
-          echo "Installing Kiali..."
-          helm repo add kiali https://kiali.org/helm-charts 2>/dev/null || true
-          helm repo update
+          # echo "Installing Kiali..."
+          # helm repo add kiali https://kiali.org/helm-charts 2>/dev/null || true
+          # helm repo update
 
-          helm upgrade --install kiali-server kiali/kiali-server \
-            --namespace istio-system \
-            --wait \
-            --timeout 300s \
-            --set auth.strategy=openid \
-            --set server.web_root=/ \
-            --set deployment.ingress_enabled=false \
-            --set external_services.prometheus.url="http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090" \
-            --set external_services.grafana.external_url="https://$(GRAFANA_HOST)" \
-            --set deployment.image_name="$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/monitoring/kiali" \
-            --set deployment.image_version="v2.24.0" \
-            --set external_services.custom_dashboards.enabled=true \
-            --set auth.openid.client_id=$(KIALI_CLIENT_ID) \
-            --set auth.openid.client_secret=$(KIALI_CLIENT_SECRET) \
-            --set auth.openid.disable_rbac=true \
-            --set auth.openid.issuer_uri="https://login.microsoftonline.com/$(AAD_TENANT_ID)/v2.0" \
-            --set auth.openid.username_claim=email \
-            --set auth.openid.scopes="openid profile email" 
+          # helm upgrade --install kiali-server kiali/kiali-server \
+          #   --namespace istio-system \
+          #   --wait \
+          #   --timeout 300s \
+          #   --set auth.strategy=openid \
+          #   --set server.web_root=/ \
+          #   --set deployment.ingress_enabled=false \
+          #   --set external_services.prometheus.url="http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090" \
+          #   --set external_services.grafana.external_url="https://$(GRAFANA_HOST)" \
+          #   --set deployment.image_name="$(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REPO)/monitoring/kiali" \
+          #   --set deployment.image_version="v2.24.0" \
+          #   --set external_services.custom_dashboards.enabled=true \
+          #   --set auth.openid.client_id=$(KIALI_CLIENT_ID) \
+          #   --set auth.openid.client_secret=$(KIALI_CLIENT_SECRET) \
+          #   --set auth.openid.disable_rbac=true \
+          #   --set auth.openid.issuer_uri="https://login.microsoftonline.com/$(AAD_TENANT_ID)/v2.0" \
+          #   --set auth.openid.username_claim=email \
+          #   --set auth.openid.scopes="openid profile email" 
 
-          echo "Installing Grafana Ingress..."
-          helm upgrade --install grafana-ingress ./manifests/grafana-ingress \
-            --namespace istio-system \
-            --wait \
-            --timeout 300s \
-            --set grafana.host=$(GRAFANA_HOST) \
-            --set kiali.host=$(KIALI_HOST) \
-            --set tls.secretName=$(TLS_SECRET_NAME) \
-            --set grafana.clientId=$(GRAFANA_CLIENT_ID) \
-            --set grafana.clientSecret=$(GRAFANA_CLIENT_SECRET) \
-            --set grafana.tenantId=$(AAD_TENANT_ID) \
-            --set kiali.clientId=$(KIALI_CLIENT_ID) \
-            --set kiali.clientSecret=$(KIALI_CLIENT_SECRET) \
-            --set kiali.tenantId=$(AAD_TENANT_ID)
+          # echo "Installing Grafana Ingress..."
+          # helm upgrade --install grafana-ingress ./manifests/grafana-ingress \
+          #   --namespace istio-system \
+          #   --wait \
+          #   --timeout 300s \
+          #   --set grafana.host=$(GRAFANA_HOST) \
+          #   --set kiali.host=$(KIALI_HOST) \
+          #   --set tls.secretName=$(TLS_SECRET_NAME) \
+          #   --set grafana.clientId=$(GRAFANA_CLIENT_ID) \
+          #   --set grafana.clientSecret=$(GRAFANA_CLIENT_SECRET) \
+          #   --set grafana.tenantId=$(AAD_TENANT_ID) \
+          #   --set kiali.clientId=$(KIALI_CLIENT_ID) \
+          #   --set kiali.clientSecret=$(KIALI_CLIENT_SECRET) \
+          #   --set kiali.tenantId=$(AAD_TENANT_ID)
 
     - task: Bash@3
       displayName: Cleanup
