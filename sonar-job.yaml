@@ -47,7 +47,6 @@ spec:
             mkdir -p /app
             tar -xzf /tmp/app.tar.gz -C /app
             cd /app
-            rm -rf .git
 
             echo "Testing connectivity..."
             curl -I https://sonar.ups.com || true
@@ -55,7 +54,7 @@ spec:
             echo "Starting Sonar..."
             java -version
             dotnet --info
-            dotnet sonarscanner begin /k:"DCT_wwrr-mod-app-data-load_283c95c3-74f2-49e6-aa5a-fb36cc97a13b" /d:sonar.host.url="https://sonar.ups.com/" /d:sonar.token="$SONAR_TOKEN" /d:sonar.branch.name="${ENVIRONMENT}" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" /d:sonar.sources="src"
+            dotnet sonarscanner begin /k:"DCT_wwrr-mod-app-data-load_283c95c3-74f2-49e6-aa5a-fb36cc97a13b" /d:sonar.host.url="https://sonar.ups.com/" /d:sonar.token="$SONAR_TOKEN" /d:sonar.branch.name="${ENVIRONMENT}" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" /d:sonar.scanner.scanAll=true
 
             echo "Configuring JFrog..."
             dotnet nuget add source https://lucius.ups.com/artifactory/api/nuget/v3/wwrr-mod-app-nuget-dev-virtual \
@@ -65,16 +64,7 @@ spec:
             --store-password-in-clear-text
 
             echo "Running restore..."
-
-            dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj \
-              --configfile nuget.config \
-              --force \
-              --no-cache
-
-            dotnet restore src/UPS.WWRR.Data/UPS.WWRR.Data.csproj \
-              --configfile nuget.config \
-              --force \
-              --no-cache
+            dotnet restore
             echo "Running build..."
             dotnet build --no-incremental || exit 1
             echo "Running tests..."
