@@ -84,15 +84,41 @@ public class CsvValidatorTests
         Assert.Empty(result.ValidationErrors);
     }
 
-    [Fact]
-    public async Task ValidateChunked_HandlesRemainingRecords_WhenNotExactMultipleOfChunkSize()
-    {
-        var service = new CsvValidator();
+        [Fact]
+        public async Task ValidateChunked_HandlesRemainingRecords_WhenNotExactMultipleOfChunkSize()
+        {
+            var service = new CsvValidator();
 
-        // Chunk size that doesn't evenly divide the record count
-        var result = await service.ValidateCsvChunkedAsync<AreaClassificationHeaderCsvModel>("Resources/tarclhd-valid.csv", chunkSize: 3);
+            // Chunk size that doesn't evenly divide the record count
+            var result = await service.ValidateCsvChunkedAsync<AreaClassificationHeaderCsvModel>("Resources/tarclhd-valid.csv", chunkSize: 3);
 
-        Assert.True(result.Success);
-        Assert.Empty(result.ValidationErrors);
+            Assert.True(result.Success);
+            Assert.Empty(result.ValidationErrors);
+        }
+
+        [Fact]
+        public async Task Validate_ReturnsError_WhenCsvContainsExtraColumnNotInSchema()
+        {
+            var service = new CsvValidator();
+
+            var result = await service.ValidateCsvAsync<AreaClassificationHeaderCsvModel>("Resources/tarclhd-extra-column.csv");
+
+            Assert.False(result.Success);
+            Assert.Single(result.ValidationErrors);
+            Assert.Contains("INS_UPD_New", result.ValidationErrors[0]);
+            Assert.Contains("not matching table schema", result.ValidationErrors[0]);
+        }
+
+        [Fact]
+        public async Task ValidateChunked_ReturnsError_WhenCsvContainsExtraColumnNotInSchema()
+        {
+            var service = new CsvValidator();
+
+            var result = await service.ValidateCsvChunkedAsync<AreaClassificationHeaderCsvModel>("Resources/tarclhd-extra-column.csv", chunkSize: 2);
+
+            Assert.False(result.Success);
+            Assert.Single(result.ValidationErrors);
+            Assert.Contains("INS_UPD_New", result.ValidationErrors[0]);
+            Assert.Contains("not matching table schema", result.ValidationErrors[0]);
+        }
     }
-}

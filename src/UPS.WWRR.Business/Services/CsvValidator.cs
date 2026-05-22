@@ -1,8 +1,11 @@
 ﻿using CsvHelper;
+using CsvHelper;
 using CsvHelper.Configuration;
+using CsvHelper.Configuration.Attributes;
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using System.Reflection;
 using UPS.WWRR.Business.Common.Constants;
 using UPS.WWRR.Business.DTO.Models.Response;
 using UPS.WWRR.Business.Interfaces;
@@ -30,6 +33,13 @@ public class CsvValidator : ICsvValidator
 
         await csvReader.ReadAsync();
         csvReader.ReadHeader();
+
+        // Validate CSV header columns match the expected schema
+        var headerErrors = ValidateHeaderColumns<TModel>(csvReader.HeaderRecord);
+        if (headerErrors.Count > 0)
+        {
+            return new CsvValidationResponse(Success: false, ValidationErrors: headerErrors);
+        }
 
         ConfigureDateTimeFormats(csvReader);
 
@@ -89,6 +99,13 @@ public class CsvValidator : ICsvValidator
 
         await csvReader.ReadAsync();
         csvReader.ReadHeader();
+
+        // Validate CSV header columns match the expected schema
+        var headerErrors = ValidateHeaderColumns<TModel>(csvReader.HeaderRecord);
+        if (headerErrors.Count > 0)
+        {
+            return new CsvValidationResponse(Success: false, ValidationErrors: headerErrors);
+        }
 
         //Start line number at 2 because we skip the header
         int lineNumber = 2;
@@ -164,6 +181,56 @@ public class CsvValidator : ICsvValidator
         var optsNull = csvReader.Context.TypeConverterOptionsCache.GetOptions<DateTime?>();
         optsNull.Formats = ServiceConstants.CsvDateTimeFormats;
         optsNull.DateTimeStyle = DateTimeStyles.AllowWhiteSpaces;
+    }
+
+    /// <summary>
+    /// Validates that CSV header columns match the expected DTO model properties.
+    /// Returns a list of error messages for any extra columns not found in the schema.
+    /// </summary>
+    private static List<string> ValidateHeaderColumns<TModel>(string[]? headerRecord)
+    {
+        var errors = new List<string>();
+
+        if (headerRecord == null || headerRecord.Length == 0)
+        {
+            errors.Add("CSV file has no header row.");
+            return errors;
+        }
+
+        // Get all valid column names from the DTO model:
+        // - Property names (default)
+        // - CsvHelper Name attribute values (if specified)
+        var validColumnNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var property in typeof(TModel).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            // Add property name as valid
+            validColumnNames.Add(property.Name);
+
+            // Also add any CsvHelper Name attribute values
+            var nameAttribute = property.GetCustomAttribute<NameAttribute>();
+            if (nameAttribute?.Names != null)
+            {
+                foreach (var name in nameAttribute.Names)
+                {
+                    if (!string.IsNullOrWhiteSpace(name))
+                        validColumnNames.Add(name);
+                }
+            }
+        }
+
+        // Find columns in CSV that don't match any property or Name attribute in the DTO
+        var extraColumns = headerRecord
+            .Select(h => h.Trim())
+            .Where(h => !string.IsNullOrWhiteSpace(h) && !validColumnNames.Contains(h))
+            .ToList();
+
+        if (extraColumns.Count > 0)
+        {
+            errors.Add($"CSV contains column(s) not matching table schema: [{string.Join(", ", extraColumns)}]");
+        }
+
+        return errors;
     }
 
 }

@@ -119,6 +119,9 @@ namespace UPS.WWRR.Business.Services
                 }
                 else
                 {
+                    // Track the receipt file location for cleanup after all processing
+                    string? receiptFileLocation = newLoads.Select(l => l.LogFileLocation).FirstOrDefault();
+
                     // Use a unique key per file (object path from FileLocation)
                     var tempFiles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -150,6 +153,10 @@ namespace UPS.WWRR.Business.Services
                             await PerformMergeLoadAsync(processingLoads, ct);
                         }
                     }
+
+                    // Move the receipt file to processed after all loads have been handled
+                    // This ensures the receipt file is moved even if all loads fail validation or processing
+                    await MoveReceiptFileToProcessedAsync(receiptFileLocation);
                 }
             }
             catch (Exception ex)
@@ -1671,6 +1678,30 @@ namespace UPS.WWRR.Business.Services
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to move file to processed folder: {file}", objectName);
+            }
+        }
+
+        /// <summary>
+        /// Moves the receipt file to the processed folder after all loads from the receipt have been handled.
+        /// This ensures the receipt file is moved even if all data file loads fail validation or processing.
+        /// </summary>
+        private async Task MoveReceiptFileToProcessedAsync(string? receiptFileLocation)
+        {
+            if (string.IsNullOrWhiteSpace(receiptFileLocation))
+                return;
+
+            try
+            {
+                var receiptFileName = ExtractObjectName(Path.GetFileName(receiptFileLocation));
+                if (!string.IsNullOrWhiteSpace(receiptFileName))
+                {
+                    await MoveObjectToProcessedAsync(receiptFileName);
+                    _logger.LogInformation("Receipt file moved to processed folder: {receiptFile}", receiptFileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to move receipt file to processed folder: {file}", receiptFileLocation);
             }
         }
     }
