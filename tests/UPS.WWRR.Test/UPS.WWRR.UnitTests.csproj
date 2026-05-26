@@ -48,6 +48,9 @@
     <None Update="Resources\tarclhd-valid.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Resources\tarclhd-extra-column.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <EmbeddedResource Include="Resources\EmbeddedTestResource.txt" />
   </ItemGroup>
 </Project>
