@@ -49,8 +49,7 @@ namespace UPS.WWRR.Data.Models
 
         [StringLength(8)]
         [Column("usr_nr", TypeName = "char")]
-        [Required]
-        public string UserNumber { get; set; } = string.Empty;
+        public string? UserNumber { get; set; }
 
         [StringLength(100)]
         [Column("load_ref_te", TypeName = "varchar(100)")]

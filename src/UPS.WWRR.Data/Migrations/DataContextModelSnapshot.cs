@@ -857,7 +857,6 @@ namespace UPS.WWRR.Data.Migrations
                         .HasColumnName("alt_ccy_rou_dmc_qy");
 
                     b.Property<string>("UserNumber")
-                        .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(8)
                         .HasColumnType("char")
