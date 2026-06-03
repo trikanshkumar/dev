@@ -48,8 +48,9 @@ namespace UPS.WWRR.Data.Models
         public decimal RoundedDomesticQuantity { get; set; }
 
         [StringLength(8)]
+        [Required]
         [Column("usr_nr", TypeName = "char")]
-        public string? UserNumber { get; set; }
+        public string UserNumber { get; set; } = string.Empty;
 
         [StringLength(100)]
         [Column("load_ref_te", TypeName = "varchar(100)")]
