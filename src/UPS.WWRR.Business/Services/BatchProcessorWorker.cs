@@ -1227,7 +1227,7 @@ namespace UPS.WWRR.Business.Services
                 RecordsInserted = 0,
                 RecordsUpdated = 0,
                 RecordsDeleted = 0,
-                BatchNumber = 1
+                BatchNumber = 0
             };
             await _loadRepository.AddDetailAsync(detail, ct);
             return detail;
