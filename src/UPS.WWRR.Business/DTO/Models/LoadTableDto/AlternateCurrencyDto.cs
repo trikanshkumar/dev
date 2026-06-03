@@ -15,6 +15,6 @@ namespace UPS.WWRR.Business.DTO.Models.LoadTableDto
         public decimal ALT_CCY_XCH_OR_QY { get; set; }
         public decimal ALT_CCY_DMC_CCL_QY { get; set; }
         public decimal ALT_CCY_ROU_DMC_QY { get; set; }
-        public string? USR_NR { get; set; }
+        public string USR_NR { get; set; } = string.Empty;
     }
 }
