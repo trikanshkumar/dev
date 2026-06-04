@@ -1,5 +1,5 @@
 trigger:
-  - dev
+  - sonarqube
 
 parameters:
   - name: environment
