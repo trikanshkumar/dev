@@ -9,6 +9,10 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends curl openjdk-17-jre && \
     rm -rf /var/lib/apt/lists/*
 
+COPY certs/*.crt /usr/local/share/ca-certificates/
+
+RUN update-ca-certificates    
+
 USER appuser
 
 RUN dotnet tool install --global dotnet-sonarscanner
