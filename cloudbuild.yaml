@@ -12,9 +12,9 @@
 
 substitutions:
   _REGION: us-east4
-  _GCP_PROJECT_ID: gcp-cti-wwrr-dev
-  _ARTIFACT_REPO: wwrr-dev-docker-repo
-  _IMAGE_NAME: wwrr-mod-app-data-load
+  _GCP_PROJECT_ID: project-a4f4c96e-a691-4c2f-8f7
+  _ARTIFACT_REPO: dev-docker-repo
+  _IMAGE_NAME: app-data-load
 
 options:
   logging: CLOUD_LOGGING_ONLY
