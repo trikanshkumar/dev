@@ -94,8 +94,6 @@ stages:
           export SONAR_IP_2=$(SONAR_IP_2)
           export ENVIRONMENT=${{ parameters.environment }}
           export SONAR_TOKEN=$(SONAR_TOKEN)
-          export JFROG_USERNAME=$(JFROG_USERNAME)
-          export JFROG_ACCESS_TOKEN=$(JFROG_ACCESS_TOKEN)
 
           envsubst < sonar-job.yaml | kubectl apply -f -
 
@@ -148,27 +146,13 @@ stages:
         version: "8.x"
 
     - task: Bash@3
-      displayName: Configure JFrog NuGet
-      inputs:
-        targetType: inline
-        script: |
-
-          dotnet nuget remove source jfrog || true
-
-          dotnet nuget add source https://lucius.ups.com/artifactory/api/nuget/v3/wwrr-mod-app-nuget-dev-virtual \
-            --name jfrog \
-            --username "$(JFROG_USERNAME)" \
-            --password "$(JFROG_ACCESS_TOKEN)" \
-            --store-password-in-clear-text    
-
-    - task: Bash@3
       displayName: Build EFBundle
       inputs:
         targetType: inline
         script: |
 
-          dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj --runtime linux-x64 --source https://lucius.ups.com/artifactory/api/nuget/v3/wwrr-mod-app-nuget-dev-virtual
-          dotnet restore src/UPS.WWRR.Data/UPS.WWRR.Data.csproj --runtime linux-x64 --source https://lucius.ups.com/artifactory/api/nuget/v3/wwrr-mod-app-nuget-dev-virtual
+          dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj --runtime linux-x64
+          dotnet restore src/UPS.WWRR.Data/UPS.WWRR.Data.csproj --runtime linux-x64
 
           BASE_CONNECTION=$(gcloud secrets versions access latest \
             --secret=wwrr-${{ parameters.environment }}-alloydb-admin-conn \
@@ -360,9 +344,6 @@ stages:
           IMAGE_TAG=$(Build.BuildId)
 
           DOCKER_BUILDKIT=1 docker build \
-            --secret id=jfrog_token,env=JFROG_ACCESS_TOKEN \
-            --build-arg JFROG_NUGET_URL=$(JFROG_NUGET_URL) \
-            --build-arg JFROG_USERNAME=$(JFROG_USERNAME) \
             -t $IMAGE_URI:$IMAGE_TAG .
           docker push $IMAGE_URI:$IMAGE_TAG
 

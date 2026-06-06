@@ -5,14 +5,8 @@ COPY Directory.Packages.props ./
 COPY nuget.config ./
 COPY src/ ./src/
 
-ARG JFROG_NUGET_URL
-ARG JFROG_USERNAME
-
-
 # restore + publish
-RUN --mount=type=secret,id=jfrog_token \
-    JFROG_ACCESS_TOKEN=$(cat /run/secrets/jfrog_token) && \
-    dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj && \
+RUN dotnet restore src/UPS.WWRR.APP/UPS.WWRR.App.csproj && \
     dotnet publish src/UPS.WWRR.APP/UPS.WWRR.App.csproj -c Release -o /app/publish --no-restore
 
 # runtime image

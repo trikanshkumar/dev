@@ -8,7 +8,7 @@
         "TABLE_NAME": "ALL",
         "BATCH_SIZE": "10000",
         "ALLOYDB_CONNECTION": "Host=localhost;Port=5432;Database=WWRR;Username=postgres;Password=postgres;Search Path=a886aa_ao;",
-        "GOOGLE_CLOUD_STORAGE_BUCKET_NAME": "wwrr-mod-alloydb-csv-dev",
+        "GOOGLE_CLOUD_STORAGE_BUCKET_NAME": "trikanshtest",
         "GOOGLE_CLOUD_STORAGE_BUCKET_SUB_NAME": "",
         "BatchLoad_ChunkSize": "10000",
         "BatchLoad_Delimiter": ",",
@@ -18,7 +18,7 @@
         "EnableIAMTokenAuth": "false",
         "TVASYLN_USE_BATCH_MERGE": "false",
         "TRASTD_USE_BATCH_MERGE": "false",
-        "GCP_PROJECT_ID": "gcp-cti-wwrr-dev",
+        "GCP_PROJECT_ID": "lithe-vault-498514-m0",
         "PUBSUB_TOPIC_ID": "wwrr-mod-qe-dlv-dev-topic",
         "Enable_MQ": "true"
       }
