@@ -1,0 +1,72 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sonar-analysis-${BUILD_BUILDID}
+  namespace: wwrr-prod
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      hostAliases:
+      - ip: "${SONAR_IP_1}"
+        hostnames:
+        - "sonar.ups.com"
+      - ip: "${SONAR_IP_2}"
+        hostnames:
+        - "sonar.ups.com"
+      containers:
+      - name: sonar
+        image: us-east4-docker.pkg.dev/gcp-cti-wwrr-prod/wwrr-prod-docker-repo/dotnet-sonar:${BUILD_BUILDID}
+        env:
+        - name: SONAR_TOKEN
+          value: "${SONAR_TOKEN}"
+        command: ["/bin/sh","-c"]
+        args:
+        - |
+            echo "Container started..."
+            echo "Waiting for file..."
+            for i in $(seq 1 60); do
+              if [ -f /tmp/app.tar.gz ]; then
+                SIZE1=$(stat -c%s /tmp/app.tar.gz)
+                sleep 2
+                SIZE2=$(stat -c%s /tmp/app.tar.gz)
+                if [ "$SIZE1" = "$SIZE2" ]; then
+                  echo "File copy completed"
+                  break
+                fi
+              fi
+            echo "Waiting for stable file..."
+            sleep 2
+            done
+
+            mkdir -p /app
+            tar -xzf /tmp/app.tar.gz -C /app
+            cd /app
+
+            echo "Testing connectivity..."
+            curl -I https://sonar.ups.com || true
+
+            echo "Starting Sonar..."
+            java -version
+            dotnet --info
+            dotnet sonarscanner begin /k:"DCT_wwrr-mod-app-data-load_283c95c3-74f2-49e6-aa5a-fb36cc97a13b" /d:sonar.host.url="https://sonar.ups.com/" /d:sonar.token="$SONAR_TOKEN" /d:sonar.branch.name="${ENVIRONMENT}" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" /d:sonar.scanner.scanAll=true
+
+            echo "Configuring JFrog..."
+            dotnet nuget add source https://lucius.ups.com/artifactory/api/nuget/v3/wwrr-mod-app-nuget-dev-virtual \
+            --name jfrog \
+            --username "${JFROG_USERNAME}" \
+            --password "${JFROG_ACCESS_TOKEN}" \
+            --store-password-in-clear-text
+
+            echo "Running restore..."
+            dotnet restore
+            echo "Running build..."
+            dotnet build --no-incremental || exit 1
+            echo "Running tests..."
+            dotnet test --no-build --collect:"XPlat Code Coverage;Format=opencover"
+            dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
